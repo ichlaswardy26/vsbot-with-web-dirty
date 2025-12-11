@@ -4,7 +4,15 @@
   "description": "Feature-rich Discord bot with leveling, economy, voice tracking, and interactive features built with Discord.js v14",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dashboard": "cd dashboard && npm start",
+    "dashboard:dev": "cd dashboard && npm run dev",
+    "config:migrate": "node scripts/migrate-config.js",
+    "config:backup": "node scripts/backup-config.js backup",
+    "config:restore": "node scripts/backup-config.js restore",
+    "config:list": "node scripts/backup-config.js list",
+    "start:all": "concurrently \"npm start\" \"npm run dashboard\"",
+    "setup": "npm install && cd dashboard && npm install"
   },
   "repository": {
     "type": "git",

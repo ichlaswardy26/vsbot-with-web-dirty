@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "backupDate": "2025-12-11T10:01:12.676Z",
+    "originalVersion": 1,
+    "originalUpdatedBy": "migration-script",
+    "originalLastUpdated": "2025-12-11T10:00:44.372Z",
+    "botVersion": "1.1.0"
+  },
+  "config": {
+    "channels": {
+      "welcome": "1376956791757209773",
+      "welcome2": "1376956791757209773",
+      "welcomeLog": "1376956791757209773",
+      "boostAnnounce": "1376956791757209773",
+      "boostLogs": "1376956791757209773",
+      "ticketLogs": "1376956791757209773",
+      "customRoleLogs": "1376956791757209776",
+      "intro": "1376956791757209773",
+      "donation": "1376956791757209776"
+    },
+    "roles": {
+      "staff": "1376956790662631513",
+      "supportTeam": "1376956790662631511",
+      "welcomeBot": "1376956790700511348",
+      "boost": "1376956790700511348",
+      "donate": "1376956790700511348",
+      "level": {
+        "10": "1376956790641786997",
+        "20": "1376956790641786998",
+        "30": "1376956790641786993",
+        "40": "1376956790629073093",
+        "50": "1376956790629073089",
+        "60": "1376956790662631507",
+        "70": "1376956790687924275",
+        "80": "1376956790687924277",
+        "90": "1376956790687924280",
+        "100": "1376956790687924281"
+      }
+    },
+    "categories": {
+      "ticket": "1376956791757209778",
+      "partner": "1376956791757209778"
+    },
+    "emojis": {
+      "souls": "<:souls:1373202161823121560>",
+      "dot": "<:dot:1373230999793696788>",
+      "blank": "<:blank:1297498366305107970>",
+      "seraphyx": "<:seraphyx:1367175101711388783>",
+      "important": "<a:important:1367186288297377834>",
+      "question": "<:question:1368184769724022894>",
+      "report": "<:report:1368185154366869586>",
+      "ban": "<:ban:1368184860924973237>",
+      "partner": "<:partner:1368185020141011055>",
+      "ticket": "🎫",
+      "roles": "👥",
+      "info": "ℹ️",
+      "website": "🌐",
+      "levelup": "⬆️",
+      "tier": "🏆",
+      "rocket": "🚀",
+      "sparkleThumbsup": "👍",
+      "kittyDance": "💃",
+      "cowoncy": "🪙",
+      "donation": "💝",
+      "foryouCommunity": "🏘️"
+    },
+    "images": {
+      "defaultGif": "https://tenor.com/view/congrats-congratulations-leonardo-dicaprio-celebrate-celebration-gif-3447802063960970082",
+      "event": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Event+Image",
+      "partner": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Partner+Image",
+      "support": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Support+Image",
+      "books": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Books+Image",
+      "rules": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Rules+Image",
+      "rinfo": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Role+Info",
+      "qris": "https://via.placeholder.com/400x200/5865F2/FFFFFF?text=QRIS+Code"
+    },
+    "features": {
+      "xpCooldown": 60000,
+      "xpMin": 15,
+      "xpMax": 25,
+      "voiceXpPerMinute": 10,
+      "dailyReward": 100,
+      "collectCooldown": 3600000,
+      "ticketPrefix": "ticket",
+      "partnerTicketPrefix": "partner",
+      "customRolePrice": 10000,
+      "wordChainTimeout": 30000
+    },
+    "colors": {
+      "primary": "#5865F2",
+      "success": "#57F287",
+      "error": "#ED4245",
+      "warning": "#FEE75C",
+      "info": "#5865F2"
+    }
+  }
+}

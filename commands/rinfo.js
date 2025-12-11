@@ -10,6 +10,7 @@ const {
   MediaGalleryItemBuilder
 } = require("discord.js");
 const config = require("../config.js");
+const ConfigManager = require("../util/ConfigManager");
 
 module.exports = {
   name: "rinfo",

@@ -126,6 +126,7 @@ app.use('/', require('./routes/index'));
 app.use('/auth', require('./routes/auth'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/dashboard/settings', require('./routes/settings'));
+app.use('/dashboard/config', require('./routes/config'));
 app.use('/api', require('./routes/api'));
 app.use('/api/advanced', require('./routes/api-advanced'));
 
@@ -140,6 +141,10 @@ io.on('connection', (socket) => {
 
 // Make io available to routes
 app.set('io', io);
+
+// Initialize Config Sync Service
+const ConfigSyncService = require('./services/ConfigSyncService');
+ConfigSyncService.start();
 
 // Error handling
 app.use((req, res) => {
