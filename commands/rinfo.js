@@ -10,7 +10,6 @@ const {
   MediaGalleryItemBuilder
 } = require("discord.js");
 const config = require("../config.js");
-const ConfigManager = require("../util/ConfigManager");
 
 module.exports = {
   name: "rinfo",
@@ -19,9 +18,7 @@ module.exports = {
     const sep = new SeparatorBuilder();
 
     const media = new MediaGalleryBuilder().addItems(
-      new MediaGalleryItemBuilder().setURL(
-        "        config.images.rinfo"
-      )
+      new MediaGalleryItemBuilder().setURL(config.images.rinfo)
     );
 
       const text1 = new TextDisplayBuilder()

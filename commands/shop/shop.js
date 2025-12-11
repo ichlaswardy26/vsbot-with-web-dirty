@@ -43,8 +43,7 @@ module.exports = {
     // Banner
     const banner = new MediaGalleryBuilder().addItems(
       new MediaGalleryItemBuilder().setURL(
-        message.guild.iconURL({ dynamic: true }) ||
-        "        config.images.defaultGif"
+        message.guild.iconURL({ dynamic: true }) || config.images.defaultGif
       )
     );
 

@@ -6,6 +6,7 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "book",
@@ -13,9 +14,7 @@ module.exports = {
   async exec(client, message) {
      
     const media = new MediaGalleryBuilder().addItems(
-      new MediaGalleryItemBuilder().setURL(
-        "        config.images.books"
-      )
+      new MediaGalleryItemBuilder().setURL(config.images.books)
     );
 
     const container = new ContainerBuilder()

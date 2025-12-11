@@ -1,4 +1,4 @@
-﻿require("dotenv").config();
+require("dotenv").config();
 const { Client, Collection, EmbedBuilder } = require("discord.js");
 const mongoose = require("mongoose");
 const { readdirSync } = require("fs");
@@ -8,11 +8,11 @@ const config = require("./config.js");
 const ConfessionState = require("./schemas/ConfessionState");
 const express = require("express");
 const crypto = require("crypto");
+
 const app = express();
-
-
 const mongoUri = config.mongoUri;
 const webhookToken = process.env.WEBHOOK_TOKEN || "lo1j7xgrossc6io5q90dh9d3";
+
 const client = new Client({
     intents: Object.values(constants.IntentsFlags).filter((v) => typeof v === "number"),
     allowedMentions: { parse: ["users", "roles"], repliedUser: false },
@@ -127,66 +127,7 @@ client.on('clientReady', () => {
     console.log('╚════════════════════════════════════════╝\n');
 });
 
-app.use(express.json());
 
-app.post('/tako', (req, res) => {
-    const takoSignatureFromHeader = req.headers['x-tako-signature'];
-    if (!takoSignatureFromHeader) {
-        return res.status(400).send('Missing signature header');
-    }
-
-    const computedSignature = crypto
-        .createHmac('sha256', webhookToken)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
-
-    const isValidSignature = crypto.timingSafeEqual(
-        Buffer.from(computedSignature),
-        Buffer.from(takoSignatureFromHeader)
-    );
-
-    if (isValidSignature) {
-        const data = req.body;
-        console.log(`\n💰 Donation received from ${data.gifterName || 'Anonymous'} - Amount: ${data.amount || 'N/A'}`);
-
-        const donationChannelId = config.channels.donation;
-        if (!donationChannelId) {
-            console.error('Donation channel ID not configured in .env');
-            return res.status(500).send('Donation channel not configured');
-        }
-
-        client.channels.fetch(donationChannelId)
-            .then(channel => {
-                if (!channel?.isTextBased()) return;
-                
-                const embed = new EmbedBuilder()
-                    .setColor('#00FF00')
-                    .setTitle('Terima Kasih atas Donasinya!')
-                    .setDescription(`Terima kasih ${data.gifterName || 'Anonymous'} atas donasi sebesar ${data.amount || 'N/A'} dengan pesan:\n\`\`\`${data.message || 'Tidak ada pesan'}\`\`\``)
-                    .setTimestamp()
-                    .setFooter({ text: '© 2025 Villain Seraphyx.' });
-
-                channel.send({ embeds: [embed] });
-            })
-            .catch(err => {
-                console.error('❌ Webhook error:', err.message);
-            });
-
-        return res.status(200).send('OK');
-    } else {
-        return res.status(400).send('Invalid signature');
-    }
-});
-
-app.listen(3000, () => {
-    console.log('╔════════════════════════════════════════╗');
-    console.log('║     🌐 WEBHOOK SERVER STARTED         ║');
-    console.log('╠════════════════════════════════════════╣');
-    console.log('║  Port      : 3000                      ║');
-    console.log('║  Endpoint  : /tako                     ║');
-    console.log('║  Status    : ✅ Listening              ║');
-    console.log('╚════════════════════════════════════════╝\n');
-});
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
@@ -240,3 +181,64 @@ process.on('SIGTERM', async () => {
 });
 
 client.login(config.token);
+// Tako Donation Webhook Server
+app.use(express.json());
+
+app.post('/tako', (req, res) => {
+    const takoSignatureFromHeader = req.headers['x-tako-signature'];
+    if (!takoSignatureFromHeader) {
+        return res.status(400).send('Missing signature header');
+    }
+
+    const computedSignature = crypto
+        .createHmac('sha256', webhookToken)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+
+    const isValidSignature = crypto.timingSafeEqual(
+        Buffer.from(computedSignature),
+        Buffer.from(takoSignatureFromHeader)
+    );
+
+    if (isValidSignature) {
+        const data = req.body;
+        console.log(`\n💰 Donation received from ${data.gifterName || 'Anonymous'} - Amount: ${data.amount || 'N/A'}`);
+
+        const donationChannelId = config.channels.donation;
+        if (!donationChannelId) {
+            console.error('Donation channel ID not configured in .env');
+            return res.status(500).send('Donation channel not configured');
+        }
+
+        client.channels.fetch(donationChannelId)
+            .then(channel => {
+                if (!channel?.isTextBased()) return;
+                
+                const embed = new EmbedBuilder()
+                    .setColor('#00FF00')
+                    .setTitle('💰 Terima Kasih atas Donasinya!')
+                    .setDescription(`Terima kasih **${data.gifterName || 'Anonymous'}** atas donasi sebesar **${data.amount || 'N/A'}** dengan pesan:\n\`\`\`${data.message || 'Tidak ada pesan'}\`\`\``)
+                    .setTimestamp()
+                    .setFooter({ text: '© 2025 Villain Seraphyx.' });
+
+                channel.send({ embeds: [embed] });
+            })
+            .catch(err => {
+                console.error('❌ Webhook error:', err.message);
+            });
+
+        return res.status(200).send('OK');
+    } else {
+        return res.status(400).send('Invalid signature');
+    }
+});
+
+app.listen(3000, () => {
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║     💰 TAKO WEBHOOK SERVER STARTED    ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log('║  Port      : 3000                      ║');
+    console.log('║  Endpoint  : /tako                     ║');
+    console.log('║  Status    : ✅ Listening              ║');
+    console.log('╚════════════════════════════════════════╝\n');
+});

@@ -1,10 +1,6 @@
 require("dotenv").config();
 
-// Load dynamic config from database
-const ConfigLoader = require('./config-loader');
-
-// Base config dengan data sensitif dan fallback values
-const baseConfig = {
+module.exports = {
   // ==================== BOT CREDENTIALS ====================
   token: process.env.TOKEN,
   clientId: process.env.CLIENT_ID,
@@ -244,48 +240,3 @@ const baseConfig = {
   DONATE_ROLE_ID: process.env.DONATE_ROLE_ID || null,
   customRoleLogsChannelId: process.env.CUSTOM_ROLE_LOGS_CHANNEL_ID || null,
 };
-
-// Function untuk merge config dari database
-async function loadDynamicConfig() {
-  try {
-    const dbConfig = await ConfigLoader.getConfig();
-    
-    if (dbConfig) {
-      // Merge database config dengan base config
-      return {
-        ...baseConfig,
-        channels: { ...baseConfig.channels, ...dbConfig.channels },
-        roles: { ...baseConfig.roles, ...dbConfig.roles },
-        categories: { ...baseConfig.categories, ...dbConfig.categories },
-        emojis: { ...baseConfig.emojis, ...dbConfig.emojis },
-        images: { ...baseConfig.images, ...dbConfig.images },
-        features: { ...baseConfig.features, ...dbConfig.features },
-        colors: { ...baseConfig.colors, ...dbConfig.colors },
-      };
-    }
-  } catch (error) {
-    console.warn('⚠️ Failed to load dynamic config, using base config:', error.message);
-  }
-  
-  return baseConfig;
-}
-
-// Export config dengan dynamic loading
-module.exports = new Proxy(baseConfig, {
-  get(target, prop) {
-    // Untuk properties yang bisa dinamis, load dari database
-    if (['channels', 'roles', 'categories', 'emojis', 'images', 'features', 'colors'].includes(prop)) {
-      // Return promise untuk async loading
-      return loadDynamicConfig().then(config => config[prop]).catch(() => target[prop]);
-    }
-    
-    // Untuk properties lain, return langsung dari base config
-    return target[prop];
-  }
-});
-
-// Export sync version untuk backward compatibility
-module.exports.sync = baseConfig;
-
-// Export async version untuk modern usage
-module.exports.async = loadDynamicConfig;

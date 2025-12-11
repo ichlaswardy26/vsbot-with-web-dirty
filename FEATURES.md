@@ -1,296 +1,307 @@
-# Features & Commands
+# 🎯 Bot Features & Commands
 
-Complete list of features and commands available in Villain Seraphyx Manager Discord Bot.
+Complete feature overview and command reference for Villain Seraphyx Manager Bot.
 
-## 📊 Leveling System
+## 🎭 Action & Fun Commands
 
-Track user activity and reward engagement with XP and levels.
+Interactive commands for user engagement and entertainment.
 
-### Commands
-- `/rank` - View your current rank, level, and XP progress with custom card
-- `/leaderboard` - Display server leaderboard with pagination
-- `/booststatus` - Check active XP boost status
-- `/voiceevent` - View voice activity events and statistics
+### Action Commands
+- **`bite @user`** - Bite another user with anime GIF
+- **`cringe`** - Show cringe reaction
+- **`cry`** - Display crying animation  
+- **`cuddle @user`** - Cuddle with someone
+- **`dance`** - Show dance animation
+- **`hug @user`** - Give someone a hug
+- **`kick @user`** - Playfully kick someone
+- **`kill @user`** - Playfully eliminate someone
+- **`kiss @user`** - Kiss someone
+- **`pat @user`** - Pat someone's head
+- **`poke @user`** - Poke another user
+- **`slap @user`** - Slap someone
+- **`wave @user`** - Wave at someone
 
-### Admin Commands
-- `/addxp <user> <amount>` - Add XP to a user
-- `/resetxp <user>` - Reset user's XP and level
-- `/boost <multiplier> <duration>` - Apply XP boost multiplier
-- `/reset` - Reset activity statistics
-
-### Features
-- Automatic XP gain from messages and voice activity
-- Custom rank cards with Canvas
-- XP boost multipliers
-- Role rewards on level up
-- Daily, weekly, monthly, and all-time leaderboards
-- Voice channel activity tracking
-
----
+### Utility Commands
+- **`afk [reason]`** - Set AFK status with optional reason
+- **`avatar [@user]`** - Display user's avatar (self or mentioned user)
+- **`ping`** - Check bot latency and response time
+- **`say <message>`** - Make the bot say something
+- **`info`** - Display bot information and statistics
 
 ## 💰 Economy System
 
-Virtual currency system with shop and exclusive items.
+Complete virtual economy with souls currency and shop system.
 
-### Commands
-- `/bal [user]` - Check balance (souls)
-- `/daily` - Claim daily reward
-- `/collect` - Collect souls from activities
-- `/shop` - Browse available items and roles
-- `/buy <item>` - Purchase items or roles
-- `/purchases` - View your purchase history
+### Core Economy
+- **`balance [@user]`** - Check souls balance
+- **`daily`** - Claim daily souls reward
+- **`collect`** - Collect periodic souls bonus
 
-### Admin Commands
-- `/addbalance <user> <amount>` - Add souls to user
-- `/resetsouls <user>` - Reset user's balance
-- `/addshop <role> <price>` - Add role to shop
-- `/removeshop <role>` - Remove role from shop
-- `/additem <name> <price> <description>` - Add exclusive item
-- `/removeitem <item>` - Remove item from shop
-- `/addexclusive <role>` - Mark role as exclusive
-- `/removeexclusiveitem <item>` - Remove exclusive item
-- `/itemid` - View item IDs
-- `/buyer <item>` - View item buyers
-- `/done <user> <item>` - Mark purchase as completed
+### Shop System
+- **`shop`** - Browse available items and roles
+- **`buy <item_id>`** - Purchase items from shop
+- **`purchases [@user]`** - View purchase history
 
-### Features
-- Virtual currency (souls)
-- Shop system with roles and items
-- Exclusive items with manual fulfillment
-- Purchase tracking and history
-- Daily rewards
-- Level-up rewards
+### Shop Management (Admin)
+- **`addshop`** - Add new shop item
+- **`removeshop <id>`** - Remove shop item
+- **`additem`** - Add exclusive limited item
+- **`removeitem <id>`** - Remove exclusive item
+- **`buyer <item_id>`** - View item buyers
+- **`done <purchase_id>`** - Mark purchase as completed
 
----
+### Economy Admin
+- **`resetsouls @user`** - Reset user's souls balance
+- **`addbalance @user <amount>`** - Add souls to user
 
-## 🎤 Voice Activity Tracking
+## 📊 Leveling & XP System
 
-Monitor and reward voice channel participation.
+Comprehensive leveling system with voice activity tracking.
 
-### Commands
-- `/voiceevent` - View voice activity statistics
-- `/voice` - Manage voice channel settings
-- `/claim` - Claim temporary voice channel
+### User Commands
+- **`rank [@user]`** - View user's rank card and stats
+- **`leaderboard`** - Server XP leaderboard
+- **`booststatus`** - Check current XP boost status
+- **`voiceevent`** - View voice activity events
 
 ### Admin Commands
-- `/resetvoiceevent` - Reset voice event statistics
+- **`addxp @user <amount>`** - Add XP to user
+- **`resetxp @user`** - Reset user's XP
+- **`boost @user`** - Toggle XP boost for user
+- **`resetvoiceevent`** - Reset voice event data
 
-### Features
-- Automatic voice activity tracking
-- XP rewards for voice participation
-- Voice event logging
-- Temporary voice channels
-- Voice channel customization (rename, bitrate, notifications)
+### XP Sources
+- **Text Messages** - Gain XP from chatting (cooldown applies)
+- **Voice Activity** - Earn XP per minute in voice channels
+- **Boost Multipliers** - Enhanced XP rates for boosters/donors
 
----
+## 🎮 Mini Games & Entertainment
 
-## 🎫 Ticket System
+Interactive games and entertainment features.
 
-Support ticket management with categories.
+### Available Games
+- **`caklontong`** - Indonesian riddle game with multiple choice
+- **`guesstheanimal`** - Animal guessing game with images
+- **`tebakgambar`** - Image guessing challenge
+- **`wordchain`** - Word association chain game
 
-### Commands
-- `/ticket` - Create a support ticket
-- `/close [reason]` - Close current ticket
-- `/partner` - Create partner ticket
-
-### Features
-- Multiple ticket categories
-- Ticket transcripts
-- Partner ticket system
-- Auto-close functionality
-- Ticket logging
-
----
-
-## 🎭 Custom Roles
-
-User-customizable roles and appearance.
-
-### Commands
-- `/cusrole <name> <color>` - Create custom role
-- `/removebg` - Remove custom role background
-
-### Features
-- Personal custom roles
-- Color customization
-- Role management
-
----
-
-## 🤖 Auto Responder
-
-Automated message responses based on triggers.
-
-### Commands
-- `/addres <trigger> <response>` - Add auto response
-- `/delres <trigger>` - Delete auto response
-- `/listres` - List all auto responses
-
-### Features
-- Keyword-based triggers
-- Custom responses
-- Multiple auto responders
-
----
-
-## 💬 Confession System
-
-Anonymous confession feature.
-
-### Commands
-- `/confes` - Submit anonymous confession
-- `/reset` - Reset confession state (admin)
-
-### Features
-- Anonymous submissions
-- Confession approval system
-- State management
-
----
+### Game Features
+- **Scoring System** - Earn souls for correct answers
+- **Timeout Protection** - Games auto-end after time limit
+- **Multiple Players** - Some games support multiple participants
+- **Difficulty Levels** - Varying difficulty across games
 
 ## 🎁 Giveaway System
 
-Create and manage server giveaways.
+Complete giveaway management with winner selection.
 
 ### Commands
-- `/start <duration> <winners> <prize>` - Start giveaway
-- `/end <message_id>` - End giveaway early
-- `/reroll <message_id>` - Reroll giveaway winners
+- **`giveaway`** - Start interactive giveaway creation
+- **`giveaway-end <message_id>`** - Manually end giveaway
+- **`giveaway-reroll <message_id>`** - Reroll giveaway winner
 
 ### Features
-- Timed giveaways
-- Multiple winners
-- Automatic winner selection
-- Reroll functionality
-- Participant tracking
+- **Interactive Setup** - Step-by-step giveaway creation
+- **Automatic Ending** - Giveaways end automatically at set time
+- **Winner Selection** - Random winner selection from participants
+- **Requirement Checking** - Optional role/level requirements
+- **Embed Display** - Beautiful giveaway embeds with reactions
 
----
+## 🛡️ Moderation & Admin Tools
 
-## 🎮 Mini Games
+Comprehensive moderation and administrative features.
 
-Interactive games for server entertainment.
+### Moderation Commands
+- **`warn @user <reason>`** - Issue warning to user
+- **`ban @user`** - Troll ban command (fun, not real ban)
+- **`snipe`** - Show recently deleted message
+
+### Admin Utilities
+- **`reset @user`** - Reset all user data
+- **`forceclose`** - Force close tickets or sessions
+- **`createembed`** - Create custom embeds
+
+### Auto Moderation
+- **Message Filtering** - Automatic content filtering
+- **Spam Protection** - Anti-spam measures
+- **Auto Responses** - Configurable auto-responder system
+
+## 🎫 Ticket System
+
+Professional support ticket system with categories.
+
+### User Commands
+- **`ticket`** - Create support ticket
+- **`close`** - Close current ticket
+
+### Ticket Types
+- **General Support** - General help and questions
+- **Partner Tickets** - Partnership applications
+- **Bug Reports** - Technical issue reporting
+
+### Features
+- **Category Organization** - Tickets sorted by type
+- **Staff Notifications** - Auto-notify support team
+- **Transcript Generation** - Save ticket conversations
+- **Permission Management** - Role-based access control
+
+## 🔊 Voice Channel Management
+
+Advanced voice channel control and temporary channels.
 
 ### Commands
-- `/wordchain` - Start word chain game
-- `/caklontong` - Indonesian riddle game
-- `/guesstheanimal` - Animal guessing game
-- `/tebakgambar` - Image guessing game
+- **`voice <subcommand>`** - Voice channel management
+  - `trust @user` - Add trusted user
+  - `untrust @user` - Remove trusted user
+  - `kick @user` - Kick from voice
+  - `ban @user` - Ban from voice
+  - `unban @user` - Unban from voice
+  - `limit <number>` - Set user limit
+  - `name <new_name>` - Change channel name
+  - `lock` - Lock channel
+  - `unlock` - Unlock channel
+  - `hide` - Hide channel
+  - `show` - Show channel
+- **`claim`** - Claim ownership of voice channel
 
 ### Features
-- Word chain with scoring
-- Timed challenges
-- Leaderboards
-- Multiple game modes
+- **Temporary Channels** - Auto-created voice channels
+- **Owner Controls** - Channel owner permissions
+- **Trusted Users** - Delegate control to trusted members
+- **Privacy Controls** - Lock, hide, and limit channels
 
----
+## 💬 Confession System
 
-## 🛡️ Moderation Tools
-
-Server moderation and management commands.
+Anonymous confession system with moderation.
 
 ### Commands
-- `/warn <user> <reason>` - Warn a user
-- `/snipe` - View recently deleted messages
-- `/trollban <user>` - Fake ban command (joke)
+- **`confess`** - Send anonymous confession
+- **`resetconfess`** - Reset confession state (admin)
 
 ### Features
-- Warning system
-- Message snipe
-- Moderation logging
+- **Anonymous Posting** - Completely anonymous confessions
+- **Moderation Queue** - Staff can review before posting
+- **Auto-numbering** - Confessions automatically numbered
+- **Spam Protection** - Cooldown and rate limiting
 
----
+## 📢 Auto Responder
 
-## 🎨 Action Commands
-
-Fun interaction commands with anime GIFs.
+Intelligent auto-response system for common queries.
 
 ### Commands
-- `/bite <user>` - Bite someone
-- `/cringe` - Show cringe reaction
-- `/cry` - Cry reaction
-- `/cuddle <user>` - Cuddle someone
-- `/dance` - Dance animation
-- `/hug <user>` - Hug someone
-- `/kick <user>` - Kick someone (fun)
-- `/kill <user>` - Kill someone (fun)
-- `/kiss <user>` - Kiss someone
-- `/pat <user>` - Pat someone
-- `/poke <user>` - Poke someone
-- `/slap <user>` - Slap someone
-- `/wave <user>` - Wave at someone
+- **`addres`** - Add new auto response
+- **`delres <id>`** - Delete auto response
+- **`listres`** - List all responses
 
 ### Features
-- Anime GIF reactions
-- User interactions
-- Fun social commands
+- **Keyword Matching** - Respond to specific keywords
+- **Multiple Triggers** - Multiple keywords per response
+- **Rich Responses** - Support for embeds and mentions
+- **Admin Management** - Easy response management
 
----
+## 📖 Information & Help
 
-## 🔧 Utility Commands
+Comprehensive information and help system.
 
-General utility and information commands.
+### Information Commands
+- **`rinfo`** - Detailed role information and hierarchy
+- **`book`** - Server information and navigation
+- **`rules`** - Server rules and guidelines
+- **`support`** - Support and donation information
+- **`partner`** - Partnership information
+- **`event`** - Current events and activities
+
+### Features
+- **Interactive Menus** - Dropdown menus for navigation
+- **Rich Embeds** - Beautiful formatted information
+- **Up-to-date Info** - Automatically updated information
+- **Multi-language** - Support for multiple languages
+
+## 💰 Tako Donation Integration
+
+Seamless integration with Tako.id donation platform.
+
+### Features
+- **Webhook Integration** - Real-time donation notifications
+- **Secure Processing** - HMAC signature verification
+- **Rich Notifications** - Beautiful donation announcements
+- **Donor Recognition** - Special recognition for donors
+
+### Webhook Details
+- **Endpoint**: `/tako` on port 3000
+- **Method**: POST with signature verification
+- **Response**: Automatic channel notifications
+- **Security**: HMAC-SHA256 signature validation
+
+## 🎨 Custom Roles & Personalization
+
+Advanced custom role system for boosters and donors.
 
 ### Commands
-- `/ping` - Check bot latency
-- `/info` - Bot information
-- `/avatar [user]` - View user avatar
-- `/rinfo` - Role information
-- `/createembed` - Create custom embed
-- `/say <message>` - Make bot say something
-- `/afk [reason]` - Set AFK status
-- `/welcome` - Setup welcome message
-- `/rules` - Display server rules
-- `/support` - Get support information
-- `/intro` - Introduction command
-- `/event` - Event information
-- `/books` - Book recommendations
-- `/desk` - Desk setup showcase
-- `/components` - UI components demo
+- **`cr create`** - Create custom role
+- **`cr edit`** - Edit existing role
+- **`cr delete`** - Delete custom role
+- **`cr add @user`** - Add user to role
+- **`cr remove @user`** - Remove user from role
+- **`cr info`** - View role information
+- **`cr up`** - Move role position up
 
 ### Features
-- Custom embeds
-- AFK system
-- Welcome messages
-- Server information
-- Utility tools
+- **Boost/Donor Tiers** - Different limits based on tier
+- **Color Customization** - Custom hex colors
+- **Icon Support** - Custom role icons (server boost required)
+- **Member Management** - Add/remove role members
+- **Position Control** - Adjust role hierarchy
+
+## 🔧 Configuration & Setup
+
+### Environment Variables
+All sensitive configuration through environment variables:
+- Bot credentials (TOKEN, CLIENT_ID, GUILD_ID)
+- Database connection (MONGO_URI)
+- Channel and role IDs
+- Feature toggles and limits
+- Tako webhook configuration
+
+### Dynamic Configuration
+- **Runtime Updates** - Many settings can be updated without restart
+- **Database Storage** - Configuration stored in MongoDB
+- **Fallback Values** - Safe defaults for all settings
+- **Validation** - Input validation for all configuration
+
+### Feature Toggles
+- **Modular Design** - Enable/disable features as needed
+- **Performance Optimization** - Disable unused features
+- **Customization** - Tailor bot to server needs
+
+## 📊 Analytics & Monitoring
+
+### Built-in Analytics
+- **Command Usage** - Track command popularity
+- **User Activity** - Monitor user engagement
+- **Error Tracking** - Automatic error logging
+- **Performance Metrics** - Response time monitoring
+
+### Logging System
+- **Structured Logging** - JSON formatted logs
+- **Log Levels** - Debug, info, warn, error levels
+- **File Rotation** - Automatic log file management
+- **Error Reporting** - Detailed error information
+
+## 🚀 Performance & Scalability
+
+### Optimization Features
+- **Database Indexing** - Optimized MongoDB queries
+- **Caching System** - Redis-like caching for frequent data
+- **Rate Limiting** - Prevent spam and abuse
+- **Memory Management** - Efficient memory usage
+
+### Scalability
+- **Sharding Ready** - Prepared for Discord sharding
+- **Load Balancing** - Support for multiple instances
+- **Database Scaling** - MongoDB cluster support
+- **CDN Integration** - External asset hosting
 
 ---
 
-## ⚙️ Configuration
-
-Bot behavior can be configured through `config.js`:
-
-- Level roles and rewards
-- XP rates and cooldowns
-- Economy settings
-- Channel IDs for features
-- Role IDs for permissions
-- Embed colors and styling
-
----
-
-## 🔐 Permissions
-
-Most commands require specific permissions:
-
-- **Admin Commands**: Administrator permission
-- **Moderator Commands**: Manage Messages, Kick Members, Ban Members
-- **Ticket Commands**: Manage Channels
-- **Shop Management**: Administrator permission
-
----
-
-## 📝 Notes
-
-- All commands use Discord's slash command system
-- XP cooldown: 60 seconds per message
-- Voice XP: Earned per minute in voice channels
-- Daily rewards reset at midnight UTC
-- Leaderboards update in real-time
-- All data stored in MongoDB
-
----
-
-For setup instructions, see [README.md](README.md)
-
-For technical details, see [SUMMARY.md](SUMMARY.md)
+*This bot is continuously updated with new features and improvements. Check the changelog for the latest updates.*

@@ -1,29 +1,18 @@
-# Discord Bot - Villain Seraphyx Manager
+# 🤖 Villain Seraphyx Manager Bot
 
-A feature-rich Discord bot built with Discord.js v14, designed for comprehensive server management with leveling, economy, voice tracking, and interactive features.
+A comprehensive Discord bot built with Discord.js v14, featuring leveling, economy, voice tracking, moderation tools, and Tako donation integration.
 
-## 🚀 Features
+## ✨ Features
 
-### Bot Features
-- **Leveling System** - XP tracking with boost multipliers and custom rank cards
-- **Economy System** - Virtual currency with shop and exclusive items
-- **Voice Activity Tracking** - Monitor and reward voice channel participation
-- **Ticket System** - Support ticket management with partner tickets
-- **Custom Roles** - User-customizable roles and shop roles
-- **Auto Responder** - Automated message responses
-- **Confession System** - Anonymous confession feature
-- **Giveaway System** - Create and manage giveaways
-- **Mini Games** - Word chain and other interactive games
-- **Moderation Tools** - Warnings, resets, and admin commands
-
-### 🌐 Web Dashboard (NEW!)
-- **Modern UI** - Beautiful and responsive dashboard with Tailwind CSS
-- **User Management** - View, edit, and manage user data (souls, bank, levels)
-- **Configuration** - Edit all bot settings via web interface
-- **Bot Control** - Monitor status, uptime, and control bot operations
-- **Analytics** - Real-time statistics with charts and graphs
-- **Secure Login** - Discord OAuth2 authentication
-- **Real-time Updates** - Socket.IO for live data synchronization
+- **🎯 Leveling System** - XP tracking with voice activity and boost multipliers
+- **💰 Economy System** - Virtual currency (souls) with shop and exclusive items  
+- **🎫 Ticket System** - Support and partner ticket management
+- **🎮 Mini Games** - Interactive games like word chain, guess the animal, etc.
+- **🛡️ Moderation Tools** - Warnings, bans, and admin utilities
+- **🎭 Action Commands** - Fun interaction commands (hug, pat, etc.)
+- **📢 Auto Responder** - Automated message responses
+- **💝 Tako Integration** - Donation webhook for Tako.id platform
+- **🎁 Giveaway System** - Create and manage server giveaways
 
 ## 📋 Prerequisites
 
@@ -31,153 +20,270 @@ A feature-rich Discord bot built with Discord.js v14, designed for comprehensive
 - MongoDB database
 - Discord Bot Token
 
-## 🔧 Installation
+## 🚀 Quick Start
 
-1. Clone the repository:
+1. **Clone & Install**
 ```bash
-git clone https://github.com/ichlaswardy26/Villain Seraphyx-Manager.git
-cd Villain Seraphyx-Manager
-```
-
-2. Install dependencies:
-```bash
+git clone <repository-url>
+cd villain-seraphyx-bot
 npm install
 ```
 
-3. Configure environment variables:
+2. **Configure Environment**
 ```bash
 cp .env.example .env
 ```
-
 Edit `.env` with your credentials:
 ```env
 TOKEN=your_discord_bot_token
 MONGO_URI=your_mongodb_connection_string
 CLIENT_ID=your_bot_client_id
 GUILD_ID=your_guild_id
+WEBHOOK_TOKEN=your_tako_webhook_token
 ```
 
-4. Configure bot settings in `config.js`
+3. **Configure Bot Settings**
+Edit `config.js` with your channel IDs, role IDs, and other settings.
 
-5. Start the bot:
+4. **Start the Bot**
 ```bash
 npm start
 ```
 
-## 🌐 Dashboard Setup
+## 📚 Commands Reference
 
-The bot comes with a modern web dashboard for easy management!
+### 🎭 Action Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `bite` | Bite someone | `sera bite @user` |
+| `cringe` | Show cringe reaction | `sera cringe` |
+| `cry` | Cry reaction | `sera cry` |
+| `cuddle` | Cuddle someone | `sera cuddle @user` |
+| `dance` | Dance animation | `sera dance` |
+| `hug` | Hug someone | `sera hug @user` |
+| `kick` | Kick someone (fun) | `sera kick @user` |
+| `kill` | Kill someone (fun) | `sera kill @user` |
+| `kiss` | Kiss someone | `sera kiss @user` |
+| `pat` | Pat someone | `sera pat @user` |
+| `poke` | Poke someone | `sera poke @user` |
+| `slap` | Slap someone | `sera slap @user` |
+| `wave` | Wave at someone | `sera wave @user` |
 
-### Quick Start
+### 👑 Admin Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `addxp` | Add XP to user | `sera addxp @user amount` |
+| `boost` | Manage boost status | `sera boost @user` |
+| `reset` | Reset user data | `sera reset @user` |
+| `resetvoiceevent` | Reset voice event | `sera resetvoiceevent` |
+| `resetxp` | Reset user XP | `sera resetxp @user` |
 
-1. Navigate to dashboard folder:
-```bash
-cd dashboard
-```
+### 💰 Economy Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `bal` / `balance` | Check balance | `sera bal [@user]` |
+| `collect` | Collect daily souls | `sera collect` |
+| `daily` | Daily reward | `sera daily` |
+| `resetsouls` | Reset user souls | `sera resetsouls @user` |
 
-2. Install dependencies:
-```bash
-npm install
-```
+### 🏪 Shop Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `shop` | View shop items | `sera shop` |
+| `buy` | Buy shop item | `sera buy <item_id>` |
+| `addshop` | Add shop item | `sera addshop` |
+| `removeshop` | Remove shop item | `sera removeshop <id>` |
+| `additem` | Add exclusive item | `sera additem` |
+| `removeitem` | Remove item | `sera removeitem <id>` |
+| `purchases` | View purchases | `sera purchases [@user]` |
+| `buyer` | View item buyers | `sera buyer <item_id>` |
+| `done` | Mark purchase done | `sera done <purchase_id>` |
 
-3. Configure dashboard:
-```bash
-copy .env.example .env
-```
+### 📊 Level Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `rank` | View user rank | `sera rank [@user]` |
+| `leaderboard` | Server leaderboard | `sera leaderboard` |
+| `booststatus` | Check boost status | `sera booststatus` |
+| `voiceevent` | Voice event info | `sera voiceevent` |
 
-Edit `dashboard/.env` with your settings (see [DASHBOARD_SETUP.md](DASHBOARD_SETUP.md) for details)
+### 🎮 Mini Games
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `caklontong` | Riddle game | `sera caklontong` |
+| `guesstheanimal` | Animal guessing | `sera guesstheanimal` |
+| `tebakgambar` | Image guessing | `sera tebakgambar` |
+| `wordchain` | Word chain game | `sera wordchain` |
 
-4. Start dashboard:
-```bash
-npm start
-```
+### 🎁 Giveaway Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `giveaway` | Start giveaway | `sera giveaway` |
+| `giveaway-end` | End giveaway | `sera giveaway-end <message_id>` |
+| `giveaway-reroll` | Reroll winner | `sera giveaway-reroll <message_id>` |
 
-Dashboard will be available at: **http://localhost:8080**
+### 🛡️ Moderation Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `warn` | Warn a user | `sera warn @user reason` |
+| `ban` | Troll ban (fun) | `sera ban @user` |
+| `snipe` | Show deleted message | `sera snipe` |
 
-### Start Both Bot and Dashboard
+### 🎫 Ticket Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `ticket` | Create support ticket | `sera ticket` |
+| `close` | Close ticket | `sera close` |
 
-Use the provided batch script (Windows):
-```bash
-start-all.bat
-```
+### 🔊 Voice Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `voice` | Voice channel control | `sera voice <subcommand>` |
+| `claim` | Claim voice channel | `sera claim` |
 
-For detailed dashboard setup instructions, see [DASHBOARD_SETUP.md](DASHBOARD_SETUP.md)
+### 📢 Auto Responder
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `addres` | Add auto response | `sera addres` |
+| `delres` | Delete response | `sera delres <id>` |
+| `listres` | List responses | `sera listres` |
+
+### 💬 Confession System
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `confess` | Send confession | `sera confess` |
+| `resetconfess` | Reset confession state | `sera resetconfess` |
+
+### 🔧 Utility Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `ping` | Bot latency | `sera ping` |
+| `info` | Bot information | `sera info` |
+| `avatar` | User avatar | `sera avatar [@user]` |
+| `afk` | Set AFK status | `sera afk [reason]` |
+| `say` | Make bot say something | `sera say <message>` |
+| `createembed` | Create custom embed | `sera createembed` |
+
+### 📖 Information Commands
+| Command | Description | Usage |
+|---------|-------------|-------|
+| `rinfo` | Role information | `sera rinfo` |
+| `book` | Server information | `sera book` |
+| `rules` | Server rules | `sera rules` |
+| `support` | Support information | `sera support` |
+| `partner` | Partnership info | `sera partner` |
+| `event` | Event information | `sera event` |
+
+## 💰 Tako Donation Integration
+
+The bot includes Tako.id webhook integration for handling donations:
+
+- **Webhook Endpoint**: `http://your-server:3000/tako`
+- **Automatic Notifications**: Donations are automatically posted to configured channel
+- **Secure**: Uses HMAC signature verification
+- **Configurable**: Set donation channel in `config.js`
+
+### Tako Setup
+1. Configure `WEBHOOK_TOKEN` in `.env`
+2. Set `DONATION_CHANNEL_ID` in `.env`
+3. Add webhook URL to your Tako.id account
 
 ## 📁 Project Structure
 
 ```
-├── commands/          # Command modules
-│   ├── actions/       # Action commands
-│   ├── admin/         # Admin commands
-│   ├── economy/       # Economy commands
-│   ├── level/         # Leveling commands
-│   ├── moderator/     # Moderation commands
-│   ├── shop/          # Shop commands
-│   └── ticket/        # Ticket commands
-├── events/            # Event handlers
-│   ├── client/        # Client events
-│   └── guild/         # Guild events
+├── commands/           # Command modules organized by category
+│   ├── actions/       # Fun action commands
+│   ├── admin/         # Administrative commands
+│   ├── economy/       # Economy system commands
+│   ├── level/         # Leveling system commands
+│   ├── shop/          # Shop and item management
+│   ├── minigames/     # Interactive games
+│   ├── moderator/     # Moderation tools
+│   ├── ticket/        # Support ticket system
+│   ├── voice/         # Voice channel management
+│   └── test/          # Utility and info commands
+├── events/            # Discord event handlers
 ├── handlers/          # Feature handlers
-├── schemas/           # MongoDB schemas
+├── schemas/           # MongoDB data models
 ├── util/              # Utility functions
 ├── config.js          # Bot configuration
-└── index.js           # Entry point
+└── index.js           # Main bot file
 ```
 
-## 📖 Documentation
+## 🔧 Configuration
 
-### Bot Documentation
-- [FEATURES.md](FEATURES.md) - Complete feature list and commands
-- [CONFIGURATION.md](CONFIGURATION.md) - Configuration guide and environment variables
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide for various platforms
-- [SUMMARY.md](SUMMARY.md) - Technical overview and architecture
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+### Environment Variables (.env)
+```env
+# Bot Credentials
+TOKEN=your_discord_bot_token
+CLIENT_ID=your_bot_client_id
+GUILD_ID=your_guild_id
 
-### Dashboard Documentation
+# Database
+MONGO_URI=your_mongodb_connection_string
 
-#### 🇮🇩 Bahasa Indonesia
-- [RINGKASAN_DASHBOARD.md](RINGKASAN_DASHBOARD.md) - 🎯 **MULAI DISINI** - Ringkasan lengkap (Bahasa Indonesia)
+# Tako Webhook
+WEBHOOK_TOKEN=your_tako_webhook_token
 
-#### 🇬🇧 English / Detailed Guides
-- [DASHBOARD_SUMMARY.md](DASHBOARD_SUMMARY.md) - ⭐ **START HERE** - Complete overview
-- [QUICK_START_DASHBOARD.md](QUICK_START_DASHBOARD.md) - ⚡ 5-minute setup guide
-- [DASHBOARD_SETUP.md](DASHBOARD_SETUP.md) - 📖 Comprehensive setup with troubleshooting
-- [DASHBOARD_FEATURES.md](DASHBOARD_FEATURES.md) - 🎨 All features documentation
-- [DASHBOARD_STRUCTURE.md](DASHBOARD_STRUCTURE.md) - 📁 Folder structure & files
-- [DASHBOARD_FLOW.md](DASHBOARD_FLOW.md) - 🔄 Visual flow & user journey
-- [DASHBOARD_FAQ.md](DASHBOARD_FAQ.md) - ❓ Frequently Asked Questions
-- [WHAT_WAS_CREATED.md](WHAT_WAS_CREATED.md) - 📦 Complete file list
-- [dashboard/CHECKLIST.md](dashboard/CHECKLIST.md) - ✅ Installation checklist (100+ items)
+# Channel IDs
+WELCOME_CHANNEL_ID=channel_id
+DONATION_CHANNEL_ID=channel_id
+TICKET_LOG_CHANNEL_ID=channel_id
+# ... (see .env.example for full list)
 
-## 📸 Screenshots
+# Role IDs
+STAFF_ROLE_ID=role_id
+BOOST_ROLE_ID=role_id
+# ... (see .env.example for full list)
+```
 
-### Dashboard Overview
-![Dashboard](https://via.placeholder.com/800x400?text=Dashboard+Overview)
+### Bot Configuration (config.js)
+The `config.js` file contains all bot settings including:
+- Channel mappings
+- Role configurations  
+- Feature settings
+- Emoji configurations
+- Image URLs
+- Economy settings
 
-### User Management
-![Users](https://via.placeholder.com/800x400?text=User+Management)
+## 🚀 Deployment
 
-### Analytics
-![Analytics](https://via.placeholder.com/800x400?text=Analytics+Dashboard)
+### Local Development
+```bash
+npm start
+```
 
-## 🤝 Contributing
+### Production Deployment
+1. **Railway/Heroku**: Use provided `Procfile`
+2. **VPS**: Use PM2 or similar process manager
+3. **Docker**: Create Dockerfile for containerization
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+See `DEPLOYMENT.md` for detailed deployment instructions.
 
 ## 📝 License
 
 This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
-## 👤 Author
+## 👥 Authors
 
-**zyflou**
+- **ichlaswardy26** - Main Developer
+- **zyflou** - Contributor
 
-- GitHub: [@zyflou](https://github.com/zyflou)
+## 🤝 Contributing
 
-**ichlaswardy26**
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-- GitHub: [@zyflou](https://github.com/ichlaswardy26)
+## 🆘 Support
 
-## 🙏 Acknowledgments
+For support and questions:
+- Create an issue on GitHub
+- Join our Discord server
+- Check the documentation files
 
-Built with [Discord.js](https://discord.js.org/) v14
+---
+
+**Built with ❤️ using Discord.js v14**
