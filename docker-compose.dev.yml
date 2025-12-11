@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  discord-bot:
+    build: .
+    container_name: villain-seraphyx-bot-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env
+    volumes:
+      # Mount source code untuk development
+      - ./:/app
+      - /app/node_modules
+      # Mount .env file
+      - ./.env:/app/.env:ro
+    networks:
+      - bot-network
+    
+    # Development specific settings
+    command: npm run dev
+    
+    # Auto-restart ketika .env berubah
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  # Env file watcher untuk development
+  env-watcher:
+    build: .
+    container_name: env-watcher-dev
+    restart: unless-stopped
+    volumes:
+      - ./:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /app
+    command: node env-watcher.js
+    networks:
+      - bot-network
+    depends_on:
+      - discord-bot
+
+networks:
+  bot-network:
+    driver: bridge

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  discord-bot:
+    build: .
+    container_name: villain-seraphyx-bot-prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    volumes:
+      # Mount .env file untuk auto-restart ketika berubah
+      - ./.env:/app/.env:ro
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount data directory untuk persistent storage
+      - ./data:/app/data
+    networks:
+      - bot-network
+    
+    # Resource limits untuk production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    
+    # Auto-restart ketika .env berubah
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    
+    # Health check yang lebih ketat untuk production
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Bot is running')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # File watcher untuk auto-restart ketika .env berubah
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower-prod
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/app:ro
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=30
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_STOPPED=true
+      - WATCHTOWER_REVIVE_STOPPED=true
+    command: --interval 30 --label-enable --cleanup
+
+  # Monitoring dengan Portainer (optional)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local
+  portainer_data:
+    driver: local
