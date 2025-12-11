@@ -1,0 +1,50 @@
+<%- include('partials/header') %>
+
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-600">
+  <div class="text-center max-w-2xl mx-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-12">
+      <!-- Icon -->
+      <div class="w-32 h-32 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-tools text-yellow-600 text-6xl"></i>
+      </div>
+      
+      <!-- Title -->
+      <h1 class="text-4xl font-bold text-gray-800 mb-4">
+        Under Maintenance
+      </h1>
+      
+      <!-- Message -->
+      <p class="text-xl text-gray-600 mb-8">
+        <%= message || 'Dashboard is under maintenance. Please check back later.' %>
+      </p>
+      
+      <!-- Info -->
+      <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i class="fas fa-info-circle text-blue-500 text-2xl"></i>
+          </div>
+          <div class="ml-3 text-left">
+            <p class="text-sm text-blue-700">
+              We're performing scheduled maintenance to improve your experience.
+              The dashboard will be back online shortly.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Refresh Button -->
+      <button onclick="location.reload()" 
+              class="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition shadow-lg">
+        <i class="fas fa-sync-alt mr-2"></i>Refresh Page
+      </button>
+      
+      <!-- Footer -->
+      <p class="text-gray-500 text-sm mt-8">
+        <%= dashboardSettings.footerText %>
+      </p>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

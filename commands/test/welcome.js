@@ -1,0 +1,18 @@
+const canvafy = require('canvafy');
+
+module.exports = {
+    name: 'welcometest',
+    description: 'card welcome',
+    async exec(client, message, args) {
+
+        const { member } = message;
+        const welcome = await new canvafy.WelcomeLeave()
+        .setAvatar(member.user.displayAvatarURL({ forceStatic: true, extension: "png" }))
+        .setBackground("image", "https://i.pinimg.com/736x/30/c3/05/30c305ad8c91a17f2444281e32ffe500.jpg")
+        .setTitle("Welcome", "#0a0a0a")
+        .setAvatarBorder("#2a2e35")
+        .build();
+    
+          message.channel.send({ content: `## ╔═══════════════════╗\n## ✦ Welcome to Villain Seraphyx  ✦\n## ╚═══════════════════╝\n_Tempat di mana cahaya dan kegelapan saling sapa, tapi tetep vibes-nya gokil dan nggak ngebosenin._\n\n<a:clouds:1369619716091543593> <@${member.user.id}>, akhirnya nyasar juga ke sini ya~\nDi sini nggak ada yang bener-bener suci atau jahat, semua cuma pengen have fun bareng — kita hidup dalam dunia dua sisi: para **villain** yang punya ambisi gelap, dan **seraph** yang pura-pura suci.\n\n\n**༶•┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈•༶**\n**<a:Witch:1369624919645880382> Langkah pertama sebelum lo hilang arah:**\n**•** Intip aturan server dan informasi di <#1325073367014969385> & <#1322981678951563355> — __kalau gak mau dikutuk dan kehilangan arah!.__\n**•** Buka topeng lo di <#1322983898325450885> — __biar kami tahu dan tidak mencurigai lo.__\n**•** Dan masuk ke arus obrolan di <#1322983268639051806> — __tempat semua energi bertabrakan.__\n**༶•┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈•༶**\n\n**⭑⭑⭑⭑⭑**\nThanks udah gabung, dan inget…\n_Di sini chaos itu seni, dan kamu bagian dari lukisannya._\nEnjoy the madness. Let the story begin..`, files: [{ attachment: welcome, name: 'welcome.png' }] });
+    }
+};
