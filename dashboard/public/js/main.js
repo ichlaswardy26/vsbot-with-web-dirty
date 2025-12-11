@@ -1,4 +1,4 @@
-// Main JavaScript for Anna Bot Dashboard
+// Main JavaScript for Villain Seraphyx Bot Dashboard
 
 // Toast notification
 function showToast(message, type = 'success') {

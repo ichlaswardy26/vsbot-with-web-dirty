@@ -27,17 +27,17 @@ module.exports = {
         iconURL: member.user.displayAvatarURL({ size: 1024 }),
       })
       .setDescription(
-        `> Hey ${member}, Welcomee! Kami senang kamu di sini <a:rocket_1f680:1437808838140231742>\n\n` +
+        `> Hey ${member}, Welcomee! Kami senang kamu di sini ${config.emojis.rocket}\n\n` +
         `Kami sangat senang kamu bergabung di **${serverName}**, sekarang kita punya **${totalMembers} members!**\n\n` +
         `📢 **Berikut beberapa channel penting yang perlu kamu tahu:**\n\n` +
-        `・💬 Ayo ngobrol di: <#1439162519095611485>, <#1422029439885246535>, <#1386682273000063096>, <#1346721194761523225>, <#1384223433788756109>, dan voice channel lainnya!\n\n` +
-        `・📜 Baca rules di: <#1434921399419404402>, <#1434921603057061909>, <#1434936563044716625>, <#1377666657178353787> atau cek pengumuman terbaru di <#1417747269008228413>!\n\n` +
-        `・🎁 Jangan lupa ikuti giveaway di: <#1354443349930676234>, <#1430233885060366376>, <#1430233946343604244>, <#1430234016547737651> dan lihat bukti pemenangnya di <#1414939199752110140>!\n\n` +
-        `・🔥 Buka premium role di: <#1431923407682928650>, <#1431923559604817992>, <#1378821287706890451>, lihat benefit-nya di <#1431923183946043412>, dan request role booster di <#1407221656891555871>!\n\n` +
+        `・💬 Ayo ngobrol di: ${config.channels.chat1 ? `<#${config.channels.chat1}>` : 'chat channel'}, ${config.channels.chat2 ? `<#${config.channels.chat2}>` : 'chat channel'}, ${config.channels.chat3 ? `<#${config.channels.chat3}>` : 'chat channel'}, ${config.channels.chat4 ? `<#${config.channels.chat4}>` : 'chat channel'}, ${config.channels.chat5 ? `<#${config.channels.chat5}>` : 'chat channel'}, dan voice channel lainnya!\n\n` +
+        `・📜 Baca rules di: ${config.channels.rules1 ? `<#${config.channels.rules1}>` : 'rules channel'}, ${config.channels.rules2 ? `<#${config.channels.rules2}>` : 'rules channel'}, ${config.channels.rules3 ? `<#${config.channels.rules3}>` : 'rules channel'}, ${config.channels.rules4 ? `<#${config.channels.rules4}>` : 'rules channel'} atau cek pengumuman terbaru di ${config.channels.announcement ? `<#${config.channels.announcement}>` : 'announcement channel'}!\n\n` +
+        `・🎁 Jangan lupa ikuti giveaway di: ${config.channels.giveaway1 ? `<#${config.channels.giveaway1}>` : 'giveaway channel'}, ${config.channels.giveaway2 ? `<#${config.channels.giveaway2}>` : 'giveaway channel'}, ${config.channels.giveaway3 ? `<#${config.channels.giveaway3}>` : 'giveaway channel'}, ${config.channels.giveaway4 ? `<#${config.channels.giveaway4}>` : 'giveaway channel'} dan lihat bukti pemenangnya di ${config.channels.giveawayWinner ? `<#${config.channels.giveawayWinner}>` : 'winner channel'}!\n\n` +
+        `・🔥 Buka premium role di: ${config.channels.premium1 ? `<#${config.channels.premium1}>` : 'premium channel'}, ${config.channels.premium2 ? `<#${config.channels.premium2}>` : 'premium channel'}, ${config.channels.premium3 ? `<#${config.channels.premium3}>` : 'premium channel'}, lihat benefit-nya di ${config.channels.premiumBenefit ? `<#${config.channels.premiumBenefit}>` : 'benefit channel'}, dan request role booster di ${config.channels.boosterRequest ? `<#${config.channels.boosterRequest}>` : 'booster request channel'}!\n\n` +
         `・👑 Kamu adalah orang ke **${totalMembers}** — terima kasih sudah join dan menjadi bagian dari kami!\n\n` +
-        `・🎭 Punya pertanyaan/laporan? Langsung ke <#1408045289230569603> atau hubungi:\n` +
-        `<@&1415621934703448074>, <@&1427913691478757458>, <@&1379438440868741183>, <@&1418977743596687430>, <@&1410992996874195168>\n\n` +
-        `<:1473sparklethumbsup:1376125029267279992> Selamat bersenang-senang di sini, semoga kamu nyaman!`
+        `・🎭 Punya pertanyaan/laporan? Langsung ke ${config.channels.support ? `<#${config.channels.support}>` : 'support channel'} atau hubungi:\n` +
+        `${config.roles.helper ? `<@&${config.roles.helper}>` : '@Helper'}, ${config.roles.contentCreator ? `<@&${config.roles.contentCreator}>` : '@Content Creator'}, ${config.roles.admin ? `<@&${config.roles.admin}>` : '@Admin'}, ${config.roles.moderator ? `<@&${config.roles.moderator}>` : '@Moderator'}, ${config.roles.engineer ? `<@&${config.roles.engineer}>` : '@Engineer'}\n\n` +
+        `${config.emojis.sparkleThumbsup} Selamat bersenang-senang di sini, semoga kamu nyaman!`
       )
       .setThumbnail(member.user.displayAvatarURL({ size: 1024 }))
       .setFooter({
@@ -47,7 +47,7 @@ module.exports = {
       .setTimestamp();
 
     // Kirim ke channel utama
-    await welcomeChannel.send({ content: `${member} JOINED THE SERVERS!!!! <a:774805kittydance:1441816360123498607>`, embeds: [welcomeEmbed] });
+    await welcomeChannel.send({ content: `${member} JOINED THE SERVERS!!!! ${config.emojis.kittyDance}`, embeds: [welcomeEmbed] });
       
       
       const welcome2Channel = client.channels.cache.get(config.welcome2ChannelId);

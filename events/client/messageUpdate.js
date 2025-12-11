@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
+const config = require("../../config.js");
 
 // Store processed message IDs to prevent duplicate responses
 const processedDonations = new Set();
@@ -10,10 +11,11 @@ module.exports = {
     if (!newMessage.guild) return;
 
     // Only process messages from OwO Bot
-    if (newMessage.author.id !== "408785106942164992") return;
+    const owoBot = config.botIds?.owoBot || "408785106942164992";
+    if (newMessage.author.id !== owoBot) return;
 
     // Only respond in the specific channel
-    if (newMessage.channel.id !== "1409830413232377856") return;
+    if (!config.channels.donation || newMessage.channel.id !== config.channels.donation) return;
 
     // Check if we've already processed this message
     if (processedDonations.has(newMessage.id)) {
@@ -39,7 +41,7 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setColor("#FFFFFF")
-        .setDescription(`<:1000051293:1317392285759180890> **| ${donorUsername}** telah berdonasi sebanyak **<:cowoncy:1409829142140289025> ${donationValue} cowoncy**\n<:blank:1297498366305107970> **|** *Terimakasih banyak atas donasinya!*`);
+        .setDescription(`${config.emojis.donation} **| ${donorUsername}** telah berdonasi sebanyak **${config.emojis.cowoncy} ${donationValue} cowoncy**\n${config.emojis.blank} **|** *Terimakasih banyak atas donasinya!*`);
 
       try {
         await newMessage.channel.send({ embeds: [embed] });

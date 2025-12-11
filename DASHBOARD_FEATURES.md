@@ -1,6 +1,6 @@
-# 🌐 Dashboard Features - Anna Manager Bot
+# 🌐 Dashboard Features - Villain Seraphyx Manager Bot
 
-Dokumentasi lengkap fitur-fitur dashboard Anna Manager Bot.
+Dokumentasi lengkap fitur-fitur dashboard Villain Seraphyx Manager Bot.
 
 ## 📊 Dashboard Overview
 
@@ -342,4 +342,4 @@ Jika ada pertanyaan atau masalah:
 
 ---
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

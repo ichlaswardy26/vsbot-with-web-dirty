@@ -9,6 +9,7 @@ const {
   MediaGalleryItemBuilder,
   TextDisplayBuilder
 } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "rules",
@@ -18,7 +19,7 @@ module.exports = {
 
     const sectionWithButtons = [
       new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('<:instagram:1423927341385519218> **── Instagram**'))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent('📸 **── Instagram**'))
         .setButtonAccessory(
           new ButtonBuilder()
             .setLabel('Follow us!')
@@ -26,11 +27,11 @@ module.exports = {
             .setStyle(ButtonStyle.Link)
         ),
       new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('<:report:1368185154366869586> **── Report Area**'))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${config.emojis.report} **── Report Area**`))
         .setButtonAccessory(
           new ButtonBuilder()
             .setLabel('Report!')
-            .setURL('https://discord.com/channels/734009169170137098/1323017135185727588')
+            .setURL(`https://discord.com/channels/${process.env.GUILD_ID || 'YOUR_GUILD_ID'}/${config.channels.support || 'SUPPORT_CHANNEL_ID'}`)
             .setStyle(ButtonStyle.Link)
         ),
       ]
@@ -69,7 +70,7 @@ Hindari konflik pribadi di server. Diskusi yang memicu drama pribadi harus dibaw
 **Sanksi: (Warn/time out)**
 
 8. __**Laporan dan Masalah**__
-Jika ada masalah atau pelanggaran, laporkan melalui open ticket <#1323017135185727588> Atau hubungi <@1306882819066167366> yang ada. Jangan mencoba menyelesaikan masalah sendiri.
+Jika ada masalah atau pelanggaran, laporkan melalui open ticket ${config.channels.support ? `<#${config.channels.support}>` : 'support channel'} Atau hubungi ${config.roles.moderator ? `<@&${config.roles.moderator}>` : '@Moderator'} yang ada. Jangan mencoba menyelesaikan masalah sendiri.
 
 9. __**Dilarang Berisik di Voice Channel**__
 Jangan mengganggu kenyamanan orang lain di voice channel dengan suara berisik, efek suara yang mengganggu, atau interupsi yang tidak perlu . hargai room itu jika di limit / di lock . minta izin terlebih dahulu bila ingin join voice limit / lock.

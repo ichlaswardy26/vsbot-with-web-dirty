@@ -1,4 +1,5 @@
 const { getOrCreateEconomy, formatNumber } = require("../../util/economyUtils");
+const config = require("../../config.js");
 
 module.exports = {
   name: "daily",
@@ -37,7 +38,7 @@ module.exports = {
       economy.lastDaily = now;
       await economy.save();
 
-      message.reply(`💀 **|** Kamu mendapatkan **${formatNumber(reward)} souls** sebagai hadiah harian!\n<:blank:1367401175355359324> **|** Sekarang kamu memiliki **${formatNumber(economy.cash)} souls**.`);
+      message.reply(`💀 **|** Kamu mendapatkan **${formatNumber(reward)} souls** sebagai hadiah harian!\n${config.emojis.blank} **|** Sekarang kamu memiliki **${formatNumber(economy.cash)} souls**.`);
     } catch (error) {
       console.error("Error in daily command:", error);
       message.reply("⚠️ Terjadi kesalahan saat mengklaim hadiah harian!");

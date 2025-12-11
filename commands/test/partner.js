@@ -9,6 +9,7 @@
     ButtonBuilder,
     ButtonStyle,
 } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
     name: "partner",
@@ -28,7 +29,7 @@ module.exports = {
             new SectionBuilder()
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(
-                        `<:ticketw:1368186624386797608> **── Ticket**`
+                        `${config.emojis.ticket} **── Ticket**`
                     )
                 )
                 .setButtonAccessory(

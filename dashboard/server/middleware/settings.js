@@ -10,12 +10,12 @@ const loadSettings = async (req, res, next) => {
     console.error('Error loading dashboard settings:', error);
     // Continue with default settings
     res.locals.dashboardSettings = {
-      title: 'Anna Manager Bot Dashboard',
+      title: 'Villain Seraphyx Manager Bot Dashboard',
       subtitle: 'Modern Dashboard untuk Mengontrol Bot Discord',
-      brandName: 'Anna Bot',
+      brandName: 'Villain Seraphyx Bot',
       brandColor: '#667eea',
       brandColorSecondary: '#764ba2',
-      footerText: '© 2025 Anna Manager Bot. All rights reserved.',
+      footerText: '© 2025 Villain Seraphyx Manager Bot. All rights reserved.',
       enableAuditLogs: true,
       enableBulkOperations: true,
       enableDataExport: true,

@@ -1,5 +1,6 @@
 const ExclusiveItem = require("../../schemas/ExclusiveItem");
 const { EmbedBuilder } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "additem",
@@ -41,7 +42,7 @@ module.exports = {
       .setTitle("🌟 Item Exclusive Ditambahkan")
       .setColor(0xffd700)
       .setDescription(
-        `📦 **Nama:** ${name}\n<:souls:1373202161823121560> **Harga:** ${price}\n🎟️ **Slot:** ${slots}\n⏳ **Berakhir:** <t:${Math.floor(
+        `📦 **Nama:** ${name}\n${config.emojis.souls} **Harga:** ${price}\n🎟️ **Slot:** ${slots}\n⏳ **Berakhir:** <t:${Math.floor(
           expiresAt.getTime() / 1000
         )}:R>`
       )

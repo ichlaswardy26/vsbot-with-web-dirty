@@ -1,6 +1,6 @@
 # Features & Commands
 
-Complete list of features and commands available in Anna Manager Discord Bot.
+Complete list of features and commands available in Villain Seraphyx Manager Discord Bot.
 
 ## 📊 Leveling System
 

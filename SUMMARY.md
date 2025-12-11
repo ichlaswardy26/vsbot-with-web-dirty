@@ -1,6 +1,6 @@
 # Project Summary
 
-Technical overview and architecture of Anna Manager Discord Bot.
+Technical overview and architecture of Villain Seraphyx Manager Discord Bot.
 
 ## 🏗️ Architecture
 

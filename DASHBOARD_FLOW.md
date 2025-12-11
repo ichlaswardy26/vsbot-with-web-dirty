@@ -1,4 +1,4 @@
-# 🔄 Dashboard Flow - Anna Manager Bot
+# 🔄 Dashboard Flow - Villain Seraphyx Manager Bot
 
 Panduan visual untuk memahami alur kerja dashboard.
 
@@ -10,7 +10,7 @@ Panduan visual untuk memahami alur kerja dashboard.
 │                  http://localhost:8080                       │
 │                                                              │
 │  ┌────────────────────────────────────────────────────┐    │
-│  │  🤖 Anna Manager Bot Dashboard                     │    │
+│  │  🤖 Villain Seraphyx Manager Bot Dashboard                     │    │
 │  │                                                     │    │
 │  │  Modern Dashboard untuk Mengontrol Bot Discord     │    │
 │  │                                                     │    │
@@ -23,7 +23,7 @@ Panduan visual untuk memahami alur kerja dashboard.
 │                  DISCORD OAUTH2                              │
 │                                                              │
 │  ┌────────────────────────────────────────────────────┐    │
-│  │  Authorize Anna Bot Dashboard?                     │    │
+│  │  Authorize Villain Seraphyx Bot Dashboard?                     │    │
 │  │                                                     │    │
 │  │  This will allow:                                  │    │
 │  │  • Access your Discord identity                    │    │
@@ -386,4 +386,4 @@ Scenario: Admin wants to give user bonus souls
 
 ---
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

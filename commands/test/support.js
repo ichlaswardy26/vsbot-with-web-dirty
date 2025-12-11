@@ -46,7 +46,7 @@ module.exports = {
             .setButtonAccessory(
                 new ButtonBuilder()
                 .setLabel(`Owo Cash`)
-                .setURL(`https://discord.com/channels/734009169170137098/1409830413232377856`)
+                .setURL(`https://discord.com/channels/${process.env.GUILD_ID || 'YOUR_GUILD_ID'}/${config.channels.donation || 'DONATION_CHANNEL_ID'}`)
                 .setStyle(ButtonStyle.Link)
             ),
         ]

@@ -1,6 +1,6 @@
 # Configuration Guide
 
-Complete guide for configuring Anna Manager Bot.
+Complete guide for configuring Villain Seraphyx Manager Bot.
 
 ## 📋 Table of Contents
 

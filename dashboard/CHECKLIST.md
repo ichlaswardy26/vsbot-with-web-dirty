@@ -232,4 +232,4 @@ Notes: _______________
 
 ---
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

@@ -1,4 +1,4 @@
-# Discord Bot - Anna Manager
+# Discord Bot - Villain Seraphyx Manager
 
 A feature-rich Discord bot built with Discord.js v14, designed for comprehensive server management with leveling, economy, voice tracking, and interactive features.
 
@@ -35,8 +35,8 @@ A feature-rich Discord bot built with Discord.js v14, designed for comprehensive
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/ichlaswardy26/Anna-Manager.git
-cd Anna-Manager
+git clone https://github.com/ichlaswardy26/Villain Seraphyx-Manager.git
+cd Villain Seraphyx-Manager
 ```
 
 2. Install dependencies:

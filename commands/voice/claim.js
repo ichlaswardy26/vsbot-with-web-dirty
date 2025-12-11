@@ -1,3 +1,5 @@
+const config = require("../../config.js");
+
 module.exports = {
   name: "claim",
   aliases: [],
@@ -23,6 +25,6 @@ module.exports = {
     await voice.setName(newName);
 
     // Notifikasi
-    message.reply(`<:seraphyx:1367175101711388783> **|** Voice berhasil diclaim.\n<:blank:1367401175355359324> **|** Nama channel diubah menjadi **${newName}**.`);
+    message.reply(`${config.emojis.seraphyx} **|** Voice berhasil diclaim.\n${config.emojis.blank} **|** Nama channel diubah menjadi **${newName}**.`);
   },
 };

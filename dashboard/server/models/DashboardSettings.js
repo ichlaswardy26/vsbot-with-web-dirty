@@ -4,7 +4,7 @@ const dashboardSettingsSchema = new mongoose.Schema({
   // General Settings
   title: {
     type: String,
-    default: 'Anna Manager Bot Dashboard'
+    default: 'Villain Seraphyx Manager Bot Dashboard'
   },
   subtitle: {
     type: String,
@@ -22,7 +22,7 @@ const dashboardSettingsSchema = new mongoose.Schema({
   // Branding
   brandName: {
     type: String,
-    default: 'Anna Bot'
+    default: 'Villain Seraphyx Bot'
   },
   brandColor: {
     type: String,
@@ -36,7 +36,7 @@ const dashboardSettingsSchema = new mongoose.Schema({
   // Footer
   footerText: {
     type: String,
-    default: '© 2025 Anna Manager Bot. All rights reserved.'
+    default: '© 2025 Villain Seraphyx Manager Bot. All rights reserved.'
   },
   footerLinks: [{
     name: String,

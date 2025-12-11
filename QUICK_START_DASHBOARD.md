@@ -1,4 +1,4 @@
-# 🚀 Quick Start - Dashboard Anna Bot
+# 🚀 Quick Start - Dashboard Villain Seraphyx Bot
 
 Panduan cepat untuk menjalankan dashboard dalam 5 menit!
 
@@ -185,4 +185,4 @@ Edit `dashboard/views/partials/sidebar.ejs`:
 
 **Selamat! Dashboard Anda sudah siap! 🎉**
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

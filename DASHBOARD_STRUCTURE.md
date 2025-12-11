@@ -1,4 +1,4 @@
-# 📁 Dashboard Structure - Anna Manager Bot
+# 📁 Dashboard Structure - Villain Seraphyx Manager Bot
 
 Dokumentasi lengkap struktur folder dan file dashboard.
 
@@ -383,4 +383,4 @@ All dashboard pages include:
 
 ---
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

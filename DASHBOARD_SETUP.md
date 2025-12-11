@@ -1,6 +1,6 @@
-# 🎯 Anna Bot Dashboard - Setup Guide
+# 🎯 Villain Seraphyx Bot Dashboard - Setup Guide
 
-Panduan lengkap untuk setup dan menjalankan dashboard Anna Manager Bot.
+Panduan lengkap untuk setup dan menjalankan dashboard Villain Seraphyx Manager Bot.
 
 ## 📋 Prerequisites
 
@@ -209,7 +209,7 @@ Jangan lupa update juga di Discord Developer Portal!
 
 1. Install Heroku CLI
 2. Login: `heroku login`
-3. Create app: `heroku create anna-bot-dashboard`
+3. Create app: `heroku create villain-seraphyx-bot-dashboard`
 4. Set environment variables:
 ```bash
 heroku config:set DISCORD_CLIENT_ID=your_id
@@ -241,7 +241,7 @@ npm install
 
 4. Start with PM2:
 ```bash
-pm2 start server/index.js --name "anna-dashboard"
+pm2 start server/index.js --name "villain-seraphyx-dashboard"
 pm2 save
 pm2 startup
 ```
@@ -281,11 +281,11 @@ Jika masih ada masalah:
 
 ## 📞 Support
 
-- GitHub Issues: [Create an issue](https://github.com/ichlaswardy26/Anna-Manager/issues)
+- GitHub Issues: [Create an issue](https://github.com/ichlaswardy26/Villain Seraphyx-Manager/issues)
 - Discord: Join support server (if available)
 
 ---
 
 **Happy Managing! 🎉**
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

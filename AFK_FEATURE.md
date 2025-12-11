@@ -1,4 +1,4 @@
-# 💤 AFK Feature - Anna Manager Bot
+# 💤 AFK Feature - Villain Seraphyx Manager Bot
 
 Fitur AFK (Away From Keyboard) yang telah diperbaiki dan ditingkatkan.
 
@@ -176,4 +176,4 @@ Jika bot tidak punya permission:
 
 ---
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

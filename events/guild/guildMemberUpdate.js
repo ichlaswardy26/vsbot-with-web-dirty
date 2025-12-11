@@ -213,9 +213,9 @@ for (const roleType of lostTypes) {
   }
 
 const dmEmbed = new EmbedBuilder()
-  .setTitle("<a:important:1367186288297377834> **|** Custom Role Dihapus")
+  .setTitle(`${config.emojis.important} **|** Custom Role Dihapus`)
   .setDescription(
-    `<:seraphyx:1367175101711388783> **|** Custom role kamu dengan tipe **${roleType === "boost" ? "Boost" : "Donate"}** telah dihapus karena kamu kehilangan role tersebut.`
+    `${config.emojis.seraphyx} **|** Custom role kamu dengan tipe **${roleType === "boost" ? "Boost" : "Donate"}** telah dihapus karena kamu kehilangan role tersebut.`
   )
   .addFields(
     { name: "Nama Role", value: `${role?.name || "Tidak ditemukan"}`, inline: true },
@@ -231,7 +231,7 @@ const dmEmbed = new EmbedBuilder()
   const logChannel = client.channels.cache.get(config.customRoleLogsChannelId);
   if (logChannel) {
     const logEmbed = new EmbedBuilder()
-      .setTitle("<:seraphyx:1367175101711388783> **|** Custom Role Dihapus Otomatis")
+      .setTitle(`${config.emojis.seraphyx} **|** Custom Role Dihapus Otomatis`)
       .setDescription(`Custom role user telah dihapus karena kehilangan role Boost/Donate.`)
       .addFields(
         { name: "👤 User", value: `${oldMember.user} (\`${oldMember.id}\`)`, inline: false },

@@ -466,4 +466,4 @@ For issues or questions:
 
 **Dashboard is now production-ready with enterprise-grade features!** 🎉
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

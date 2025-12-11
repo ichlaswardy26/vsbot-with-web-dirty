@@ -1,4 +1,4 @@
-# ❓ Dashboard FAQ - Anna Manager Bot
+# ❓ Dashboard FAQ - Villain Seraphyx Manager Bot
 
 Frequently Asked Questions tentang dashboard.
 
@@ -386,4 +386,4 @@ npm install
 
 **Tidak menemukan jawaban? Create issue di GitHub!**
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

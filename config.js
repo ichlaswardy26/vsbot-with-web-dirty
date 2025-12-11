@@ -26,6 +26,10 @@ module.exports = {
     // Ticket
     ticketLogs: process.env.TICKET_LOG_CHANNEL_ID || null,
     
+    // Confession
+    confession: process.env.CONFESSION_CHANNEL_ID || null,
+    confessionLog: process.env.CONFESSION_LOG_CHANNEL_ID || null,
+    
     // Custom Role
     customRoleLogs: process.env.CUSTOM_ROLE_LOGS_CHANNEL_ID || null,
     
@@ -34,6 +38,52 @@ module.exports = {
     
     // Donation
     donation: process.env.DONATION_CHANNEL_ID || null,
+    
+    // Chat Channels
+    chat1: process.env.CHAT_CHANNEL_1_ID || null,
+    chat2: process.env.CHAT_CHANNEL_2_ID || null,
+    chat3: process.env.CHAT_CHANNEL_3_ID || null,
+    chat4: process.env.CHAT_CHANNEL_4_ID || null,
+    chat5: process.env.CHAT_CHANNEL_5_ID || null,
+    
+    // Rules Channels
+    rules1: process.env.RULES_CHANNEL_1_ID || null,
+    rules2: process.env.RULES_CHANNEL_2_ID || null,
+    rules3: process.env.RULES_CHANNEL_3_ID || null,
+    rules4: process.env.RULES_CHANNEL_4_ID || null,
+    announcement: process.env.ANNOUNCEMENT_CHANNEL_ID || null,
+    
+    // Giveaway Channels
+    giveaway1: process.env.GIVEAWAY_CHANNEL_1_ID || null,
+    giveaway2: process.env.GIVEAWAY_CHANNEL_2_ID || null,
+    giveaway3: process.env.GIVEAWAY_CHANNEL_3_ID || null,
+    giveaway4: process.env.GIVEAWAY_CHANNEL_4_ID || null,
+    giveawayWinner: process.env.GIVEAWAY_WINNER_CHANNEL_ID || null,
+    
+    // Premium Channels
+    premium1: process.env.PREMIUM_CHANNEL_1_ID || null,
+    premium2: process.env.PREMIUM_CHANNEL_2_ID || null,
+    premium3: process.env.PREMIUM_CHANNEL_3_ID || null,
+    premiumBenefit: process.env.PREMIUM_BENEFIT_CHANNEL_ID || null,
+    boosterRequest: process.env.BOOSTER_REQUEST_CHANNEL_ID || null,
+    
+    // Support
+    support: process.env.SUPPORT_CHANNEL_ID || null,
+    
+    // Voice System
+    joinToCreate: process.env.JOIN_TO_CREATE_CHANNEL_ID || null,
+    voiceCategory: process.env.VOICE_CATEGORY_ID || null,
+    voiceLog: process.env.VOICE_LOG_CHANNEL_ID || null,
+  },
+  
+  // ==================== API KEYS ====================
+  apiKeys: {
+    removeBg: process.env.REMOVE_BG_API_KEY || null,
+  },
+  
+  // ==================== BOT IDs ====================
+  botIds: {
+    owoBot: process.env.OWO_BOT_ID || "408785106942164992",
   },
   
   // ==================== CATEGORIES ====================
@@ -53,8 +103,40 @@ module.exports = {
     boost: process.env.BOOST_ROLE_ID || null,
     donate: process.env.DONATE_ROLE_ID || null,
     
+    // Staff Hierarchy
+    owner: process.env.OWNER_ROLE_ID || null,
+    coOwner: process.env.CO_OWNER_ROLE_ID || null,
+    engineer: process.env.ENGINEER_ROLE_ID || null,
+    admin: process.env.ADMIN_ROLE_ID || null,
+    moderator: process.env.MODERATOR_ROLE_ID || null,
+    eventOrganizer: process.env.EVENT_ORGANIZER_ROLE_ID || null,
+    partnerManager: process.env.PARTNER_MANAGER_ROLE_ID || null,
+    designer: process.env.DESIGNER_ROLE_ID || null,
+    helper: process.env.HELPER_ROLE_ID || null,
+    contentCreator: process.env.CONTENT_CREATOR_ROLE_ID || null,
+    
+    // Support Tiers
+    supportTier1: process.env.SUPPORT_TIER_1_ROLE_ID || null,
+    supportTier2: process.env.SUPPORT_TIER_2_ROLE_ID || null,
+    supportTier3: process.env.SUPPORT_TIER_3_ROLE_ID || null,
+    supportTier4: process.env.SUPPORT_TIER_4_ROLE_ID || null,
+    
+    // Special Community Roles
+    editor: process.env.EDITOR_ROLE_ID || null,
+    special: process.env.SPECIAL_ROLE_ID || null,
+    streamer: process.env.STREAMER_ROLE_ID || null,
+    videoCreator: process.env.VIDEO_CREATOR_ROLE_ID || null,
+    bigGiveawayWinner: process.env.BIG_GIVEAWAY_WINNER_ROLE_ID || null,
+    smallGiveawayWinner: process.env.SMALL_GIVEAWAY_WINNER_ROLE_ID || null,
+    bioLink: process.env.BIO_LINK_ROLE_ID || null,
+    socialFollower: process.env.SOCIAL_FOLLOWER_ROLE_ID || null,
+    activeMember: process.env.ACTIVE_MEMBER_ROLE_ID || null,
+    
     // Level Roles (format: level:roleId)
     level: {
+      1: process.env.LEVEL_1_ROLE_ID || null,
+      2: process.env.LEVEL_2_ROLE_ID || null,
+      7: process.env.LEVEL_7_ROLE_ID || null,
       10: process.env.LEVEL_10_ROLE_ID || null,
       20: process.env.LEVEL_20_ROLE_ID || null,
       30: process.env.LEVEL_30_ROLE_ID || null,
@@ -80,11 +162,30 @@ module.exports = {
     report: process.env.EMOJI_REPORT || '📢',
     ban: process.env.EMOJI_BAN || '🔨',
     partner: process.env.EMOJI_PARTNER || '🤝',
+    ticket: process.env.EMOJI_TICKET || '🎫',
+    roles: process.env.EMOJI_ROLES || '👥',
+    info: process.env.EMOJI_INFO || 'ℹ️',
+    website: process.env.EMOJI_WEBSITE || '🌐',
+    levelup: process.env.EMOJI_LEVELUP || '⬆️',
+    tier: process.env.EMOJI_TIER || '🏆',
+    rocket: process.env.EMOJI_ROCKET || '🚀',
+    sparkleThumbsup: process.env.EMOJI_SPARKLE_THUMBSUP || '👍',
+    kittyDance: process.env.EMOJI_KITTYDANCE || '💃',
+    cowoncy: process.env.EMOJI_COWONCY || '🪙',
+    donation: process.env.EMOJI_DONATION || '💝',
+    foryouCommunity: process.env.EMOJI_FORYOU_COMMUNITY || '🏘️',
   },
   
   // ==================== IMAGES & ASSETS ====================
   images: {
-    defaultGif: process.env.DEFAULT_GIF_URL || 'https://media.discordapp.net/attachments/1366614812762570842/1426492512150884352/a8a69f5297fe2d3e60ff91610266b677.gif',
+    defaultGif: process.env.DEFAULT_GIF_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Default+Image',
+    event: process.env.EVENT_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Event+Image',
+    partner: process.env.PARTNER_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Partner+Image',
+    support: process.env.SUPPORT_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Support+Image',
+    books: process.env.BOOKS_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Books+Image',
+    rules: process.env.RULES_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Rules+Image',
+    rinfo: process.env.RINFO_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Role+Info',
+    qris: process.env.QRIS_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=QRIS+Code',
   },
   
   // ==================== FEATURES SETTINGS ====================

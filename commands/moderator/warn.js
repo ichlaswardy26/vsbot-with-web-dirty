@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const Warn = require("../../schemas/Warn");
 const { EmbedBuilder } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "warn",
@@ -8,11 +9,11 @@ module.exports = {
 
   async exec(client, message, args) {
     if (!message.member.permissions.has(Discord.PermissionsBitField.Flags.ManageMessages)) {
-      return message.reply("<a:important:1367186288297377834> **|** Kamu tidak memiliki izin `Manage Messages` untuk menggunakan perintah ini.");
+      return message.reply(`${config.emojis.important} **|** Kamu tidak memiliki izin \`Manage Messages\` untuk menggunakan perintah ini.`);
     }    
 
     const target = message.mentions.members.first();
-    if (!target) return message.reply("<a:important:1367186288297377834> **|** Tolong mention member yang ingin diperingatkan.");
+    if (!target) return message.reply(`${config.emojis.important} **|** Tolong mention member yang ingin diperingatkan.`);
 
     const reason = args.slice(1).join(" ") || "Tidak ada alasan diberikan.";
 
@@ -41,7 +42,7 @@ module.exports = {
       message.channel.send(`⚠️ Tidak bisa mengirim DM ke ${target.user.tag}.`);
     }
     const sucembed = new Discord.EmbedBuilder()
-    .setDescription(`<:ban:1368184860924973237> **|** <@${target.user.id}> telah diperingatkan.`)
+    .setDescription(`${config.emojis.ban} **|** <@${target.user.id}> telah diperingatkan.`)
     .setColor("White");
 
     message.channel.send({ embeds: [sucembed] });

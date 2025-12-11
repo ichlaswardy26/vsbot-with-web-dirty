@@ -1,4 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const config = require('../../config.js');
 
 module.exports = {
   name: "tiket",
@@ -13,14 +14,14 @@ module.exports = {
     const button = new ButtonBuilder()
       .setCustomId("create_ticket")
       .setLabel("Buat Tiket")
-      .setEmoji("<:ticketw:1368186624386797608>")
+      .setEmoji(config.emojis.ticket)
       .setStyle(ButtonStyle.Secondary);
 
     const row = new ActionRowBuilder().addComponents(button);
 
     const embed = new EmbedBuilder()
       .setDescription(
-        `## Welcome to Seraphyx Help Desk.\n\nKlik tombol dibawah ini dan pilih subject untuk membuat tiket.\nSubject List:\n<:question:1368184769724022894> = Pertanyaan\n<:report:1368185154366869586> = Report\n<:ban:1368184860924973237> = Ban Appeal`
+        `## Welcome to Seraphyx Help Desk.\n\nKlik tombol dibawah ini dan pilih subject untuk membuat tiket.\nSubject List:\n${config.emojis.question} = Pertanyaan\n${config.emojis.report} = Report\n${config.emojis.ban} = Ban Appeal`
       ) // 🟢 Partnership dihapus
       .setColor('White');
 

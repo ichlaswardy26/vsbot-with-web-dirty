@@ -1,7 +1,7 @@
 {
-  "name": "anna-bot-dashboard",
+  "name": "villain-seraphyx-bot-dashboard",
   "version": "1.0.0",
-  "description": "Modern dashboard for Anna Manager Bot",
+  "description": "Modern dashboard for Villain Seraphyx Manager Bot",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",

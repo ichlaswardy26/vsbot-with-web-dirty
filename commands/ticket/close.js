@@ -1,14 +1,15 @@
 ﻿const { EmbedBuilder, PermissionsBitField } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "close",
   description: "Menutup ticket partnership.",
   async exec(client, message, args) {
-    const staffRoleId = "1376956790700511352"; // 🧑‍💼 Role staff
-    const logChannelId = "1376956791757209773"; // 🧾 Channel log partnership
+    const staffRoleId = config.roles.staff; // 🧑‍💼 Role staff
+    const logChannelId = config.channels.ticketLogs; // 🧾 Channel log partnership
 
     // 🛑 Pastikan user memiliki role staff
-    if (!message.member.roles.cache.has(staffRoleId)) {
+    if (!staffRoleId || !message.member.roles.cache.has(staffRoleId)) {
       return message.reply("❌ Hanya **staff** yang dapat menutup ticket ini.");
     }
 
@@ -25,7 +26,7 @@ module.exports = {
     setTimeout(async () => {
       try {
         // 📋 Kirim log sebelum channel dihapus
-        const logChannel = message.guild.channels.cache.get(logChannelId);
+        const logChannel = logChannelId ? message.guild.channels.cache.get(logChannelId) : null;
         if (logChannel) {
           const embed = new EmbedBuilder()
             .setTitle("🗑️ Ticket Partnership Ditutup")

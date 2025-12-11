@@ -1,8 +1,8 @@
-# 🎉 Ringkasan Dashboard - Anna Manager Bot
+# 🎉 Ringkasan Dashboard - Villain Seraphyx Manager Bot
 
 ## ✨ Apa yang Sudah Dibuat?
 
-Saya telah membuat **dashboard web modern dan lengkap** untuk bot Discord Anna Manager Anda!
+Saya telah membuat **dashboard web modern dan lengkap** untuk bot Discord Villain Seraphyx Manager Anda!
 
 ---
 
@@ -292,7 +292,7 @@ A: Ya, open source dan mudah dimodifikasi
 
 ## 🎉 Kesimpulan
 
-Dashboard Anna Manager Bot adalah **solusi lengkap** untuk mengontrol bot Discord Anda:
+Dashboard Villain Seraphyx Manager Bot adalah **solusi lengkap** untuk mengontrol bot Discord Anda:
 
 ✅ **Modern** - UI yang indah dengan Tailwind CSS
 ✅ **Lengkap** - Semua fitur dalam satu tempat
@@ -325,7 +325,7 @@ http://localhost:8080
 
 **Selamat! Dashboard Anda siap digunakan! 🎉**
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot
 
 ---
 

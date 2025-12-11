@@ -9,6 +9,7 @@
   MessageFlags
 } = require('discord.js');
 const ConfessionState = require('../../schemas/ConfessionState');
+const config = require('../../config.js');
 
 /**
  * Handle confession-related button interactions
@@ -63,8 +64,8 @@ async function confessionHandler(client, interaction) {
     
     try {
     
-    const confessionChannelId = "1376956791757209773";
-    const confessionChannel = interaction.guild.channels.cache.get(confessionChannelId);
+    const confessionChannelId = config.channels.confession;
+    const confessionChannel = confessionChannelId ? interaction.guild.channels.cache.get(confessionChannelId) : null;
 
     if (!confessionChannel?.isTextBased()) {
       console.log('Confession channel not found or not text-based');
@@ -168,8 +169,8 @@ async function confessionHandler(client, interaction) {
     }
 
     // Send log to log channel if available
-    const logChannelIdConfes = "1322999470232961035";
-    const logChannelConfes = interaction.guild.channels.cache.get(logChannelIdConfes);
+    const logChannelIdConfes = config.channels.confessionLog;
+    const logChannelConfes = logChannelIdConfes ? interaction.guild.channels.cache.get(logChannelIdConfes) : null;
 
     if (logChannelConfes?.isTextBased()) {
       const logEmbed = new EmbedBuilder()

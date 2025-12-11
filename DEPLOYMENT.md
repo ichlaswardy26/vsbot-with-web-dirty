@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Quick guide for deploying Anna Manager Bot to various platforms.
+Quick guide for deploying Villain Seraphyx Manager Bot to various platforms.
 
 ## 🚀 General Deployment Steps
 
@@ -33,7 +33,7 @@ Quick guide for deploying Anna Manager Bot to various platforms.
 
 2. Start the bot:
    ```bash
-   pm2 start index.js --name anna-bot
+   pm2 start index.js --name villain-seraphyx-bot
    ```
 
 3. Setup auto-restart on reboot:
@@ -45,9 +45,9 @@ Quick guide for deploying Anna Manager Bot to various platforms.
 4. Useful PM2 commands:
    ```bash
    pm2 status          # Check status
-   pm2 logs anna-bot   # View logs
-   pm2 restart anna-bot # Restart bot
-   pm2 stop anna-bot   # Stop bot
+   pm2 logs villain-seraphyx-bot   # View logs
+   pm2 restart villain-seraphyx-bot # Restart bot
+   pm2 stop villain-seraphyx-bot   # Stop bot
    ```
 
 ---
@@ -133,8 +133,8 @@ Quick guide for deploying Anna Manager Bot to various platforms.
 
 3. Build and run:
    ```bash
-   docker build -t anna-bot .
-   docker run -d --env-file .env anna-bot
+   docker build -t villain-seraphyx-bot .
+   docker run -d --env-file .env villain-seraphyx-bot
    ```
 
 ---
@@ -161,7 +161,7 @@ sudo apt-get install mongodb
 sudo systemctl start mongodb
 
 # Connection string
-MONGO_URI=mongodb://localhost:27017/anna-bot
+MONGO_URI=mongodb://localhost:27017/villain-seraphyx-bot
 ```
 
 ---
@@ -183,7 +183,7 @@ MONGO_URI=mongodb://localhost:27017/anna-bot
 ### Logs
 ```bash
 # PM2
-pm2 logs anna-bot
+pm2 logs villain-seraphyx-bot
 
 # Heroku
 heroku logs --tail
@@ -245,7 +245,7 @@ git pull origin main
 npm install
 
 # Restart bot
-pm2 restart anna-bot
+pm2 restart villain-seraphyx-bot
 # or
 heroku restart
 ```

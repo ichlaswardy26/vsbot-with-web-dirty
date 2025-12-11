@@ -1,6 +1,6 @@
-# Anna Manager Bot - Dashboard
+# Villain Seraphyx Manager Bot - Dashboard
 
-Dashboard web modern untuk mengontrol dan memonitor Anna Manager Bot dengan fitur lengkap.
+Dashboard web modern untuk mengontrol dan memonitor Villain Seraphyx Manager Bot dengan fitur lengkap.
 
 ## 🌟 Fitur
 
@@ -297,7 +297,7 @@ DISCORD_CALLBACK_URL=https://yourdomain.com/auth/discord/callback
 Gunakan PM2 untuk production:
 ```bash
 npm install -g pm2
-pm2 start server/index.js --name "anna-dashboard"
+pm2 start server/index.js --name "villain-seraphyx-dashboard"
 pm2 save
 pm2 startup
 ```
@@ -322,7 +322,7 @@ server {
 
 ## 📄 License
 
-Same as Anna Manager Bot - ISC License
+Same as Villain Seraphyx Manager Bot - ISC License
 
 ## 🤝 Contributing
 
@@ -334,4 +334,4 @@ Jika ada masalah atau pertanyaan, silakan buat issue di GitHub repository.
 
 ---
 
-Made with ❤️ for Anna Manager Bot
+Made with ❤️ for Villain Seraphyx Manager Bot

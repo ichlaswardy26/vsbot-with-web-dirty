@@ -1,15 +1,15 @@
 @echo off
 echo ========================================
-echo   Starting Anna Manager Bot System
+echo   Starting Villain Seraphyx Manager Bot System
 echo ========================================
 echo.
 
 echo [1/2] Starting Discord Bot...
-start "Anna Bot" cmd /k "node index.js"
+start "Villain Seraphyx Bot" cmd /k "node index.js"
 timeout /t 3 /nobreak >nul
 
 echo [2/2] Starting Dashboard...
-start "Anna Dashboard" cmd /k "cd dashboard && npm start"
+start "Villain Seraphyx Dashboard" cmd /k "cd dashboard && npm start"
 timeout /t 2 /nobreak >nul
 
 echo.

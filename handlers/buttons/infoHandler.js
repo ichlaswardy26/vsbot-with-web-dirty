@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const config = require('../../config.js');
 
 /**
  * Handle info-related dropdown interactions
@@ -12,40 +13,40 @@ async function infoHandler(client, interaction) {
   switch (selected) {
     case 'roles':
       responseEmbed = new EmbedBuilder()
-        .setTitle("<:roles:1368177567114330224> Information Role")
+        .setTitle(`${config.emojis.roles} Information Role`)
         .setDescription(`───────୨ৎ───────
-⚝ <@&1277873590607548427> — **Owner**
-⚝ <@&1277871965432188941> — **Co-Owner**
-⚝ <@&1338451263439896576> — **Engineer**
-⚝ <@&1306882734593015809> — **Admin**
-⚝ <@&1306882819066167366> — **Moderator**
-⚝ <@&1306883048264175648> — **Event Organizer**
-⚝ <@&1309154823358124073> — **Partner Manager**
-⚝ <@&1310896227696640010> — **Designer**
+⚝ ${config.roles.owner ? `<@&${config.roles.owner}>` : '@Owner'} — **Owner**
+⚝ ${config.roles.coOwner ? `<@&${config.roles.coOwner}>` : '@Co-Owner'} — **Co-Owner**
+⚝ ${config.roles.engineer ? `<@&${config.roles.engineer}>` : '@Engineer'} — **Engineer**
+⚝ ${config.roles.admin ? `<@&${config.roles.admin}>` : '@Admin'} — **Admin**
+⚝ ${config.roles.moderator ? `<@&${config.roles.moderator}>` : '@Moderator'} — **Moderator**
+⚝ ${config.roles.eventOrganizer ? `<@&${config.roles.eventOrganizer}>` : '@Event Organizer'} — **Event Organizer**
+⚝ ${config.roles.partnerManager ? `<@&${config.roles.partnerManager}>` : '@Partner Manager'} — **Partner Manager**
+⚝ ${config.roles.designer ? `<@&${config.roles.designer}>` : '@Designer'} — **Designer**
 ───────୨ৎ───────`)
         .setColor(0xffffff);
       break;
 
     case 'list':
       responseEmbed = new EmbedBuilder()
-        .setTitle("<:info:1368177794026045440> Information Staff")
+        .setTitle(`${config.emojis.info} Information Staff`)
         .setDescription(`─────⊹⊱ Information Role ⊰⊹─────
 ───────୨ৎ───────
-⚝ Owner : <@354799934920327168> 
-⚝ Co - Owner : <@1302164153565446154> 
-⚝ Engineer : <@707254056535588924> 
-⚝ Admin : <@902542130667458590>, <@1058131180593102939>
-⚝ Moderator : <@764711027022888981>, <@800305845795291156>
-⚝ Staffs Helper : <@1269247235263303772>, <@851112610614214666>, <@1288739535588425789>, <@904243402021933086>
-⚝ Staffs Partnership : <@1222394549331300413>, <@1325734551754117182>
-⚝ Designer : <@813223540748320799>
+⚝ Owner : *Lihat role ${config.roles.owner ? `<@&${config.roles.owner}>` : '@Owner'}*
+⚝ Co - Owner : *Lihat role ${config.roles.coOwner ? `<@&${config.roles.coOwner}>` : '@Co-Owner'}*
+⚝ Engineer : *Lihat role ${config.roles.engineer ? `<@&${config.roles.engineer}>` : '@Engineer'}*
+⚝ Admin : *Lihat role ${config.roles.admin ? `<@&${config.roles.admin}>` : '@Admin'}*
+⚝ Moderator : *Lihat role ${config.roles.moderator ? `<@&${config.roles.moderator}>` : '@Moderator'}*
+⚝ Staffs Helper : *Lihat role ${config.roles.helper ? `<@&${config.roles.helper}>` : '@Helper'}*
+⚝ Staffs Partnership : *Lihat role ${config.roles.partnerManager ? `<@&${config.roles.partnerManager}>` : '@Partner Manager'}*
+⚝ Designer : *Lihat role ${config.roles.designer ? `<@&${config.roles.designer}>` : '@Designer'}*
 ───────୨ৎ───────`)
         .setColor(0xffffff);
       break;
 
     case 'social':
       responseEmbed = new EmbedBuilder()
-        .setTitle("<:website:1368177916063514719> Sosial Media")
+        .setTitle(`${config.emojis.website} Sosial Media`)
         .setDescription("📸 Instagram: [@vseraphyx](https://instagram.com/vseraphyx)\n🌐 Website: Dalam perkembangan")
         .setColor(0xffffff);
       break;

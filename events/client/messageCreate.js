@@ -7,12 +7,12 @@ const { updateLeaderboardXP } = require("../../util/leaderboardUtils");
 const { giveXp } = require("../../util/applyXpWithBoost");
 const { safeReply, safeSend } = require("../../util/messageUtils");
 const Activity = require("../../schemas/Activity");
+const config = require("../../config.js");
 
 // Cooldown per user for XP
 const messageUsers = new Map();
 
-// ID channel log for level ups
-const LOG_CHANNEL_ID = "1322983854398505062";
+// ID channel log for level ups - now using config
 
 module.exports = {
   name: "messageCreate",
@@ -165,7 +165,7 @@ async function handleMessageXP(client, message) {
       if (!result.levelUp) return;
 
       // If level up, continue processing
-      const logChannel = client.channels.cache.get(LOG_CHANNEL_ID);
+      const logChannel = config.channels.voiceLog ? client.channels.cache.get(config.channels.voiceLog) : null;
       if (!logChannel?.isTextBased()) return;
 
       const soulsEarned = getLevelUpReward(result.newLevel);
@@ -193,13 +193,13 @@ async function handleMessageXP(client, message) {
 
       // Send notification only on level up
       const levelUpLines = [
-        `<a:levelup:1373202754708832277> **|** ${message.author} naik ke level **${result.newLevel}**! \`[${Math.floor(result.totalXp)}/${getXpRequirement(result.newLevel)}]\``,
-        `<:souls:1373202161823121560> **|** Mendapatkan ${formatNumber(soulsEarned)} souls!`,
-        `<:blank:1367401175355359324> **|** Terus aktif dan dapatkan reward menarik lainnya!`
+        `${config.emojis.levelup} **|** ${message.author} naik ke level **${result.newLevel}**! \`[${Math.floor(result.totalXp)}/${getXpRequirement(result.newLevel)}]\``,
+        `${config.emojis.souls} **|** Mendapatkan ${formatNumber(soulsEarned)} souls!`,
+        `${config.emojis.blank} **|** Terus aktif dan dapatkan reward menarik lainnya!`
       ];
 
       if (milestoneLevels.includes(result.newLevel) && tierName) {
-        levelUpLines.push(`<:tier:1373202620487041076> **|** Kamu telah mencapai tier **${tierName}**!`);
+        levelUpLines.push(`${config.emojis.tier} **|** Kamu telah mencapai tier **${tierName}**!`);
       }
 
       await logChannel.send(levelUpLines.join("\n")).catch(console.error);

@@ -4,14 +4,14 @@ const { getXpRequirement } = require("../../util/levelUtils");
 const { getLevelUpReward, addSouls, formatNumber } = require("../../util/economyUtils.js");
 const { updateLeaderboardXP } = require("../../util/leaderboardUtils");
 const { giveXp } = require("../../util/applyXpWithBoost");
-
-const LOG_CHANNEL_ID = "1322983854398505062";
+const config = require("../../config.js");
 
 module.exports = {
   name: 'voiceStateUpdate',
   async exec(client, oldState, newState) {
-    const joinToCreateChannelId = '1447235501953122436';
-    const voiceCategoryId = '1376956791757209772';
+    const joinToCreateChannelId = config.channels.joinToCreate;
+    const voiceCategoryId = config.channels.voiceCategory;
+    const LOG_CHANNEL_ID = config.channels.voiceLog;
 
     // ========================================
     // VOICE XP & LEVELING SYSTEM
@@ -196,13 +196,13 @@ module.exports = {
                           const tierName = getTierName(result.newLevel);
 
                           const lines = [
-                            `<a:levelup:1373202754708832277> **|** <@${uid}> naik ke level **${result.newLevel}**! \`[${Math.floor(result.totalXp || 0)}/${getXpRequirement(result.newLevel)}]\``,
-                            `<:souls:1373202161823121560> **|** Mendapatkan ${formatNumber(soulsEarned)} souls!`,
-                            `<:blank:1367401175355359324> **|** Terus aktif dan dapatkan reward menarik lainnya!`
+                            `${config.emojis.levelup} **|** <@${uid}> naik ke level **${result.newLevel}**! \`[${Math.floor(result.totalXp || 0)}/${getXpRequirement(result.newLevel)}]\``,
+                            `${config.emojis.souls} **|** Mendapatkan ${formatNumber(soulsEarned)} souls!`,
+                            `${config.emojis.blank} **|** Terus aktif dan dapatkan reward menarik lainnya!`
                           ];
 
                           if (milestoneLevels.includes(result.newLevel) && tierName) {
-                            lines.push(`<:tier:1373202620487041076> **|** Kamu telah mencapai tier **${tierName}**!`);
+                            lines.push(`${config.emojis.tier} **|** Kamu telah mencapai tier **${tierName}**!`);
                           }
 
                           await logChannel.send(lines.join("\n")).catch(console.error);
@@ -274,7 +274,7 @@ module.exports = {
       const controlChannel = await member.createDM();
       if (controlChannel) {
         const embed = new EmbedBuilder()
-          .setDescription(`List Command:\n> \`seravoice name -\` **Untuk mengganti nama voice.**\n> \`seravoice bitrate -\` **Mengatur bitrate voice channel.**\n> \`seravoice kick -\` **Mengeluarkan anggota dari voice.**\n> \`seravoice ban -\` **Melarang anggota join ke voice.**\n> \`seravoice unban -\` **Membolehkan kembali anggota yang dibanned untuk join.**\n> \`seravoice lock -\` **Mengunci voice agar tidak bisa join.**\n> \`seravoice unlock -\` **Membuka kembali voice untuk join.**\n> \`seravoice hide -\` **Menyembunyikan voice dari server.**\n> \`seravoice unhide -\` **Menampilkan kembali voice yang disembunyikan.**\n> \`seravoice trust -\` **Menambahkan pengguna ke daftar trusted untuk mengelola voice.**\n> \`seravoice untrust -\` **Menghapus pengguna dari daftar trusted.**\n> \`seravoice limit -\` **Mengatur jumlah maksimal anggota di voice.**\n> \`seravoice region -\` **Mengganti region voice (jika applicable).**\n\n<a:important:1367186288297377834> Hanya **Ownership** yang dapat menggunakan Panel dan Command.\n\n<:seraphyx:1367175101711388783> **|** Gunakan tombol 🔔 - **Untuk Toggle Join/Leave notification.**\n\n<:seraphyx:1367175101711388783> **|** Jika kamu menemukan bug atau error, silahkan laporkan ke staff yang sedang online.`)
+          .setDescription(`List Command:\n> \`seravoice name -\` **Untuk mengganti nama voice.**\n> \`seravoice bitrate -\` **Mengatur bitrate voice channel.**\n> \`seravoice kick -\` **Mengeluarkan anggota dari voice.**\n> \`seravoice ban -\` **Melarang anggota join ke voice.**\n> \`seravoice unban -\` **Membolehkan kembali anggota yang dibanned untuk join.**\n> \`seravoice lock -\` **Mengunci voice agar tidak bisa join.**\n> \`seravoice unlock -\` **Membuka kembali voice untuk join.**\n> \`seravoice hide -\` **Menyembunyikan voice dari server.**\n> \`seravoice unhide -\` **Menampilkan kembali voice yang disembunyikan.**\n> \`seravoice trust -\` **Menambahkan pengguna ke daftar trusted untuk mengelola voice.**\n> \`seravoice untrust -\` **Menghapus pengguna dari daftar trusted.**\n> \`seravoice limit -\` **Mengatur jumlah maksimal anggota di voice.**\n> \`seravoice region -\` **Mengganti region voice (jika applicable).**\n\n${config.emojis.important} Hanya **Ownership** yang dapat menggunakan Panel dan Command.\n\n${config.emojis.seraphyx} **|** Gunakan tombol 🔔 - **Untuk Toggle Join/Leave notification.**\n\n${config.emojis.seraphyx} **|** Jika kamu menemukan bug atau error, silahkan laporkan ke staff yang sedang online.`)
           .setColor('White')
           .setFooter({ text: `Villain Seraphyx | ${voice.name}` });
 
@@ -288,7 +288,7 @@ module.exports = {
         const textChannel = guild.channels.cache.find(c => c.id === voice.id && c.isTextBased());
         if (textChannel) {
           await textChannel.send({
-            content: `<:seraphyx:1367175101711388783> **|** Yow <@${member.id}>, here is your voice!!\n<:blank:1367401175355359324> **|** Ikuti instruksi dibawah ini untuk mengatur channel.`,
+            content: `${config.emojis.seraphyx} **|** Yow <@${member.id}>, here is your voice!!\n${config.emojis.blank} **|** Ikuti instruksi dibawah ini untuk mengatur channel.`,
             embeds: [embed],
             components: [row],
           });

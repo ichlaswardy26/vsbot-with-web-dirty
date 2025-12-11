@@ -7,6 +7,7 @@ const {
 const ShopRole = require("../../schemas/ShopRole");
 const path = require("path");
 const fs = require("fs");
+const config = require("../../config.js");
 
 module.exports = {
   name: "shop",
@@ -43,7 +44,7 @@ module.exports = {
     const banner = new MediaGalleryBuilder().addItems(
       new MediaGalleryItemBuilder().setURL(
         message.guild.iconURL({ dynamic: true }) ||
-        "https://media.discordapp.net/attachments/1366614812762570842/1426492512150884352/a8a69f5297fe2d3e60ff91610266b677.gif"
+        "        config.images.defaultGif"
       )
     );
 
@@ -58,7 +59,7 @@ module.exports = {
           const role = message.guild.roles.cache.get(r.roleId);
           const unix = r.expiresAt ? Math.floor(r.expiresAt.getTime() / 1000) : null;
           const exp = unix ? `⏳ Expired <t:${unix}:R>` : "";
-          return `✴️ **${r.name}**〔Gradient: ${r.gradient ? "ON" : "OFF"} || Rarity: ${r.rarity || "Common"}〕\n<:souls:1373202161823121560> **${r.price}** (**${r.buyers.length}/${r.slots}**) ${exp}`;
+          return `✴️ **${r.name}**〔Gradient: ${r.gradient ? "ON" : "OFF"} || Rarity: ${r.rarity || "Common"}〕\n${config.emojis.souls} **${r.price}** (**${r.buyers.length}/${r.slots}**) ${exp}`;
         }).join("\n");
       exclusiveSection = new TextDisplayBuilder().setContent(exclusiveText);
     }
@@ -69,7 +70,7 @@ module.exports = {
       const normalText = "\n" +
         normalRoles.map(r => {
           const desc = r.description || "_Tidak ada deskripsi._";
-          return `<:souls:1373202161823121560> **${r.price}** - **${r.name}**\n${desc}`;
+          return `${config.emojis.souls} **${r.price}** - **${r.name}**\n${desc}`;
         }).join("\n\n");
       normalSection = new TextDisplayBuilder().setContent(normalText);
     }

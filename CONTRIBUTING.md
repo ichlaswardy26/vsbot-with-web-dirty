@@ -1,11 +1,11 @@
-# Contributing to Anna Manager Bot
+# Contributing to Villain Seraphyx Manager Bot
 
 Thank you for considering contributing to this project! Here are some guidelines to help you get started.
 
 ## 🚀 Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/Anna-Manager.git`
+2. Clone your fork: `git clone https://github.com/your-username/Villain Seraphyx-Manager.git`
 3. Create a new branch: `git checkout -b feature/your-feature-name`
 4. Make your changes
 5. Test your changes thoroughly

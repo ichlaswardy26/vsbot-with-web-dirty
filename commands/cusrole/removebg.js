@@ -2,9 +2,10 @@ const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const axios = require('axios');
 const sharp = require('sharp');
 const FormData = require('form-data');
+const config = require('../../config.js');
 
 // API Key dari remove.bg
-const REMOVE_BG_API_KEY = 'gSbaJQeGtZkc8yqkYWz7BmYG';
+const REMOVE_BG_API_KEY = config.apiKeys.removeBg;
 
 module.exports = {
   name: 'removebg',
@@ -14,7 +15,7 @@ module.exports = {
     const promptEmbed = new EmbedBuilder()
       .setColor('Blue')
       .setTitle('🖼️ Kirim Gambar')
-      .setDescription('<:seraphyx:1367175101711388783> **|** Silakan kirim **gambar PNG/JPG** yang ingin dihapus background-nya.\nKamu punya waktu 30 detik.')
+      .setDescription(`${config.emojis.seraphyx} **|** Silakan kirim **gambar PNG/JPG** yang ingin dihapus background-nya.\nKamu punya waktu 30 detik.`)
       .setFooter({ text: 'Command akan dibatalkan jika tidak ada gambar yang dikirim.' });
 
     await message.reply({ embeds: [promptEmbed] });
@@ -28,13 +29,18 @@ module.exports = {
 
       // Validasi tipe file
       if (!attachment.contentType?.startsWith('image/')) {
-        return message.reply('<a:important:1367186288297377834> **|** File yang dikirim bukan gambar.');
+        return message.reply(`${config.emojis.important} **|** File yang dikirim bukan gambar.`);
       }
 
-      await message.channel.send('<:seraphyx:1367175101711388783> **|** Memproses gambar, harap tunggu...');
+      await message.channel.send(`${config.emojis.seraphyx} **|** Memproses gambar, harap tunggu...`);
 
       // Download gambar
       const imageBuffer = (await axios.get(attachment.url, { responseType: 'arraybuffer' })).data;
+
+      // Validasi API key
+      if (!REMOVE_BG_API_KEY) {
+        return message.reply(`${config.emojis.important} **|** API key Remove.bg tidak dikonfigurasi. Hubungi administrator.`);
+      }
 
       // Kirim ke remove.bg
       const formData = new FormData();
@@ -65,17 +71,17 @@ module.exports = {
 
       // Kirim hasil ke user
       await message.reply({
-        content: '<a:check:1367395457529282581> **|** Background berhasil dihapus dan gambar telah dikompres!',
+        content: '✅ **|** Background berhasil dihapus dan gambar telah dikompres!',
         files: [resultAttachment]
       });
 
     } catch (error) {
       if (error instanceof Map) {
-        return message.reply('<:seraphyx:1367175101711388783> **|** Waktu habis. Tidak ada gambar yang dikirim.');
+        return message.reply(`${config.emojis.seraphyx} **|** Waktu habis. Tidak ada gambar yang dikirim.`);
       }
 
       console.error('❌ Error:', error?.response?.data || error);
-      return message.reply('<a:important:1367186288297377834> **|** Terjadi kesalahan saat memproses gambar. Coba lagi nanti.');
+      return message.reply(`${config.emojis.important} **|** Terjadi kesalahan saat memproses gambar. Coba lagi nanti.`);
     }
   }
 };
