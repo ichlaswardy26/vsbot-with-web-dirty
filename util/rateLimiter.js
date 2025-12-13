@@ -3,6 +3,8 @@
  * Provides cooldown and rate limiting functionality for commands
  */
 
+const config = require('../config');
+
 class RateLimiter {
     constructor() {
         this.cooldowns = new Map();
@@ -255,7 +257,6 @@ class RateLimiter {
      * @returns {boolean} Whether user is exempt
      */
     isExempt(member) {
-        const config = require('../config');
         const rolePermissions = require('./rolePermissions');
         
         // Bot owners are exempt

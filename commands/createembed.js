@@ -1,4 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ChannelType } = require("discord.js");
+const config = require('../config.js');
 
 module.exports = {
   name: "createembed",
@@ -6,7 +7,6 @@ module.exports = {
   category: "utility",
   async exec(client, message) {
     const rolePermissions = require("../util/rolePermissions");
-const config = require('../config.js');
     
     // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'staff');

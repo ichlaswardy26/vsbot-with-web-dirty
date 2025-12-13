@@ -8,6 +8,7 @@
   AttachmentBuilder
 } = require('discord.js');
 const Canvas = require('canvas');
+const config = require('../../config.js');
 
 /**
  * Create a custom identity card canvas image
@@ -202,7 +203,6 @@ async function introHandler(client, interaction) {
   }
 
   if (interaction.isModalSubmit() && interaction.customId === 'modal_submit_intro') {
-    const config = require('../../config');
     const introChannelId = config.channels.intro;
     const introChannel = interaction.guild.channels.cache.get(introChannelId);
 
