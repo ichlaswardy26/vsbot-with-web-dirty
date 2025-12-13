@@ -5,7 +5,7 @@ module.exports = {
   name: "cry",
   description: "Cry!",
   category: "action",
-  async exec(client, message, args) {
+  async exec(client, message) {
     try {
       const response = await axios.get("https://api.waifu.pics/sfw/cry");
 

@@ -1,6 +1,5 @@
 const Giveaway = require("../../schemas/Giveaway");
 const { endGiveaway } = require("../../handlers/giveawayHandler");
-const { PermissionsBitField } = require("discord.js");
 
 module.exports = {
   name: "giveaway-end",

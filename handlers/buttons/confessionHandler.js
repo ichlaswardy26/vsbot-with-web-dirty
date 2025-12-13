@@ -5,8 +5,7 @@
   ButtonStyle,
   ModalBuilder,
   TextInputBuilder,
-  TextInputStyle,
-  MessageFlags
+  TextInputStyle
 } = require('discord.js');
 const ConfessionState = require('../../schemas/ConfessionState');
 const config = require('../../config.js');

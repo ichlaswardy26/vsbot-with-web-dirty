@@ -1,11 +1,10 @@
-const { PermissionsBitField } = require('discord.js');
 const Leveling = require('../../schemas/Leveling');
 const { updateLevelRole } = require('../../util/roleUtils');
 
 module.exports = {
     name: 'resetxp',
     description: 'Reset a user\'s XP (Admin only)',
-    async exec(client, message, args) {
+    async exec(client, message) {
         try {
             const rolePermissions = require("../../util/rolePermissions");
             

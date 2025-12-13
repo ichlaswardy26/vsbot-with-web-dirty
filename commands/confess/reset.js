@@ -4,7 +4,7 @@ module.exports = {
   name: "resetconfessionstate",
   aliases: ["resetconfess"],
   description: "Reset state confession terakhir untuk server ini.",
-  async exec(client, message, args) {
+  async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
     
     // Check permission using standardized system

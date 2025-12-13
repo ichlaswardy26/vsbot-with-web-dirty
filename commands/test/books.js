@@ -3,7 +3,6 @@ const {
   StringSelectMenuBuilder,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
-  ButtonStyle,
   MessageFlags,
 } = require("discord.js");
 const config = require("../../config.js");

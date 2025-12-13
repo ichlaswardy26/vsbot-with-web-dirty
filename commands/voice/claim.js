@@ -3,7 +3,7 @@ const config = require("../../config.js");
 module.exports = {
   name: "claim",
   aliases: [],
-  async exec(client, message, args) {
+  async exec(client, message) {
     const member = message.member;
     const voice = member.voice.channel;
     if (!voice) return message.reply("<a:important:1367186288297377834> **|** Kamu tidak sedang berada di voice channel.");

@@ -9,7 +9,14 @@ module.exports = {
   name: "confess",
   description: "Tampilkan panel confession",
 
-  async exec(client, message, args) {
+  async exec(client, message) {
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
     const embed = new EmbedBuilder()
       .setTitle("Confessions Panel")
       .setDescription("📝 Klik tombol dibawah untuk memulai confession.")

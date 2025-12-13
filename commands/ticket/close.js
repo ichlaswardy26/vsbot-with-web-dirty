@@ -1,11 +1,11 @@
-﻿const { EmbedBuilder, PermissionsBitField } = require("discord.js");
+﻿const { EmbedBuilder } = require("discord.js");
 const config = require("../../config.js");
 const rolePermissions = require("../../util/rolePermissions");
 
 module.exports = {
   name: "close",
   description: "Menutup ticket partnership.",
-  async exec(client, message, args) {
+  async exec(client, message) {
     const logChannelId = config.channels.ticketLogs; // 🧾 Channel log partnership
 
     // Check permission using standardized system

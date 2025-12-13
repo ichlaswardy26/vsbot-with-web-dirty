@@ -1,5 +1,4 @@
 const { rerollGiveaway } = require("../../handlers/giveawayHandler");
-const { PermissionsBitField } = require("discord.js");
 
 module.exports = {
   name: "giveaway-reroll",

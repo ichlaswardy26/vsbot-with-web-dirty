@@ -69,7 +69,6 @@ mongoose.connection.on('disconnected', () => {
 });
 
 client.commands = new Collection();
-client.slashCommands = new Collection();
 client.config = config;
 client.lastConfessionMessage = new Map();
 client.embedBuilders = new Map();

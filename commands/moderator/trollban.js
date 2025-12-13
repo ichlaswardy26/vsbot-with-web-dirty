@@ -5,10 +5,12 @@ module.exports = {
   description: "Displays a fake ban embed (troll ban) without actually banning the member. Restricted to users with the special role.",
   
   async exec(client, message, args) {
-    // Check if the user has the required role
-    const staffRoleId = client.config.roles?.staff || client.config.staffRoleId;
-    if (!staffRoleId || !message.member.roles.cache.has(staffRoleId)) {
-      return message.reply("<a:important:1367186288297377834> **|** Kamu tidak memiliki izin untuk menggunakan command ini.");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'moderator');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     // Fetch the target member from mentions
@@ -45,7 +47,7 @@ module.exports = {
       // Optional: Add a reaction to the original message to show command was processed
       try {
         await message.react("🔨");
-      } catch (reactionError) {
+      } catch (error) { // eslint-disable-line no-unused-vars
         // Ignore reaction errors (might not have permission)
         console.log("Could not add reaction to troll ban message");
       }

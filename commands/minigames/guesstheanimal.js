@@ -7,10 +7,12 @@ module.exports = {
     aliases: ['th'],
     description: "Tebak nama hewan dari gambar!",
     async exec(client, message) {
-        // Only allow users with a specific role to run this command
-        const allowedRole = '1365953400902254632'; // Change to your required role name or ID
-        if (!message.member.roles.cache.some(role => role.name === allowedRole || role.id === allowedRole)) {
-            return message.reply('Kamu tidak memiliki izin untuk menjalankan perintah ini.');
+        const rolePermissions = require("../../util/rolePermissions");
+        
+        // Check permission using standardized system
+        const permissionError = rolePermissions.checkPermission(message.member, 'staff');
+        if (permissionError) {
+            return message.reply(permissionError);
         }
         const gameId = `${this.name}-${message.channel.id}`;
         if (client.games.has(gameId)) return message.reply("Permainan sedang berlangsung di channel ini");

@@ -1,10 +1,10 @@
-const { EmbedBuilder, PermissionsBitField } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "say",
   description: "Bot akan mengulangi pesan yang Anda masukkan.",
   category: "utility",
-  async exec(client, message, args) {
+  async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
     
     // Check permission using standardized system

@@ -5,7 +5,7 @@ module.exports = {
   name: "forceclose",
   description: "Force close current ticket (admin only)",
   
-  async exec(client, message, args) {
+  async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
     
     // Check permission using standardized system

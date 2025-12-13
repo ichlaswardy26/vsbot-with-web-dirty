@@ -4,7 +4,7 @@ module.exports = {
   name: "testafk",
   description: "Test AFK system with nickname changes",
   
-  async exec(client, message, args) {
+  async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
     
     // Check permission using standardized system

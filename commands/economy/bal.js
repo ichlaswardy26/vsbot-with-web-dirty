@@ -5,7 +5,7 @@ module.exports = {
     name: 'balance',
     aliases: ['bal', 'money', 'souls', 'soul', 'cash'],
     description: 'Check your souls balance',
-    async exec(client, message, args) {
+    async exec(client, message) {
         try {
             const targetUser = message.mentions.users.first() || message.author;
             const economy = await getOrCreateEconomy(targetUser.id, message.guild.id);

@@ -4,7 +4,7 @@ module.exports = {
   name: "ping",
   description: "Ping command",
   category: "utility",
-  async exec(client, message, args) {
+  async exec(client, message) {
     const msg = await message.channel.send("Pinging...");
 
     const ping = msg.createdTimestamp - message.createdTimestamp;

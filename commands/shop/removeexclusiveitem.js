@@ -44,7 +44,7 @@ module.exports = {
       } else {
         await message.channel.send("❌ Penghapusan item dibatalkan.");
       }
-    } catch (e) {
+    } catch (error) { // eslint-disable-line no-unused-vars
       await message.channel.send("⏰ Waktu konfirmasi habis, item tidak dihapus.");
     }
   },

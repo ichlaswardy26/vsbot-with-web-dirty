@@ -11,6 +11,13 @@ module.exports = {
   name: 'removebg',
   description: 'Menghapus background dari gambar dan mengkompresnya untuk icon role',
   async exec(client, message) {
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'staff');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
     // Step 1: Minta user kirim gambar
     const promptEmbed = new EmbedBuilder()
       .setColor('Blue')

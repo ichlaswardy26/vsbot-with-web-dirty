@@ -7,6 +7,13 @@ module.exports = {
   description: 'Add a new autoresponder interactively',
   category: 'Autoresponder',
   async exec(client, message) {
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
     const filter = response => response.author.id === message.author.id;
 
     // Step 1: Kirimkan permintaan untuk trigger

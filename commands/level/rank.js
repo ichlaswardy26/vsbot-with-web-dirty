@@ -28,7 +28,7 @@ module.exports = {
   name: "rank",
   aliases: ["profile", "level", "tier"],
   description: "Menampilkan profil XP dan level user dengan desain canvas modern dan tier role.",
-  async exec(client, message, args) {
+  async exec(client, message) {
     try {
       const target = message.mentions.users.first() || message.author;
       const guild = message.guild;

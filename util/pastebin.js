@@ -30,13 +30,11 @@ async function createPaste(title, content) {
       api_dev_key: 'UUOCpEDrgSt36Kf4134Wcya9-excA2JX',
       api_user_key: key,
       api_option: "paste",
-      api_paste_code: "",
+      api_paste_code: content,
       api_paste_name: title,
       api_paste_format: "html5",
       api_paste_private: 1,
       api_paste_expire_date: "N",
-      api_paste_code: "",
-      api_paste_data: content,
     },
   });
 

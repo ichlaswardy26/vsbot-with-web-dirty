@@ -12,7 +12,7 @@ const Canvas = require('canvas');
 /**
  * Create a custom identity card canvas image
  */
-async function createIdentityCard(data, user, guild) {
+async function createIdentityCard(data, user) {
   // Set up canvas
   const canvas = Canvas.createCanvas(900, 500);
   const ctx = canvas.getContext('2d');

@@ -6,7 +6,7 @@ module.exports = {
   aliases: ["sendticket", "ticketbutton"],
   description: "Mengirim tombol buat tiket ke channel ini (hanya admin)",
 
-  async exec(client, message, args) {
+  async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
     
     // Check permission using standardized system

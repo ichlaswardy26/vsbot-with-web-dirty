@@ -10,7 +10,7 @@ module.exports = {
   description: 'Test permission system dan tampilkan status permission user',
   category: 'test',
   
-  async exec(client, message, args) {
+  async exec(client, message) {
     // Only allow staff or higher to use this command
     const permissionError = rolePermissions.checkPermission(message.member, 'staff');
     if (permissionError) {

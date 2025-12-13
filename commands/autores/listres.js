@@ -7,6 +7,13 @@ module.exports = {
   description: 'List all autoresponders',
   category: 'Autoresponder',
   async exec(client, message) {
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
     try {
       const responders = await Responder.find();
       if (responders.length === 0) {
@@ -74,7 +81,7 @@ module.exports = {
           await i.update({ embeds: [newEmbed], components: [row] });
         });
 
-        collector.on('end', collected => {
+        collector.on('end', () => {
           // Menghapus button setelah waktu habis
           row.components[0].setDisabled(true);
           replyMessage.edit({ components: [row] });

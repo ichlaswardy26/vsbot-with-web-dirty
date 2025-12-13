@@ -573,7 +573,7 @@ class WordChainManager {
               break;
             }
           }
-        } catch (error) {
+        } catch (error) { // eslint-disable-line no-unused-vars
           // Word not found, continue to next suffix
           continue;
         }
@@ -606,7 +606,7 @@ class WordChainManager {
                 console.log(`[WordChain Bot] Found word with random search (attempt ${attempts + 1}): ${validWord.word}`);
               }
             }
-          } catch (error) {
+          } catch (error) { // eslint-disable-line no-unused-vars
             // Continue searching
           }
           attempts++;

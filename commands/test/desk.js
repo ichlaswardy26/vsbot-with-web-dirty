@@ -1,7 +1,7 @@
 module.exports = {
     name: 'desk',
     description: 'Desk command',
-    async exec(client, message, args) {
+    async exec(client, message) {
         await message.channel.send(`# ── .✦ 𝐕𝐢𝐥𝐥𝐚𝐢𝐧 𝐒𝐞𝐫𝐚𝐩𝐡𝐲𝐱  ✦.──
 「 ✦ 𝐀𝐛𝐨𝐮𝐭 𝐒𝐞𝐫𝐯𝐞𝐫 ✦ 」
 

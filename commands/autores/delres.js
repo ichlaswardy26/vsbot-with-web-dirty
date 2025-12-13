@@ -6,6 +6,13 @@ module.exports = {
   description: 'Delete an autoresponder by trigger or index number',
   category: 'Autoresponder',
   async exec(client, message, args) {
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
     const input = args[0];
     if (!input) {
       return message.reply('Please provide the trigger or index number to delete!\nExample: `!delres welcome` or `!delres 1`');

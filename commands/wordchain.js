@@ -5,7 +5,7 @@ module.exports = {
   name: "wordchain",
   description: "Start a Mini Word Chain Game",
   category: "games",
-  async exec(client, message, args) {
+  async exec(client, message) {
     try {
       const channelId = message.channel.id;
       

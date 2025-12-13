@@ -1,12 +1,9 @@
 const { 
-  AttachmentBuilder,
   ActionRowBuilder, 
   ButtonBuilder, 
   ButtonStyle,
 } = require("discord.js");
 const ShopRole = require("../../schemas/ShopRole");
-const path = require("path");
-const fs = require("fs");
 const config = require("../../config.js");
 
 module.exports = {
@@ -55,7 +52,6 @@ module.exports = {
     if (exclusiveRoles.length) {
       const exclusiveText = "**🌟 Exclusive Role (Limited Time):**\n" +
         exclusiveRoles.map(r => {
-          const role = message.guild.roles.cache.get(r.roleId);
           const unix = r.expiresAt ? Math.floor(r.expiresAt.getTime() / 1000) : null;
           const exp = unix ? `⏳ Expired <t:${unix}:R>` : "";
           return `✴️ **${r.name}**〔Gradient: ${r.gradient ? "ON" : "OFF"} || Rarity: ${r.rarity || "Common"}〕\n${config.emojis.souls} **${r.price}** (**${r.buyers.length}/${r.slots}**) ${exp}`;

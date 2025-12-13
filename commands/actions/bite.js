@@ -5,7 +5,7 @@ module.exports = {
   name: "bite",
   description: "Bite someone!",
   category: "action",
-  async exec(client, message, args) {
+  async exec(client, message) {
     const target = message.mentions.users.first();
     if (!target) {
       return message.reply("<a:important:1367186288297377834> **|** Mention seseorang!");

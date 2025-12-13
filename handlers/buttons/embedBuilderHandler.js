@@ -1,5 +1,4 @@
 const { EmbedBuilder } = require("discord.js");
-const config = require("../../config");
 
 module.exports = async (client, interaction) => {
   try {
@@ -71,7 +70,7 @@ module.exports = async (client, interaction) => {
       
       // Map button actions to prompt text and field type
       let promptText = "";
-      let fieldType = "";
+      // let fieldType = "";
       let baseDescription = "Gunakan tombol di bawah ini untuk menyesuaikan embed kamu:\n\n" +
           "**Set Title** - Input title untuk embed\n" +
           "**Set Description** - Input deskripsi untuk embed\n" +
@@ -81,7 +80,7 @@ module.exports = async (client, interaction) => {
           "**Set Color** - Ganti warna embed (hex code)";
       
       switch (interaction.customId) {
-        case "ce_cancel_embed":
+        case "ce_cancel_embed": {
           // Handle cancellation
           const cancelEmbed = new EmbedBuilder()
             .setTitle("config.emojis.important **|** Embed Cancelled")
@@ -103,30 +102,28 @@ module.exports = async (client, interaction) => {
             content: "config.emojis.seraphyx **|** Pembuatan  embed diberhentikan.", 
             ephemeral: true 
           });
+        }
           
         case "ce_set_title":
           promptText = "📝 Silahkan input title (maksimal 256 karakter):";
-          fieldType = "title";
+          // fieldType = "title";
           break;
         case "ce_set_desc":
           promptText = "📄 Silakan input deskripsi (maksimal 4096 karakter):";
-          fieldType = "description";
+          // fieldType = "description";
           break;
         case "ce_set_image":
           promptText = "🖼️ Silakan upload file gambar atau berikan URL gambar yang valid untuk embed:";
-          fieldType = "image";
           break;
         case "ce_set_thumbnail":
           promptText = "🖼️ Silakan upload gambar untuk thumbnail atau ketik `default` untuk menggunakan ikon server:";
-          fieldType = "thumbnail";
           break;
         case "ce_set_footer":
           promptText = "📋 Silakan input teks footer (maksimal 2048 karakter):";
-          fieldType = "footer";
           break;
         case "ce_set_color":
           promptText = "🎨 Silakan input hex code (contoh: `#FF5733`, `#00FF00`):";
-          fieldType = "color";
+          // fieldType = "color";
           break;
         default:
           return interaction.reply({ 

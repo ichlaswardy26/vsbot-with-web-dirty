@@ -50,5 +50,10 @@
     "node-cron": "^3.0.2",
     "node-superfetch": "^0.3.5",
     "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0"
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const { EmbedBuilder } = require("discord.js");
 const VoiceChannelModel = require("../../schemas/voiceChannel");
 const config = require("../../config.js");

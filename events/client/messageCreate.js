@@ -5,7 +5,7 @@ const { getLevelUpReward, addSouls, formatNumber } = require("../../util/economy
 const { updateLevelRole } = require("../../util/roleUtils");
 const { updateLeaderboardXP } = require("../../util/leaderboardUtils");
 const { giveXp } = require("../../util/applyXpWithBoost");
-const { safeReply, safeSend } = require("../../util/messageUtils");
+const { safeSend } = require("../../util/messageUtils");
 const Activity = require("../../schemas/Activity");
 const config = require("../../config.js");
 
@@ -52,12 +52,10 @@ module.exports = {
         global.afkUsers.delete(userId);
 
         // Kembalikan nickname asli
-        let nicknameRestored = false;
         if (member && member.manageable) {
             try {
                 // Jika originalNickname null, berarti user tidak punya nickname sebelumnya
                 await member.setNickname(afkInfo.originalNickname);
-                nicknameRestored = true;
             } catch (error) {
                 console.error('Gagal mengembalikan nickname:', error);
             }

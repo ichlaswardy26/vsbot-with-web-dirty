@@ -1,4 +1,4 @@
-const { EmbedBuilder, PermissionsBitField } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const ms = require("ms");
 const Giveaway = require("../../schemas/Giveaway");
 const { scheduleGiveaway } = require("../../handlers/giveawayHandler");

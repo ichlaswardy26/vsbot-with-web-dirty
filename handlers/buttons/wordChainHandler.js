@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 const wordChainManager = require("../../util/wordChainManager");
-const config = require("../../config");
+// const config = require("../../config");
 
 async function handleWordChainInteraction(client, interaction) {
   const channelId = interaction.channel.id;
@@ -181,7 +181,7 @@ async function handleStartGame(interaction, channelId) {
   
   // Create player list with scores for Turn | Player | Point section
   let playerScoreText = "";
-  game.players.forEach((player, index) => {
+  game.players.forEach((player) => {
     const isCurrentTurn = player.userId === currentPlayer?.userId;
     const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
     if (player.isLobbyMaster) {
@@ -192,15 +192,15 @@ async function handleStartGame(interaction, channelId) {
   });
 
   // Top section - keep lobby info
-  const playerCount = game.players.length;
-  let lobbyPlayerList = "";
-  game.players.forEach((player) => {
-    if (player.isLobbyMaster) {
-      lobbyPlayerList += `@${player.username} 👑\n`;
-    } else {
-      lobbyPlayerList += `@${player.username}\n`;
-    }
-  });
+  // const playerCount = game.players.length;
+  // let lobbyPlayerList = "";
+  // game.players.forEach((player) => {
+  //   if (player.isLobbyMaster) {
+  //     lobbyPlayerList += `@${player.username} 👑\n`;
+  //   } else {
+  //     lobbyPlayerList += `@${player.username}\n`;
+  //   }
+  // });
 
   const gameplayEmbed = new EmbedBuilder()
     .setDescription(
@@ -329,7 +329,7 @@ async function handleExitGame(interaction, channelId) {
   }
   
   wordChainManager.clearTurnTimer(channelId);
-  const result = wordChainManager.exitGame(channelId);
+  wordChainManager.exitGame(channelId);
   
   const cancelledEmbed = new EmbedBuilder()
     .setTitle("❌ Game Cancelled")
@@ -378,7 +378,7 @@ async function handleRoll(interaction, channelId, userId) {
   
   // Create player list with scores for Turn | Player | Point section
   let playerScoreText = "";
-  game.players.forEach((player, index) => {
+  game.players.forEach((player) => {
     const isCurrentTurn = player.userId === currentPlayer?.userId;
     const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
     if (player.isLobbyMaster) {
@@ -389,15 +389,15 @@ async function handleRoll(interaction, channelId, userId) {
   });
 
   // Top section - keep lobby info
-  const playerCount = game.players.length;
-  let lobbyPlayerList = "";
-  game.players.forEach((player) => {
-    if (player.isLobbyMaster) {
-      lobbyPlayerList += `@${player.username} 👑\n`;
-    } else {
-      lobbyPlayerList += `@${player.username}\n`;
-    }
-  });
+  // const playerCount = game.players.length;
+  // let lobbyPlayerList = "";
+  // game.players.forEach((player) => {
+  //   if (player.isLobbyMaster) {
+  //     lobbyPlayerList += `@${player.username} 👑\n`;
+  //   } else {
+  //     lobbyPlayerList += `@${player.username}\n`;
+  //   }
+  // });
 
   const gameplayEmbed = new EmbedBuilder()
     .setDescription(

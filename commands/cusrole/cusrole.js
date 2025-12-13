@@ -1,6 +1,4 @@
 const { EmbedBuilder } = require('discord.js');
-const { createCanvas, loadImage } = require('@napi-rs/canvas'); // optional for image editing
-const fs = require('fs');
 const CustomRoleModel = require('../../schemas/customRole'); // Pastikan schema MongoDB Anda sesuai
 const { BOOST_ROLE_ID, DONATE_ROLE_ID } = require('../../config');
 
@@ -148,7 +146,7 @@ module.exports = {
             });
             try {
               await r.setColors({ primaryColor: roleColor, secondaryColor: gradientColor });
-            } catch (e) {
+            } catch (error) { // eslint-disable-line no-unused-vars
               // Fallback to single color if gradient fails
               await message.channel.send('<a:important:1367186288297377834> **|** Gagal mengatur gradient, menggunakan warna utama saja.');
             }
@@ -364,7 +362,7 @@ module.exports = {
                   customRole.roleColor = `${mainColor},${gradientColor}`;
                   await customRole.save();
                   message.channel.send(`<a:check:1367395457529282581> **|** Gradient role berhasil diubah menjadi **${mainColor} | ${gradientColor}**.`);
-                } catch (e) {
+                } catch (error) { // eslint-disable-line no-unused-vars
                   await roleToEdit.edit({ colors: { primaryColor: mainColor } });
                   customRole.roleColor = mainColor;
                   await customRole.save();
@@ -680,6 +678,7 @@ module.exports = {
               return message.channel.send({ embeds: [embed] });
             }
 
+              /* Duplicate delete block removed
               else if (sub === 'delete') {
                 const staffRole = message.guild.roles.cache.find(r => r.name.toLowerCase() === 'staff');
                 const hasPermission =
@@ -753,6 +752,7 @@ module.exports = {
                   ]
                 });
               }
+              */
 
     else {
 

@@ -1,6 +1,6 @@
+
 const Discord = require("discord.js");
 const Warn = require("../../schemas/Warn");
-const { EmbedBuilder } = require("discord.js");
 const config = require("../../config.js");
 const rolePermissions = require("../../util/rolePermissions");
 
@@ -41,7 +41,7 @@ module.exports = {
             .setTimestamp()
         ],
       });
-    } catch (err) {
+    } catch (error) { // eslint-disable-line no-unused-vars
       message.channel.send(`⚠️ Tidak bisa mengirim DM ke ${target.user.tag}.`);
     }
     const sucembed = new Discord.EmbedBuilder()

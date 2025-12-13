@@ -4,7 +4,7 @@ const config = require('../../config.js');
 module.exports = {
     name: 'welcometest',
     description: 'card welcome',
-    async exec(client, message, args) {
+    async exec(client, message) {
 
         const { member } = message;
         const welcome = await new canvafy.WelcomeLeave()

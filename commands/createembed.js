@@ -4,7 +4,15 @@ module.exports = {
   name: "createembed",
   description: "Interactively create a custom embed",
   category: "utility",
-  async exec(client, message, args) {
+  async exec(client, message) {
+    const rolePermissions = require("../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'staff');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
+    
     try {
       // Initialize embed state with default values
       const embedState = {

@@ -39,7 +39,7 @@ async function giveXp(client, userId, guildId, baseXp) {
         }
 
         const oldLevel = userData.level;
-        const oldXp = userData.xp;
+        // const oldXp = userData.xp;
 
         // Tambahkan XP hasil boost
         userData.xp += finalXp;

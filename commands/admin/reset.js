@@ -7,7 +7,7 @@ module.exports = {
   name: "reset",
   description: "🔴 Reset semua data Activity (chat & voice)",
   category: "admin",
-  async exec(client, message, args) {
+  async exec(client, message) {
     // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'admin');
     if (permissionError) {

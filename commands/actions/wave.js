@@ -4,7 +4,7 @@ const axios = require("axios");
 module.exports = {
   name: "wave",
   category: "action",
-  async exec(client, message, args) {
+  async exec(client, message) {
     try {
       const response = await axios.get("https://api.waifu.pics/sfw/wave");
 

@@ -1,9 +1,7 @@
-const { PermissionsBitField } = require("discord.js");
-
 module.exports = {
     name: 'testwelcome',
     description: 'Mengirim pesan welcome untuk testing',
-    async exec(client, message, args) {
+    async exec(client, message) {
         const rolePermissions = require("../../util/rolePermissions");
         
         // Check permission using standardized system

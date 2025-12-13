@@ -1,6 +1,9 @@
 const { PermissionsBitField } = require('discord.js');
 const config = require('../config');
 const permissionChecker = require('./permissionChecker');
+const temporaryPermissions = require('./temporaryPermissions');
+const permissionInheritance = require('./permissionInheritance');
+// const logger = require('./logger');
 
 /**
  * Role Permission Utility
@@ -26,6 +29,12 @@ class RolePermissions {
         const adminRoleId = config.roles?.admin;
         if (adminRoleId && permissionChecker.hasRole(member, adminRoleId)) return true;
         
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'admin')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'admin')) return true;
+        
         return false;
     }
 
@@ -43,6 +52,12 @@ class RolePermissions {
         // Check staff role
         const staffRoleId = config.roles?.staff || config.staffRoleId;
         if (staffRoleId && permissionChecker.hasRole(member, staffRoleId)) return true;
+        
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'staff')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'staff')) return true;
         
         return false;
     }
@@ -69,6 +84,12 @@ class RolePermissions {
             return true;
         }
         
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'moderator')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'moderator')) return true;
+        
         return false;
     }
 
@@ -85,6 +106,12 @@ class RolePermissions {
         
         // Check if user has ManageGuild permission (for economy commands)
         if (permissionChecker.hasPermission(member, PermissionsBitField.Flags.ManageGuild)) return true;
+        
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'economy')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'economy')) return true;
         
         return false;
     }
@@ -107,6 +134,12 @@ class RolePermissions {
         const eventOrganizerRoleId = config.roles?.eventOrganizer;
         if (eventOrganizerRoleId && permissionChecker.hasRole(member, eventOrganizerRoleId)) return true;
         
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'giveaway')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'giveaway')) return true;
+        
         return false;
     }
 
@@ -125,6 +158,12 @@ class RolePermissions {
         const supportTeamRoleId = config.roles?.supportTeam;
         if (supportTeamRoleId && permissionChecker.hasRole(member, supportTeamRoleId)) return true;
         
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'ticket')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'ticket')) return true;
+        
         return false;
     }
 
@@ -134,7 +173,18 @@ class RolePermissions {
      * @returns {boolean}
      */
     canManageShop(member) {
-        return this.isAdmin(member);
+        if (!member) return false;
+        
+        // Admin can manage shop
+        if (this.isAdmin(member)) return true;
+        
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'shop')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'shop')) return true;
+        
+        return false;
     }
 
     /**
@@ -165,7 +215,18 @@ class RolePermissions {
      * @returns {boolean}
      */
     canCreateCustomRole(member) {
-        return this.hasBoostRole(member) || this.hasDonateRole(member);
+        if (!member) return false;
+        
+        // Check boost or donate roles
+        if (this.hasBoostRole(member) || this.hasDonateRole(member)) return true;
+        
+        // Check temporary permissions
+        if (temporaryPermissions.hasTemporaryPermission(member.user.id, member.guild.id, 'customRole')) return true;
+        
+        // Check inherited permissions
+        if (permissionInheritance.hasPermissionThroughGroups(member, 'customRole')) return true;
+        
+        return false;
     }
 
     /**
@@ -224,6 +285,248 @@ class RolePermissions {
         }
 
         return checkFunction() ? null : this.createPermissionError(permissionType);
+    }
+
+    // ==================== TEMPORARY PERMISSIONS ====================
+
+    /**
+     * Grant temporary permission to user
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @param {string|Array} permissions - Permission(s) to grant
+     * @param {number|string} duration - Duration (ms or string like '1h', '30m')
+     * @param {string} grantedBy - User ID who granted the permission
+     * @param {string} reason - Reason for granting permission
+     * @returns {Object} Grant result
+     */
+    async grantTemporaryPermission(userId, guildId, permissions, duration, grantedBy, reason = '') {
+        return await temporaryPermissions.grantTemporaryPermission(userId, guildId, permissions, duration, grantedBy, reason);
+    }
+
+    /**
+     * Revoke temporary permission from user
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @param {string|Array} permissions - Permission(s) to revoke (optional, revokes all if not specified)
+     * @param {string} revokedBy - User ID who revoked the permission
+     * @param {string} reason - Reason for revoking permission
+     * @returns {Object} Revoke result
+     */
+    async revokeTemporaryPermission(userId, guildId, permissions, revokedBy, reason = '') {
+        return await temporaryPermissions.revokeTemporaryPermission(userId, guildId, permissions, revokedBy, reason);
+    }
+
+    /**
+     * Get user's temporary permissions
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @returns {Object|null} Temporary permissions info
+     */
+    getUserTemporaryPermissions(userId, guildId) {
+        return temporaryPermissions.getUserTemporaryPermissions(userId, guildId);
+    }
+
+    /**
+     * Get all active temporary permissions for guild
+     * @param {string} guildId - Guild ID
+     * @returns {Array} Array of active temporary permissions
+     */
+    getAllTemporaryPermissions(guildId) {
+        return temporaryPermissions.getAllTemporaryPermissions(guildId);
+    }
+
+    /**
+     * Extend existing temporary permission
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @param {number|string} additionalDuration - Additional duration to add
+     * @param {string} extendedBy - User ID who extended the permission
+     * @param {string} reason - Reason for extension
+     * @returns {Object} Extension result
+     */
+    async extendTemporaryPermission(userId, guildId, additionalDuration, extendedBy, reason = '') {
+        return await temporaryPermissions.extendTemporaryPermission(userId, guildId, additionalDuration, extendedBy, reason);
+    }
+
+    // ==================== PERMISSION INHERITANCE ====================
+
+    /**
+     * Assign permission group to user
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @param {string} groupName - Permission group name
+     * @param {string} assignedBy - User ID who assigned the group
+     * @param {string} reason - Reason for assignment
+     * @returns {Object} Assignment result
+     */
+    async assignGroupToUser(userId, guildId, groupName, assignedBy, reason = '') {
+        return await permissionInheritance.assignGroupToUser(userId, guildId, groupName, assignedBy, reason);
+    }
+
+    /**
+     * Remove permission group from user
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @param {string} groupName - Permission group name
+     * @param {string} removedBy - User ID who removed the group
+     * @param {string} reason - Reason for removal
+     * @returns {Object} Removal result
+     */
+    async removeGroupFromUser(userId, guildId, groupName, removedBy, reason = '') {
+        return await permissionInheritance.removeGroupFromUser(userId, guildId, groupName, removedBy, reason);
+    }
+
+    /**
+     * Assign permission group to role
+     * @param {string} roleId - Role ID
+     * @param {string} groupName - Permission group name
+     * @param {string} assignedBy - User ID who assigned the group
+     * @param {string} reason - Reason for assignment
+     * @returns {Object} Assignment result
+     */
+    async assignGroupToRole(roleId, groupName, assignedBy, reason = '') {
+        return await permissionInheritance.assignGroupToRole(roleId, groupName, assignedBy, reason);
+    }
+
+    /**
+     * Remove permission group from role
+     * @param {string} roleId - Role ID
+     * @param {string} groupName - Permission group name
+     * @param {string} removedBy - User ID who removed the group
+     * @param {string} reason - Reason for removal
+     * @returns {Object} Removal result
+     */
+    async removeGroupFromRole(roleId, groupName, removedBy, reason = '') {
+        return await permissionInheritance.removeGroupFromRole(roleId, groupName, removedBy, reason);
+    }
+
+    /**
+     * Create custom permission group
+     * @param {string} groupName - Group name
+     * @param {Array} permissions - Array of permissions
+     * @param {Array} inherits - Array of groups to inherit from
+     * @param {string} description - Group description
+     * @param {string} createdBy - User ID who created the group
+     * @returns {Object} Creation result
+     */
+    async createPermissionGroup(groupName, permissions, inherits, description, createdBy) {
+        return await permissionInheritance.createPermissionGroup(groupName, permissions, inherits, description, createdBy);
+    }
+
+    /**
+     * Delete custom permission group
+     * @param {string} groupName - Group name
+     * @param {string} deletedBy - User ID who deleted the group
+     * @returns {Object} Deletion result
+     */
+    async deletePermissionGroup(groupName, deletedBy) {
+        return await permissionInheritance.deletePermissionGroup(groupName, deletedBy);
+    }
+
+    /**
+     * Get user's permission groups
+     * @param {string} userId - User ID
+     * @param {string} guildId - Guild ID
+     * @returns {Array} Array of group names
+     */
+    getUserGroups(userId, guildId) {
+        return permissionInheritance.getUserGroups(userId, guildId);
+    }
+
+    /**
+     * Get role's permission groups
+     * @param {string} roleId - Role ID
+     * @returns {Array} Array of group names
+     */
+    getRoleGroups(roleId) {
+        return permissionInheritance.getRoleGroups(roleId);
+    }
+
+    /**
+     * Get all available permission groups
+     * @returns {Object} All permission groups
+     */
+    getAllGroups() {
+        return permissionInheritance.getAllGroups();
+    }
+
+    /**
+     * Get permission group details
+     * @param {string} groupName - Group name
+     * @returns {Object|null} Group details
+     */
+    getGroupDetails(groupName) {
+        return permissionInheritance.getGroupDetails(groupName);
+    }
+
+    /**
+     * Get comprehensive user permissions (direct + temporary + inherited)
+     * @param {GuildMember} member - Discord guild member
+     * @returns {Object} Complete permission information
+     */
+    async getCompleteUserPermissions(member) {
+        if (!member) return null;
+
+        const userId = member.user.id;
+        const guildId = member.guild.id;
+
+        // Get direct permissions
+        const directPermissions = {
+            admin: this.isAdmin(member),
+            staff: this.isStaff(member),
+            moderator: this.isModerator(member),
+            economy: this.canManageEconomy(member),
+            giveaway: this.canManageGiveaways(member),
+            ticket: this.canManageTickets(member),
+            shop: this.canManageShop(member),
+            customRole: this.canCreateCustomRole(member)
+        };
+
+        // Get temporary permissions
+        const tempPermissions = temporaryPermissions.getUserTemporaryPermissions(userId, guildId);
+
+        // Get inherited permissions
+        const inheritedPermissions = permissionInheritance.getUserPermissions(member);
+        const userGroups = permissionInheritance.getUserGroups(userId, guildId);
+
+        // Get role groups
+        const roleGroups = [];
+        for (const role of member.roles.cache.values()) {
+            const groups = permissionInheritance.getRoleGroups(role.id);
+            if (groups.length > 0) {
+                roleGroups.push({ roleId: role.id, roleName: role.name, groups });
+            }
+        }
+
+        return {
+            userId,
+            guildId,
+            username: member.user.username,
+            displayName: member.displayName,
+            directPermissions,
+            temporaryPermissions: tempPermissions,
+            inheritedPermissions,
+            userGroups,
+            roleGroups,
+            allPermissions: Object.keys(directPermissions).filter(perm => directPermissions[perm])
+        };
+    }
+
+    /**
+     * Get permission statistics for guild
+     * @param {string} guildId - Guild ID
+     * @returns {Object} Permission statistics
+     */
+    getPermissionStatistics(guildId) {
+        const tempStats = temporaryPermissions.getStatistics();
+        const inheritanceStats = permissionInheritance.getStatistics();
+        
+        return {
+            temporaryPermissions: tempStats,
+            permissionInheritance: inheritanceStats,
+            guildId,
+            timestamp: Date.now()
+        };
     }
 }
 

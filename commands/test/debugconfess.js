@@ -4,9 +4,13 @@ module.exports = {
   name: "debugconfess",
   description: "Debug confession system configuration",
   
-  async exec(client, message, args) {
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menggunakan perintah ini.");
+  async exec(client, message) {
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     const confessionChannelId = "1376956791757209773";

@@ -5,7 +5,7 @@ module.exports = {
   aliases: ["resetcash", "resetsouls"],
   description: "Reset semua saldo souls atau milik satu user saja",
   usage: "[mention optional]",
-  async exec(client, message, args) {
+  async exec(client, message) {
     try {
       const rolePermissions = require("../../util/rolePermissions");
       

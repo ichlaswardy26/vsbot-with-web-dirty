@@ -7,7 +7,6 @@ module.exports = (client) => {
 
     if (isExist) {
         let prefixCommands = 0;
-        let slashCommands = 0;
         const categories = new Set();
 
         const loadCommands = (dir) => {
@@ -20,10 +19,7 @@ module.exports = (client) => {
                 if (isCommandFile) {
                     const command = require(filePath);
 
-                    if (command.data) {
-                        client.slashCommands.set(command.data.name, command);
-                        slashCommands++;
-                    } else if (command.name) {
+                    if (command.name) {
                         client.commands.set(command.name, command);
                         prefixCommands++;
                         if (command.category) categories.add(command.category);
@@ -42,9 +38,8 @@ module.exports = (client) => {
         console.log('║     📦 COMMAND LOADER STATISTICS      ║');
         console.log('╠════════════════════════════════════════╣');
         console.log(`║  ⚡ Prefix Commands    : ${String(prefixCommands).padEnd(12)}║`);
-        console.log(`║  🔹 Slash Commands     : ${String(slashCommands).padEnd(12)}║`);
         console.log(`║  📁 Categories         : ${String(categories.size).padEnd(12)}║`);
-        console.log(`║  ✅ Total Commands     : ${String(prefixCommands + slashCommands).padEnd(12)}║`);
+        console.log(`║  ✅ Total Commands     : ${String(prefixCommands).padEnd(12)}║`);
         console.log('╚════════════════════════════════════════╝\n');
     }
 };

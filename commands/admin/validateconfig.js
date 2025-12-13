@@ -8,7 +8,7 @@ module.exports = {
     description: 'Validate bot configuration and server setup',
     category: 'admin',
     
-    async exec(client, message, args) {
+    async exec(client, message) {
         // Check permission using standardized system
         const permissionError = rolePermissions.checkPermission(message.member, 'admin');
         if (permissionError) {

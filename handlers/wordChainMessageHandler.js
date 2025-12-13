@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 const wordChainManager = require("../util/wordChainManager");
-const config = require("../config");
+// const config = require("../config");
 
 async function handleWordChainMessage(client, message) {
   // Skip if message is undefined or from a bot
@@ -192,12 +192,12 @@ function startTimerForHumanPlayer(channelId, channel) {
   });
 }
 
-async function sendNewGameplayEmbed(channel, game, newWord, pointsEarned, lastPlayerName, lastAnswer) {
+async function sendNewGameplayEmbed(channel, game, newWord) {
   const currentPlayer = wordChainManager.getCurrentPlayer(game.channelId);
   
   // Create player list with scores for Turn | Player | Point section
   let playerScoreText = "";
-  game.players.forEach((player, index) => {
+  game.players.forEach((player) => {
     const isCurrentTurn = player.userId === currentPlayer?.userId;
     const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
     if (player.isLobbyMaster) {
@@ -208,15 +208,15 @@ async function sendNewGameplayEmbed(channel, game, newWord, pointsEarned, lastPl
   });
 
   // Top section - keep lobby info
-  const playerCount = game.players.length;
-  let lobbyPlayerList = "";
-  game.players.forEach((player) => {
-    if (player.isLobbyMaster) {
-      lobbyPlayerList += `@${player.username} 👑\n`;
-    } else {
-      lobbyPlayerList += `@${player.username}\n`;
-    }
-  });
+  // const playerCount = game.players.length;
+  // let lobbyPlayerList = "";
+  // game.players.forEach((player) => {
+  //   if (player.isLobbyMaster) {
+  //     lobbyPlayerList += `@${player.username} 👑\n`;
+  //   } else {
+  //     lobbyPlayerList += `@${player.username}\n`;
+  //   }
+  // });
 
   const gameplayEmbed = new EmbedBuilder()
     .setDescription(

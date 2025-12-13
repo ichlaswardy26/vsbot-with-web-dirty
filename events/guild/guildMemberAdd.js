@@ -17,7 +17,7 @@ module.exports = {
     // 📊 Data dasar
     const totalMembers = member.guild.memberCount.toLocaleString();
     const serverName = member.guild.name;
-    const joinedAt = `<t:${Math.floor(member.joinedTimestamp / 1000)}:F>`;
+    // const joinedAt = `<t:${Math.floor(member.joinedTimestamp / 1000)}:F>`;
 
     // 🎨 Buat embed welcome
     const welcomeEmbed = new EmbedBuilder()

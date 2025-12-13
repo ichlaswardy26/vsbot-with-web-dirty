@@ -66,7 +66,7 @@ class Logger {
                 if (stats.size > this.maxLogSize) {
                     await this.rotateLogFile(filename);
                 }
-            } catch (error) {
+            } catch (error) { // eslint-disable-line no-unused-vars
                 // File doesn't exist, which is fine
             }
 
@@ -91,7 +91,7 @@ class Logger {
                 
                 try {
                     await fs.rename(oldFile, newFile);
-                } catch (error) {
+                } catch (error) { // eslint-disable-line no-unused-vars
                     // File might not exist, continue
                 }
             }

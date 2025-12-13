@@ -155,9 +155,7 @@ module.exports = {
       .setTimestamp();
     const unboostLogMessage = await boostAnnounceLogChannel.send({
       embeds: [unboostEmbedLog],
-      components: oldMember.guild.premiumSubscriptionCount
-        ? [totalBoosterRow]
-        : [],
+      components: [],
     });
     unboostLogMessage.pin();
   }

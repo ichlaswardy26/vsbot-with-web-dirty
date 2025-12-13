@@ -17,7 +17,7 @@ async function updateLevelRole(member, level) {
         
         // Find the highest role the user should have based on their level
         let highestRoleLevel = 0;
-        for (const [roleLevel, roleId] of Object.entries(LEVEL_ROLES)) {
+        for (const [roleLevel] of Object.entries(LEVEL_ROLES)) {
             if (level >= parseInt(roleLevel) && parseInt(roleLevel) > highestRoleLevel) {
                 highestRoleLevel = parseInt(roleLevel);
             }

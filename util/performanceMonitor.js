@@ -329,7 +329,7 @@ class PerformanceMonitor {
             .filter(entry => entry.timestamp > oneHourAgo);
 
         // Clean old command execution data
-        for (const [commandName, metrics] of this.commandMetrics.entries()) {
+        for (const [, metrics] of this.commandMetrics.entries()) {
             metrics.recentExecutions = metrics.recentExecutions
                 .filter(execution => execution.timestamp > oneHourAgo);
         }
