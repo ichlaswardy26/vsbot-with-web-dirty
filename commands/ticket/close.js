@@ -1,16 +1,17 @@
 ﻿const { EmbedBuilder, PermissionsBitField } = require("discord.js");
 const config = require("../../config.js");
+const rolePermissions = require("../../util/rolePermissions");
 
 module.exports = {
   name: "close",
   description: "Menutup ticket partnership.",
   async exec(client, message, args) {
-    const staffRoleId = config.roles.staff; // 🧑‍💼 Role staff
     const logChannelId = config.channels.ticketLogs; // 🧾 Channel log partnership
 
-    // 🛑 Pastikan user memiliki role staff
-    if (!staffRoleId || !message.member.roles.cache.has(staffRoleId)) {
-      return message.reply("❌ Hanya **staff** yang dapat menutup ticket ini.");
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'ticket');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     const channel = message.channel;

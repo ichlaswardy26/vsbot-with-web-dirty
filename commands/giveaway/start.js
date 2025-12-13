@@ -2,6 +2,7 @@ const { EmbedBuilder, PermissionsBitField } = require("discord.js");
 const ms = require("ms");
 const Giveaway = require("../../schemas/Giveaway");
 const { scheduleGiveaway } = require("../../handlers/giveawayHandler");
+const rolePermissions = require("../../util/rolePermissions");
 
 module.exports = {
   name: "giveaway",
@@ -12,10 +13,10 @@ module.exports = {
 
   async exec(client, message, args) {
     try {
-      // izin: ManageMessages atau owner
-      const isOwner = client.config?.ownerId?.includes?.(message.author.id);
-      if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages) && !isOwner) {
-        return message.reply("❌ Kamu tidak punya izin untuk memulai giveaway.");
+      // Check permission using standardized system
+      const permissionError = rolePermissions.checkPermission(message.member, 'giveaway');
+      if (permissionError) {
+        return message.reply(permissionError);
       }
 
       if (args.length < 3) {

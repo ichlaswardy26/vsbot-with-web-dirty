@@ -202,7 +202,7 @@ module.exports = {
         await newCustomRole.save();
 
         // Set posisi role
-        const rolePembatasId = '1062374982778376192'; // Role referensi untuk posisi
+        const rolePembatasId = client.config.roles?.customRolePosition || client.config.features?.customRolePositionRef || '1062374982778376192'; // Role referensi untuk posisi
         const batasRole = message.guild.roles.cache.get(rolePembatasId);
         if (batasRole) {
           try {

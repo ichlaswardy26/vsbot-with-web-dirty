@@ -5,9 +5,12 @@ module.exports = {
   name: "buyer",
   description: "Lihat daftar pembeli item exclusive",
   async exec(client, message) {
-    // 🔒 hanya admin
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menggunakan perintah ini!");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     // 📦 ambil semua item exclusive

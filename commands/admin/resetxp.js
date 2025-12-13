@@ -7,9 +7,12 @@ module.exports = {
     description: 'Reset a user\'s XP (Admin only)',
     async exec(client, message, args) {
         try {
-            // Check if user has admin permission
-            if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-                return message.reply('❌ **|** Kamu tidak memiliki izin untuk menggunakan command ini!');
+            const rolePermissions = require("../../util/rolePermissions");
+            
+            // Check permission using standardized system
+            const permissionError = rolePermissions.checkPermission(message.member, 'economy');
+            if (permissionError) {
+                return message.reply(permissionError);
             }
 
             // Get target user

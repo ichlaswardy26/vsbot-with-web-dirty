@@ -212,10 +212,67 @@ async function handleMessageXP(client, message) {
 // Helper function to process commands
 // Returns true if a command was executed, false otherwise
 async function processCommands(client, message) {
+  const rateLimiter = require('../../util/rateLimiter');
   const prefix = client.config.prefix.toLowerCase();
   const mentionRegex = new RegExp(`^<@!?${client.user.id}>`);
   const isMentionCommand = message.content.match(mentionRegex);
   const startsWithPrefix = message.content.toLowerCase().startsWith(prefix);
+
+  // Helper function to execute command with rate limiting and performance monitoring
+  async function executeCommand(command, commandName, args) {
+    const performanceMonitor = require('../../util/performanceMonitor');
+    const logger = require('../../util/logger');
+    
+    // Start performance timing
+    const endTiming = performanceMonitor.startCommandTiming(
+      commandName, 
+      message.author.id, 
+      message.guild.id
+    );
+
+    // Skip rate limiting for exempt users
+    if (!rateLimiter.isExempt(message.member)) {
+      // Determine command category for rate limiting
+      const category = command.category || 'general';
+      
+      // Check rate limits
+      const limitCheck = rateLimiter.checkLimits(message.author.id, commandName, category);
+      if (limitCheck.blocked) {
+        // Log rate limit hit
+        await logger.logRateLimit(
+          message.author.id, 
+          commandName, 
+          category, 
+          limitCheck.reason,
+          { guildId: message.guild.id, channelId: message.channel.id }
+        );
+        
+        await message.reply(limitCheck.message);
+        endTiming(false, new Error('Rate limited'));
+        return true; // Command blocked but still counts as command attempt
+      }
+    }
+
+    try {
+      await command.exec(client, message, args);
+      endTiming(true); // Command executed successfully
+      return true;
+    } catch (error) {
+      console.error(`Error executing command ${commandName}:`, error);
+      
+      // Log the error
+      await logger.logError(error, `command execution: ${commandName}`, {
+        userId: message.author.id,
+        guildId: message.guild.id,
+        channelId: message.channel.id,
+        commandName
+      });
+      
+      await safeSend(message.channel, 'An error occurred while executing this command.');
+      endTiming(false, error); // Command failed
+      return true; // Still a command attempt
+    }
+  }
 
   if (isMentionCommand) {
     const args = message.content.replace(mentionRegex, '').trim().split(/ +/g);
@@ -226,14 +283,7 @@ async function processCommands(client, message) {
                       client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
       if (command) {
-        try {
-          await command.exec(client, message, args);
-          return true; // Command executed
-        } catch (error) {
-          console.error(error);
-          await safeSend(message.channel, 'An error occurred while executing this command.');
-          return true; // Still a command attempt
-        }
+        return await executeCommand(command, commandName, args);
       } else {
         await message.channel.send(`Command \`${commandName}\` tidak ditemukan.`);
         return true; // Command attempt
@@ -252,14 +302,7 @@ async function processCommands(client, message) {
                     client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
     if (command) {
-      try {
-        await command.exec(client, message, args);
-        return true; // Command executed
-      } catch (error) {
-        console.error(error);
-        await safeSend(message.channel, 'An error occurred while executing this command.');
-        return true; // Still a command attempt
-      }
+      return await executeCommand(command, commandName, args);
     }
     return false; // Not a valid command, allow XP
   } else {

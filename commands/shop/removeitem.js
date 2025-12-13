@@ -5,8 +5,12 @@ module.exports = {
   name: "removeitem",
   description: "Hapus item exclusive aktif dari shop (dengan konfirmasi tombol)",
   async exec(client, message) {
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menghapus item!");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     // Cek apakah ada item exclusive aktif

@@ -1,11 +1,15 @@
 const ShopRole = require("../../schemas/ShopRole");
+const rolePermissions = require("../../util/rolePermissions");
 
 module.exports = {
   name: "addshop",
   description: "Tambah role ke shop",
   async exec(client, message, args) {
-    if (!message.member.permissions.has("Administrator"))
-      return message.reply("❌ Kamu tidak punya izin!");
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
 
     // Pastikan minimal argumen utama ada
     if (args.length < 3)

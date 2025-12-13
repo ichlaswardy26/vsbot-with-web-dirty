@@ -5,9 +5,13 @@ module.exports = {
   description: "Bot akan mengulangi pesan yang Anda masukkan.",
   category: "utility",
   async exec(client, message, args) {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-          return message.reply("<a:important:1367186288297377834> **|** Kamu membutuhkan izin untuk menggunakan perintah ini.");
-        }
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'staff');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
 
     // Meminta pengguna untuk menentukan channel
     const embed1 = new EmbedBuilder()

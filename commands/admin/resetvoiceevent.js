@@ -4,8 +4,12 @@ module.exports = {
   name: "vreset",
   description: "Reset semua data voice event di server ini (admin only)",
   async exec(client, message) {
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Hanya admin yang dapat menggunakan perintah ini.");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
     const guildId = message.guild.id;
     try {

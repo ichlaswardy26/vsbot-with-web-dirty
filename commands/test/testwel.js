@@ -4,9 +4,13 @@ module.exports = {
     name: 'testwelcome',
     description: 'Mengirim pesan welcome untuk testing',
     async exec(client, message, args) {
-        if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-              return message.reply("<a:important:1367186288297377834> **|** Kamu membutuhkan izin untuk menggunakan perintah ini.");
-            }
+        const rolePermissions = require("../../util/rolePermissions");
+        
+        // Check permission using standardized system
+        const permissionError = rolePermissions.checkPermission(message.member, 'staff');
+        if (permissionError) {
+            return message.reply(permissionError);
+        }
         const guild = message.guild;
         const member = guild.members.cache.get(message.author.id);
 

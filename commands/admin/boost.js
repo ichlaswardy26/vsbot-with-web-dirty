@@ -7,9 +7,12 @@ module.exports = {
   usage: '<jam> <x1/x2/x3/...>',
   async exec(client, message, args) {
     try {
-      // Cek izin admin
-      if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-        return message.reply('❌ **|** Kamu tidak punya izin untuk menggunakan command ini!');
+      const rolePermissions = require("../../util/rolePermissions");
+      
+      // Check permission using standardized system
+      const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+      if (permissionError) {
+        return message.reply(permissionError);
       }
 
       // Parsing argumen

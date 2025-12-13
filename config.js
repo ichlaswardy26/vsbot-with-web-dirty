@@ -132,6 +132,9 @@ module.exports = {
     socialFollower: process.env.SOCIAL_FOLLOWER_ROLE_ID || null,
     activeMember: process.env.ACTIVE_MEMBER_ROLE_ID || null,
     
+    // Position Reference Role
+    customRolePosition: process.env.CUSTOM_ROLE_POSITION_REF || null,
+    
     // Level Roles (format: level:roleId)
     level: {
       1: process.env.LEVEL_1_ROLE_ID || null,
@@ -206,6 +209,7 @@ module.exports = {
     
     // Custom Role
     customRolePrice: parseInt(process.env.CUSTOM_ROLE_PRICE) || 1000,
+    customRolePositionRef: process.env.CUSTOM_ROLE_POSITION_REF || '1062374982778376192',
     
     // Word Chain
     wordChainTimeout: parseInt(process.env.WORD_CHAIN_TIMEOUT) || 30000, // milliseconds

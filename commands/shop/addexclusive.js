@@ -4,8 +4,13 @@ module.exports = {
   name: "addexclusive",
   description: "Tambah role exclusive dengan slot & durasi (hanya boleh 1 active)",
   async exec(client, message, args) {
-    if (!message.member.permissions.has("Administrator"))
-      return message.reply("❌ Kamu tidak punya izin!");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
+    }
 
     const name = args[0]?.toLowerCase();
     const role = message.mentions.roles.first();

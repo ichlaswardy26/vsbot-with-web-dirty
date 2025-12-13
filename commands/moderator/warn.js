@@ -2,14 +2,17 @@ const Discord = require("discord.js");
 const Warn = require("../../schemas/Warn");
 const { EmbedBuilder } = require("discord.js");
 const config = require("../../config.js");
+const rolePermissions = require("../../util/rolePermissions");
 
 module.exports = {
   name: "warn",
-  description: "Memberikan peringatan kepada member (requires ManageMessages).",
+  description: "Memberikan peringatan kepada member (requires Moderator permissions).",
 
   async exec(client, message, args) {
-    if (!message.member.permissions.has(Discord.PermissionsBitField.Flags.ManageMessages)) {
-      return message.reply(`${config.emojis.important} **|** Kamu tidak memiliki izin \`Manage Messages\` untuk menggunakan perintah ini.`);
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'moderator');
+    if (permissionError) {
+      return message.reply(`${config.emojis.important} **|** ${permissionError}`);
     }    
 
     const target = message.mentions.members.first();

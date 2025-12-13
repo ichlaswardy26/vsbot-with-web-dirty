@@ -5,8 +5,12 @@ module.exports = {
   aliases: ["resetconfess"],
   description: "Reset state confession terakhir untuk server ini.",
   async exec(client, message, args) {
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu harus menjadi admin untuk menggunakan perintah ini.");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     const guildId = message.guild.id;

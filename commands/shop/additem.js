@@ -6,9 +6,12 @@ module.exports = {
   name: "additem",
   description: "Tambah item exclusive baru (nama di akhir argumen)",
   async exec(client, message, args) {
-    // Cek izin admin
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menjalankan perintah ini!");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     // Ambil argumen

@@ -3,14 +3,17 @@ const Leveling = require('../../schemas/Leveling');
 const { getXpRequirement } = require('../../util/levelUtils');
 const { getLevelUpReward, addSouls } = require('../../util/economyUtils');
 const { updateLevelRole } = require('../../util/roleUtils');
+const rolePermissions = require('../../util/rolePermissions');
 
 module.exports = {
     name: 'addxp',
     description: 'Add XP to a user (Admin only)',
     async exec(client, message, args) {
         try {
-            if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-                return message.reply('❌ **|** Kamu tidak memiliki izin untuk menggunakan command ini!');
+            // Check permission using standardized system
+            const permissionError = rolePermissions.checkPermission(message.member, 'economy');
+            if (permissionError) {
+                return message.reply(permissionError);
             }
 
             const targetUser = message.mentions.users.first();

@@ -4,9 +4,12 @@ module.exports = {
   name: "done",
   description: "Konfirmasi pembelian item exclusive oleh admin",
   async exec(client, message, args) {
-    // 🔒 pastikan admin
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menggunakan perintah ini!");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     // ambil user mention dan nama item

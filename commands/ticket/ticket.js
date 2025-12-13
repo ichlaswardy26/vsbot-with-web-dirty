@@ -7,8 +7,12 @@ module.exports = {
   description: "Mengirim tombol buat tiket ke channel ini (hanya admin)",
 
   async exec(client, message, args) {
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menggunakan perintah ini.");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'admin');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     const button = new ButtonBuilder()

@@ -5,8 +5,12 @@ module.exports = {
   description: "Hapus item exclusive dari database berdasarkan nama (dengan konfirmasi)",
   usage: "ritem <nama_item>",
   async exec(client, message, args) {
-    if (!message.member.permissions.has("Administrator")) {
-      return message.reply("❌ Kamu tidak punya izin untuk menghapus item!");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'shop');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     const name = args && args.length ? args.join(" ") : null;

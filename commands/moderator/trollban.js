@@ -6,8 +6,8 @@ module.exports = {
   
   async exec(client, message, args) {
     // Check if the user has the required role
-    const requiredRoleId = client.config.staffRoleId; // "1320620623369867385"
-    if (!message.member.roles.cache.has(requiredRoleId)) {
+    const staffRoleId = client.config.roles?.staff || client.config.staffRoleId;
+    if (!staffRoleId || !message.member.roles.cache.has(staffRoleId)) {
       return message.reply("<a:important:1367186288297377834> **|** Kamu tidak memiliki izin untuk menggunakan command ini.");
     }
 

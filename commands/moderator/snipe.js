@@ -5,9 +5,12 @@ module.exports = {
   description: "Menampilkan pesan terakhir yang dihapus di channel ini (khusus dengan izin ManageMessages).",
 
   async exec(client, message) {
-    // Cek permission
-    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-      return message.reply("<a:important:1367186288297377834> **|** Kamu membutuhkan izin untuk menggunakan perintah ini.");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'moderator');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
 
     const snipe = client.snipes.get(message.channel.id);

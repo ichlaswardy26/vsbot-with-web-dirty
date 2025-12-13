@@ -6,8 +6,12 @@ module.exports = {
   name: "giveaway-end",
   description: "Akhiri giveaway sekarang (admin). Usage: giveaway-end <messageId>",
   async exec(client, message, args) {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-      return message.reply("❌ Kamu tidak punya izin.");
+    const rolePermissions = require("../../util/rolePermissions");
+    
+    // Check permission using standardized system
+    const permissionError = rolePermissions.checkPermission(message.member, 'giveaway');
+    if (permissionError) {
+      return message.reply(permissionError);
     }
     const messageId = args[0];
     if (!messageId) return message.reply("Berikan messageId giveaway.");

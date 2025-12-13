@@ -7,9 +7,12 @@ module.exports = {
   usage: "[mention optional]",
   async exec(client, message, args) {
     try {
-      // Pastikan hanya admin yang bisa pakai command
-      if (!message.member.permissions.has("Administrator")) {
-        return message.reply("❌ Kamu tidak punya izin untuk menggunakan perintah ini!");
+      const rolePermissions = require("../../util/rolePermissions");
+      
+      // Check permission using standardized system
+      const permissionError = rolePermissions.checkPermission(message.member, 'economy');
+      if (permissionError) {
+        return message.reply(permissionError);
       }
 
       const targetUser = message.mentions.users.first();
