@@ -35,7 +35,7 @@ module.exports = {
 
         const button = [
             new SectionBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`<:tako:1423946058102345832> **── Tako**`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${config.emojis.tako} **── Tako**`))
             .setButtonAccessory(
                 new ButtonBuilder()
                 .setLabel(`Tako.id`)
@@ -43,7 +43,7 @@ module.exports = {
                 .setStyle(ButtonStyle.Link)
             ),
             new SectionBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`<:owocash:1324276422679986196> **── Owo Cash**`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${config.emojis.owoCash} **── Owo Cash**`))
             .setButtonAccessory(
                 new ButtonBuilder()
                 .setLabel(`Owo Cash`)
@@ -53,52 +53,52 @@ module.exports = {
         ]
 
         const text = new TextDisplayBuilder()
-        .setContent(`𝑷𝒂𝒌𝒆𝒕 𝑺𝒖𝒑𝒑𝒐𝒓𝒕 <a:black_boost:1406332177880318023> 
+        .setContent(`𝑷𝒂𝒌𝒆𝒕 𝑺𝒖𝒑𝒑𝒐𝒓𝒕 ${config.emojis.blackBoost} 
 ↓
- <:1037cross:1419307001371951144> Cavern of Dread : IDR 15.000 /5M <:owocash:1324276422679986196>
+ ${config.emojis.cross} Cavern of Dread : IDR 15.000 /5M ${config.emojis.owoCash}
 - Special Thanks & Shout out by Host di event
 - Custom Roles
 - Durasi 1 Bulan
-- Role given : <@&1368198158680719390> 
+- Role given : <@&${config.roles.cavernDread}> 
 
-<:2783blackbat:1419306818991034398>  The Midnight Covenant : IDR 35.000 /10M <:owocash:1324276422679986196>
+${config.emojis.blackBat}  The Midnight Covenant : IDR 35.000 /10M ${config.emojis.owoCash}
 - Special Thanks & Shout out by Host di event
 - Unlock VIP Voice
 - Logo Contributor dicantumkan di poster (1x event)
 - Durasi 1 Bulan
-- Role given : <@&1368197873086238803> 
+- Role given : <@&${config.roles.midnightCovenant}> 
 
-<:675510cards:1419307055541649459>   The Dread Legion : IDR 50.000 / 15M <:owocash:1324276422679986196>
+${config.emojis.cards}   The Dread Legion : IDR 50.000 / 15M ${config.emojis.owoCash}
 - Special Thanks & Shout out by Host di event
 - Unlock VIP Voice
 - Logo Contributor dicantumkan di poster (Semua event)
 - Nama Sponsor dicantumkan pada caption di setiap event
 - Durasi 1 Bulan
-- Role Given : <@&1310613443690237983> 
+- Role Given : <@&${config.roles.dreadLegion}> 
 
-<:6721spider:1419306783838830843>  Abyssal Blade : IDR 75.000 / 20M <:owocash:1324276422679986196>
+${config.emojis.spider}  Abyssal Blade : IDR 75.000 / 20M ${config.emojis.owoCash}
 - Mendapatkan Benefit Paket Abyssal Blade
 - Unlock VIP Voice
 - Mendapatkan Custom Role selama 1 bulan
 - Durasi 2 Bulan
 - Role Contributor eksklusif (2 bulan)
-- Role Given : <@&1319526216302329896> 
+- Role Given : <@&${config.roles.abyssalBlade}> 
 
-<:398121darkwyvern:1419307036268826710>   Valkyrie  : IDR 100.000 / 30M <:owocash:1324276422679986196>
+${config.emojis.darkWyvern}   Valkyrie  : IDR 100.000 / 30M ${config.emojis.owoCash}
 - Mendapatkan Benefit Paket Valkyrie
 - Mendapatkan Custom Role selama 2 bulan
 - Durasi 4 bulan
 - Unlock VIP Voice
-- Role Given : <@&1319526216302329896> 
+- Role Given : <@&${config.roles.abyssalBlade}> 
 
 - Any Question?
 - Jika ada yang mau ditanyakan atau mau tahu info lebih lanjut, bisa langsung hubungi Admin yaa`)
 
         const small = new TextDisplayBuilder()
         .setContent(`**Jika ada kendala bug atau error dari bot, bisa langsung menghubungi:**
-> ✮ <@707254056535588924> (Executive)
-> ✮ <@1322543566404456500> (Supreme Visioner)
-> ✮ <@372727563514281984> (Engineer)`
+> ✮ <@${config.staffUsers.executive}> (Executive)
+> ✮ <@${config.staffUsers.supremeVisioner}> (Supreme Visioner)
+> ✮ <@${config.staffUsers.engineer}> (Engineer)`
         );
 
         const container = new ContainerBuilder()

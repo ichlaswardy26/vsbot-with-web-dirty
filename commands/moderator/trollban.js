@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "ban",
@@ -16,12 +17,12 @@ module.exports = {
     // Fetch the target member from mentions
     const target = message.mentions.members.first();
     if (!target) {
-      return message.reply("<a:important:1367186288297377834> **|** Tolong mention member yang ingin di-ban. Contoh: `seraban @user <reason>`");
+      return message.reply(`${config.emojis.important} **|** Tolong mention member yang ingin di-ban. Contoh: \`seraban @user <reason>\``);
     }
 
     // Check if target is the command issuer (prevent self-troll ban)
     if (target.id === message.author.id) {
-      return message.reply("<a:important:1367186288297377834> **|** Kamu tidak bisa ban diri sendiri!");
+      return message.reply(`${config.emojis.important} **|** Kamu tidak bisa ban diri sendiri!`);
     }
 
     // Get the reason from args (everything after the mention)
@@ -54,7 +55,7 @@ module.exports = {
 
     } catch (error) {
       console.error("Error sending troll ban embed:", error);
-      message.reply("<a:important:1367186288297377834> **|** Terjadi kesalahan saat menjalankan troll ban command.");
+      message.reply(`${config.emojis.important} **|** Terjadi kesalahan saat menjalankan troll ban command.`);
     }
   },
 };

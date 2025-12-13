@@ -1,3 +1,5 @@
+const config = require('../../config.js');
+
 module.exports = {
     name: 'testwelcome',
     description: 'Mengirim pesan welcome untuk testing',
@@ -20,10 +22,10 @@ module.exports = {
             const eventHandler = require("../../events/guild/guildMemberAdd.js");
             await eventHandler.exec(client, member);
 
-            message.reply("<a:check:1367395457529282581> **|** Welcome message telah dikirim.");
+            message.reply(`${config.emojis.check} **|** Welcome message telah dikirim.`);
         } catch (err) {
             console.error(err);
-            message.reply("<a:important:1367186288297377834> **|** Terjadi kesalahan saat testing welcome.");
+            message.reply(`${config.emojis.important} **|** Terjadi kesalahan saat testing welcome.`);
         }
     }
 };

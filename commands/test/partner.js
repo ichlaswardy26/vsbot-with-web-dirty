@@ -66,9 +66,9 @@ Ambil Ticket di bawah untuk Ticket Partnership ˗ˏˋ ★ ˎˊ˗`
 
         const small = new TextDisplayBuilder().setContent(
 `**Jika ada kendala bug atau error dari bot, bisa langsung menghubungi:**
-> ✮ <@707254056535588924> (Executive)
-> ✮ <@1322543566404456500> (Supreme Visioner)
-> ✮ <@372727563514281984> (Engineer)`
+> ✮ <@${config.staffUsers.executive}> (Executive)
+> ✮ <@${config.staffUsers.supremeVisioner}> (Supreme Visioner)
+> ✮ <@${config.staffUsers.engineer}> (Engineer)`
         );
 
         const container = new ContainerBuilder()

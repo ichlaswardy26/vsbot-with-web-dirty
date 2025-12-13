@@ -1,13 +1,14 @@
 const { EmbedBuilder } = require("discord.js");
 const { getOrCreateEconomy, formatNumber } = require("../../util/economyUtils");
+const config = require('../../config.js');
 
-// Role dan reward
+// Role dan reward - using config
 const LEVEL_ROLES = {
-  10: "1372855014607028304",
-  20: "1372855062526951425",
-  30: "1372855106931916831",
-  40: "1372855135146872853",
-  50: "1372855165174022205",
+  10: config.roles.level[10],
+  20: config.roles.level[20],
+  30: config.roles.level[30],
+  40: config.roles.level[40],
+  50: config.roles.level[50],
 };
 
 const ROLE_REWARDS = {

@@ -1,5 +1,5 @@
 const { ActivityType } = require("discord.js");
-const logStatus = require("../../util/logger");
+const logger = require("../../util/logger");
 const introCommand = require("../../commands/test/intro");
 const { checkGiveaways } = require("../../handlers/giveawayHandler"); // <-- tambahkan ini
 
@@ -10,7 +10,12 @@ module.exports = {
       activities: [{ name: `Villain Seraphyx`, type: ActivityType.Custom }],
     });
 
-    logStatus(client);
+    // Log bot status when ready
+    await logger.log('INFO', 'BOT', `Bot ${client.user.tag} is ready and online!`, {
+      guildCount: client.guilds.cache.size,
+      userCount: client.users.cache.size,
+      uptime: process.uptime()
+    });
 
     // Jalankan sistem giveaway di sini
     await checkGiveaways(client);

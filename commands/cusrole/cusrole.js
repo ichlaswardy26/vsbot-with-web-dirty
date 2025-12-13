@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const CustomRoleModel = require('../../schemas/customRole'); // Pastikan schema MongoDB Anda sesuai
-const { BOOST_ROLE_ID, DONATE_ROLE_ID } = require('../../config');
+const config = require('../../config.js');
 
 module.exports = {
   name: 'cr',
@@ -13,15 +13,15 @@ module.exports = {
     if (sub === 'up') {
       // Move custom role above user's highest role (excluding managed and @everyone)
       const filter = m => m.author.id === message.author.id;
-      const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID);
-      const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID);
+      const isBoost = message.member.roles.cache.has(config.roles.boost);
+      const isDonate = message.member.roles.cache.has(config.roles.donate);
       let roleType;
       if (isBoost && isDonate) {
-        await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin dinaikkan.");
+        await message.channel.send(`${config.emojis.seraphyx} **|** Kamu punya role **Boost** dan **Donate**. Ketik \`boost\` atau \`donate\` untuk memilih custom role yang ingin dinaikkan.`);
         const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
         const typeInput = collected.first().content.toLowerCase();
         if (!['boost', 'donate'].includes(typeInput)) {
-          return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+          return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
         }
         roleType = typeInput;
       } else if (isBoost) {
@@ -29,7 +29,7 @@ module.exports = {
       } else if (isDonate) {
         roleType = 'donate';
       } else {
-        return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+        return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
       }
 
       const customRole = await CustomRoleModel.findOne({
@@ -38,14 +38,14 @@ module.exports = {
         roleType
       });
       if (!customRole) {
-        return message.reply(`<a:important:1367186288297377834> **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
+        return message.reply(`${config.emojis.important} **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
       }
       const role = message.guild.roles.cache.get(customRole.roleId);
       if (!role) {
-        return message.reply('<a:important:1367186288297377834> **|** Role custom tidak ditemukan di server.');
+        return message.reply('${config.emojis.important} **|** Role custom tidak ditemukan di server.');
       }
       if (!role.editable) {
-        return message.reply('<a:important:1367186288297377834> **|** Saya tidak memiliki izin untuk mengatur posisi role ini.');
+        return message.reply('${config.emojis.important} **|** Saya tidak memiliki izin untuk mengatur posisi role ini.');
       }
       // Find user's highest role (excluding managed and @everyone and the custom role itself)
       const userRoles = message.member.roles.cache
@@ -53,28 +53,28 @@ module.exports = {
         .sort((a, b) => b.position - a.position);
       const highest = userRoles.first();
       if (!highest) {
-        return message.reply('<a:important:1367186288297377834> **|** Tidak ada role lain yang bisa dijadikan referensi.');
+        return message.reply('${config.emojis.important} **|** Tidak ada role lain yang bisa dijadikan referensi.');
       }
       try {
         await role.setPosition(highest.position + 1);
-        return message.channel.send(`<a:check:1367395457529282581> **|** Role custom kamu telah dinaikkan di atas <@&${highest.id}>.`);
+        return message.channel.send(`${config.emojis.check} **|** Role custom kamu telah dinaikkan di atas <@&${highest.id}>.`);
       } catch (err) {
         console.error(err);
-        return message.channel.send('<a:important:1367186288297377834> **|** Gagal menaikkan role. Pastikan bot memiliki izin dan role bot lebih tinggi.');
+        return message.channel.send('${config.emojis.important} **|** Gagal menaikkan role. Pastikan bot memiliki izin dan role bot lebih tinggi.');
       }
     } else if (sub === 'create') {
       const filter = m => m.author.id === message.author.id;
 
-      const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID); // ID role Boost
-      const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID); // ID role Donate
+      const isBoost = message.member.roles.cache.has(config.BOOST_ROLE_ID); // ID role Boost
+      const isDonate = message.member.roles.cache.has(config.DONATE_ROLE_ID); // ID role Donate
 
       let roleType;
       if (isBoost && isDonate) {
-        await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu memiliki role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih jenis custom role yang ingin dibuat.");
+        await message.channel.send(config.emojis.seraphyx + " **|** Kamu memiliki role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih jenis custom role yang ingin dibuat.");
         const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
         const typeInput = collected.first().content.toLowerCase();
         if (!['boost', 'donate'].includes(typeInput)) {
-          return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+          return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
         }
         roleType = typeInput;
       } else if (isBoost) {
@@ -82,7 +82,7 @@ module.exports = {
       } else if (isDonate) {
         roleType = 'donate';
       } else {
-        return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+        return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
       }
 
       // Cek apakah user sudah memiliki custom role untuk tipe ini
@@ -92,18 +92,18 @@ module.exports = {
         roleType
       });
       if (existingRole) {
-        return message.reply(`<a:important:1367186288297377834> **|** Anda sudah memiliki custom role bertipe **${roleType}**.`);
+        return message.reply(`${config.emojis.important} **|** Anda sudah memiliki custom role bertipe **${roleType}**.`);
       }
 
       try {
         // Step 1: Ask for role name
-        await message.channel.send('<:seraphyx:1367175101711388783> **|** Silakan ketik nama role yang kamu inginkan (dalam 30 detik)...');
+        await message.channel.send('${config.emojis.seraphyx} **|** Silakan ketik nama role yang kamu inginkan (dalam 30 detik)...');
         const nameMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
         const roleName = nameMsg.first().content;
 
 
         // Step 2: Ask for role color or gradient
-        await message.channel.send('<:seraphyx:1367175101711388783> **|** Ketik warna role dalam format HEX (contoh: `#FF0000`) atau dua kode HEX untuk gradient (contoh: `#34ebd8 #34eb77`)');
+        await message.channel.send('${config.emojis.seraphyx} **|** Ketik warna role dalam format HEX (contoh: `#FF0000`) atau dua kode HEX untuk gradient (contoh: `#34ebd8 #34eb77`)');
         const colorMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
         const colorInput = colorMsg.first().content.trim();
         const colorParts = colorInput.split(/\s+/);
@@ -113,19 +113,19 @@ module.exports = {
         // Validate single or double hex codes
         if (colorParts.length === 1) {
           if (!/^#([0-9A-F]{6})$/i.test(roleColor)) {
-            return message.channel.send('<a:important:1367186288297377834> **|** Format warna tidak valid. Gunakan format HEX seperti `#RRGGBB`.');
+            return message.channel.send('${config.emojis.important} **|** Format warna tidak valid. Gunakan format HEX seperti `#RRGGBB`.');
           }
         } else if (colorParts.length === 2) {
           if (!/^#([0-9A-F]{6})$/i.test(colorParts[0]) || !/^#([0-9A-F]{6})$/i.test(colorParts[1])) {
-            return message.channel.send('<a:important:1367186288297377834> **|** Kedua warna harus format HEX seperti `#RRGGBB #RRGGBB`.');
+            return message.channel.send('${config.emojis.important} **|** Kedua warna harus format HEX seperti `#RRGGBB #RRGGBB`.');
           }
           gradientColor = colorParts[1];
         } else {
-          return message.channel.send('<a:important:1367186288297377834> **|** Masukkan satu atau dua kode warna HEX.');
+          return message.channel.send('${config.emojis.important} **|** Masukkan satu atau dua kode warna HEX.');
         }
 
         // Step 3: Ask for icon
-        await message.channel.send('<:seraphyx:1367175101711388783> **|** Kirim gambar untuk icon role kamu (hanya image), atau ketik `cancel` untuk lewati (30 detik)...');
+        await message.channel.send('${config.emojis.seraphyx} **|** Kirim gambar untuk icon role kamu (hanya image), atau ketik `cancel` untuk lewati (30 detik)...');
         const iconMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
 
         const iconContent = iconMsg.first().content?.toLowerCase();
@@ -148,7 +148,7 @@ module.exports = {
               await r.setColors({ primaryColor: roleColor, secondaryColor: gradientColor });
             } catch (error) { // eslint-disable-line no-unused-vars
               // Fallback to single color if gradient fails
-              await message.channel.send('<a:important:1367186288297377834> **|** Gagal mengatur gradient, menggunakan warna utama saja.');
+              await message.channel.send('${config.emojis.important} **|** Gagal mengatur gradient, menggunakan warna utama saja.');
             }
             return r;
           } else {
@@ -164,11 +164,11 @@ module.exports = {
         if (iconContent === 'cancel' || !hasAttachment) {
           // Buat role tanpa icon
           role = await createRoleWithColor({});
-          await message.channel.send('<a:check:1367395457529282581> **|** Role berhasil dibuat tanpa icon.');
+          await message.channel.send('${config.emojis.check} **|** Role berhasil dibuat tanpa icon.');
         } else {
           const attachment = iconMsg.first().attachments.first();
           if (!attachment.contentType?.startsWith('image')) {
-            return message.channel.send('<a:important:1367186288297377834> **|** File yang dikirim bukan gambar.');
+            return message.channel.send('${config.emojis.important} **|** File yang dikirim bukan gambar.');
           }
 
           iconAttachment = attachment;
@@ -180,8 +180,8 @@ module.exports = {
             const imageBuffer = await fetch(attachment.url).then(res => res.arrayBuffer());
             await role.setIcon(Buffer.from(imageBuffer));
           } catch (err) {
-            console.warn('<a:important:1367186288297377834> **|** Gagal menetapkan icon role:', err.message);
-            message.channel.send('<:seraphyx:1367175101711388783> **|** Role berhasil dibuat, tapi gagal mengatur icon (mungkin karena batasan level boost server).');
+            console.warn('${config.emojis.important} **|** Gagal menetapkan icon role:', err.message);
+            message.channel.send('${config.emojis.seraphyx} **|** Role berhasil dibuat, tapi gagal mengatur icon (mungkin karena batasan level boost server).');
           }
         }
 
@@ -200,7 +200,7 @@ module.exports = {
         await newCustomRole.save();
 
         // Set posisi role
-        const rolePembatasId = client.config.roles?.customRolePosition || client.config.features?.customRolePositionRef || '1062374982778376192'; // Role referensi untuk posisi
+        const rolePembatasId = client.config.roles?.customRolePosition || client.config.features?.customRolePositionRef || config.roles.customRolePosition; // Role referensi untuk posisi
         const batasRole = message.guild.roles.cache.get(rolePembatasId);
         if (batasRole) {
           try {
@@ -215,29 +215,29 @@ module.exports = {
           await message.member.roles.add(role);
         } catch (err) {
           console.warn('Gagal menambahkan role ke user:', err.message);
-          message.channel.send('<:seraphyx:1367175101711388783> **|** Role berhasil dibuat, namun gagal memberikan role ke Anda.');
+          message.channel.send('${config.emojis.seraphyx} **|** Role berhasil dibuat, namun gagal memberikan role ke Anda.');
         }
 
-        await message.channel.send(`<a:check:1367395457529282581> **|** Role berhasil dibuat: <@&${role.id}>`);
+        await message.channel.send(`${config.emojis.check} **|** Role berhasil dibuat: <@&${role.id}>`);
 
       } catch (err) {
         console.error(err);
-        message.channel.send('<a:important:1367186288297377834> **|** Waktu habis atau terjadi kesalahan. Silakan coba lagi.');
+        message.channel.send('${config.emojis.important} **|** Waktu habis atau terjadi kesalahan. Silakan coba lagi.');
       }
     }
 
       else if (sub === 'delete') {
         // Allow user to delete their own custom role and DB entry
         const filter = m => m.author.id === message.author.id;
-        const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID);
-        const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID);
+        const isBoost = message.member.roles.cache.has(config.BOOST_ROLE_ID);
+        const isDonate = message.member.roles.cache.has(config.DONATE_ROLE_ID);
         let roleType;
         if (isBoost && isDonate) {
-          await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin dihapus.");
+          await message.channel.send(config.emojis.seraphyx + " **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin dihapus.");
           const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
           const typeInput = collected.first().content.toLowerCase();
           if (!['boost', 'donate'].includes(typeInput)) {
-            return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+            return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
           }
           roleType = typeInput;
         } else if (isBoost) {
@@ -245,7 +245,7 @@ module.exports = {
         } else if (isDonate) {
           roleType = 'donate';
         } else {
-          return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+          return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
         }
 
         const customRole = await CustomRoleModel.findOne({
@@ -254,7 +254,7 @@ module.exports = {
           roleType
         });
         if (!customRole) {
-          return message.reply(`<a:important:1367186288297377834> **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
+          return message.reply(`${config.emojis.important} **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
         }
         const role = message.guild.roles.cache.get(customRole.roleId);
         let deleted = false;
@@ -268,25 +268,25 @@ module.exports = {
         }
         await CustomRoleModel.deleteOne({ _id: customRole._id });
         if (deleted) {
-          return message.channel.send(`<a:check:1367395457529282581> **|** Custom role kamu berhasil dihapus dari server dan database.`);
+          return message.channel.send(`${config.emojis.check} **|** Custom role kamu berhasil dihapus dari server dan database.`);
         } else {
-          return message.channel.send(`<a:check:1367395457529282581> **|** Data custom role di database dihapus. Role tidak ditemukan di server.`);
+          return message.channel.send(`${config.emojis.check} **|** Data custom role di database dihapus. Role tidak ditemukan di server.`);
         }
       }
       else if (sub === 'edit') {
         const filter = m => m.author.id === message.author.id;
 
-        const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID); // ID role Boost
-        const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID); // ID role Donate
+        const isBoost = message.member.roles.cache.has(config.BOOST_ROLE_ID); // ID role Boost
+        const isDonate = message.member.roles.cache.has(config.DONATE_ROLE_ID); // ID role Donate
 
         let roleType;
 
         if (isBoost && isDonate) {
-          await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin diedit.");
+          await message.channel.send(config.emojis.seraphyx + " **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin diedit.");
           const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
           const typeInput = collected.first().content.toLowerCase();
           if (!['boost', 'donate'].includes(typeInput)) {
-            return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+            return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
           }
           roleType = typeInput;
         } else if (isBoost) {
@@ -294,7 +294,7 @@ module.exports = {
         } else if (isDonate) {
           roleType = 'donate';
         } else {
-          return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+          return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
         }
 
         const customRole = await CustomRoleModel.findOne({
@@ -304,26 +304,26 @@ module.exports = {
         });
 
         if (!customRole) {
-          return message.reply(`<a:important:1367186288297377834> **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
+          return message.reply(`${config.emojis.important} **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
         }
 
         try {
-          await message.channel.send('<:seraphyx:1367175101711388783> **|** Apa yang ingin kamu edit? Pilih salah satu: `name`, `color`, atau `icon`.');
+          await message.channel.send('${config.emojis.seraphyx} **|** Apa yang ingin kamu edit? Pilih salah satu: `name`, `color`, atau `icon`.');
           const editChoiceMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
           const editChoice = editChoiceMsg.first().content.toLowerCase();
 
           const roleToEdit = message.guild.roles.cache.get(customRole.roleId);
 
           if (!roleToEdit) {
-            return message.channel.send('<a:important:1367186288297377834> **|** Role yang ingin kamu edit tidak ditemukan.');
+            return message.channel.send('${config.emojis.important} **|** Role yang ingin kamu edit tidak ditemukan.');
           }
 
           if (!roleToEdit.editable) {
-            return message.channel.send('<a:important:1367186288297377834> **|** Saya tidak memiliki izin untuk mengedit role ini.');
+            return message.channel.send('${config.emojis.important} **|** Saya tidak memiliki izin untuk mengedit role ini.');
           }
 
           if (editChoice === 'name') {
-            await message.channel.send('<:seraphyx:1367175101711388783> **|** Ketik nama baru untuk role kamu:');
+            await message.channel.send('${config.emojis.seraphyx} **|** Ketik nama baru untuk role kamu:');
             const newNameMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
             const newRoleName = newNameMsg.first().content;
 
@@ -331,11 +331,11 @@ module.exports = {
             customRole.roleName = newRoleName;
             await customRole.save();
 
-            message.channel.send(`<a:check:1367395457529282581> **|** Nama role berhasil diubah menjadi **${newRoleName}**.`);
+            message.channel.send(`${config.emojis.check} **|** Nama role berhasil diubah menjadi **${newRoleName}**.`);
 
           } else if (editChoice === 'color') {
 
-            await message.channel.send('<:seraphyx:1367175101711388783> **|** Ketik warna baru dalam format HEX (contoh: `#FF0000`) atau dua kode HEX untuk gradient (contoh: `#34ebd8 #34eb77`):');
+            await message.channel.send('${config.emojis.seraphyx} **|** Ketik warna baru dalam format HEX (contoh: `#FF0000`) atau dua kode HEX untuk gradient (contoh: `#34ebd8 #34eb77`):');
             const newColorMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
             const colorInput = newColorMsg.first().content.trim();
             const colorParts = colorInput.split(/\s+/);
@@ -344,15 +344,15 @@ module.exports = {
 
             if (colorParts.length === 1) {
               if (!/^#([0-9A-F]{6})$/i.test(mainColor)) {
-                return message.channel.send('<a:important:1367186288297377834> **|** Format warna tidak valid. Gunakan HEX seperti `#RRGGBB`.');
+                return message.channel.send('${config.emojis.important} **|** Format warna tidak valid. Gunakan HEX seperti `#RRGGBB`.');
               }
               await roleToEdit.edit({ colors: { primaryColor: mainColor } });
               customRole.roleColor = mainColor;
               await customRole.save();
-              message.channel.send(`<a:check:1367395457529282581> **|** Warna role berhasil diubah menjadi **${mainColor}**.`);
+              message.channel.send(`${config.emojis.check} **|** Warna role berhasil diubah menjadi **${mainColor}**.`);
             } else if (colorParts.length === 2) {
               if (!/^#([0-9A-F]{6})$/i.test(colorParts[0]) || !/^#([0-9A-F]{6})$/i.test(colorParts[1])) {
-                return message.channel.send('<a:important:1367186288297377834> **|** Kedua warna harus format HEX seperti `#RRGGBB #RRGGBB`.');
+                return message.channel.send('${config.emojis.important} **|** Kedua warna harus format HEX seperti `#RRGGBB #RRGGBB`.');
               }
               gradientColor = colorParts[1];
               // Try setColors if available
@@ -361,25 +361,25 @@ module.exports = {
                   await roleToEdit.setColors({ primaryColor: mainColor, secondaryColor: gradientColor });
                   customRole.roleColor = `${mainColor},${gradientColor}`;
                   await customRole.save();
-                  message.channel.send(`<a:check:1367395457529282581> **|** Gradient role berhasil diubah menjadi **${mainColor} | ${gradientColor}**.`);
+                  message.channel.send(`${config.emojis.check} **|** Gradient role berhasil diubah menjadi **${mainColor} | ${gradientColor}**.`);
                 } catch (error) { // eslint-disable-line no-unused-vars
                   await roleToEdit.edit({ colors: { primaryColor: mainColor } });
                   customRole.roleColor = mainColor;
                   await customRole.save();
-                  message.channel.send('<a:important:1367186288297377834> **|** Gagal mengatur gradient, menggunakan warna utama saja.');
+                  message.channel.send('${config.emojis.important} **|** Gagal mengatur gradient, menggunakan warna utama saja.');
                 }
               } else {
                 await roleToEdit.edit({ colors: { primaryColor: mainColor } });
                 customRole.roleColor = mainColor;
                 await customRole.save();
-                message.channel.send('<a:important:1367186288297377834> **|** Gradient tidak didukung, menggunakan warna utama saja.');
+                message.channel.send('${config.emojis.important} **|** Gradient tidak didukung, menggunakan warna utama saja.');
               }
             } else {
-              return message.channel.send('<a:important:1367186288297377834> **|** Masukkan satu atau dua kode warna HEX.');
+              return message.channel.send('${config.emojis.important} **|** Masukkan satu atau dua kode warna HEX.');
             }
 
           } else if (editChoice === 'icon') {
-            await message.channel.send('<:seraphyx:1367175101711388783> **|** Kirim gambar baru untuk icon role kamu (image saja), atau ketik `cancel` untuk batal.');
+            await message.channel.send('${config.emojis.seraphyx} **|** Kirim gambar baru untuk icon role kamu (image saja), atau ketik `cancel` untuk batal.');
 
             const iconMsg = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
 
@@ -387,12 +387,12 @@ module.exports = {
             const hasAttachment = iconMsg.first().attachments.size > 0;
 
             if (iconContent === 'cancel' || !hasAttachment) {
-              return message.channel.send('<a:important:1367186288297377834> **|** Tidak ada perubahan icon dilakukan.');
+              return message.channel.send('${config.emojis.important} **|** Tidak ada perubahan icon dilakukan.');
             }
 
             const attachment = iconMsg.first().attachments.first();
             if (!attachment.contentType?.startsWith('image')) {
-              return message.channel.send('<a:important:1367186288297377834> **|** File yang dikirim bukan gambar.');
+              return message.channel.send('${config.emojis.important} **|** File yang dikirim bukan gambar.');
             }
 
             try {
@@ -402,35 +402,35 @@ module.exports = {
               customRole.roleIcon = attachment.url;
               await customRole.save();
 
-              message.channel.send('<a:check:1367395457529282581> **|** Icon role berhasil diubah.');
+              message.channel.send('${config.emojis.check} **|** Icon role berhasil diubah.');
             } catch (err) {
               console.error(err);
-              message.channel.send('<a:important:1367186288297377834> **|** Gagal mengubah icon. Coba lagi atau pastikan server memiliki boost level yang cukup.');
+              message.channel.send('${config.emojis.important} **|** Gagal mengubah icon. Coba lagi atau pastikan server memiliki boost level yang cukup.');
             }
 
           } else {
-            message.reply("<a:important:1367186288297377834> **|** Pilihan tidak valid. Harus `name`, `color`, atau `icon`.");
+            message.reply(config.emojis.important + " **|** Pilihan tidak valid. Harus `name`, `color`, atau `icon`.");
           }
         } catch (err) {
           console.error(err);
-          message.channel.send('<a:important:1367186288297377834> **|** Waktu habis atau terjadi kesalahan. Silakan coba lagi.');
+          message.channel.send('${config.emojis.important} **|** Waktu habis atau terjadi kesalahan. Silakan coba lagi.');
         }
       }
 
         else if (sub === 'add') {
           const filter = m => m.author.id === message.author.id;
 
-          const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID); // ID role Boost
-          const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID); // ID role Donate
+          const isBoost = message.member.roles.cache.has(config.BOOST_ROLE_ID); // ID role Boost
+          const isDonate = message.member.roles.cache.has(config.DONATE_ROLE_ID); // ID role Donate
 
           let roleType;
 
           if (isBoost && isDonate) {
-            await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin ditambahkan anggota.");
+            await message.channel.send(config.emojis.seraphyx + " **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin ditambahkan anggota.");
             const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
             const typeInput = collected.first().content.toLowerCase();
             if (!['boost', 'donate'].includes(typeInput)) {
-              return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+              return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
             }
             roleType = typeInput;
           } else if (isBoost) {
@@ -438,7 +438,7 @@ module.exports = {
           } else if (isDonate) {
             roleType = 'donate';
           } else {
-            return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+            return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
           }
 
           const customRole = await CustomRoleModel.findOne({
@@ -448,28 +448,28 @@ module.exports = {
           });
 
           if (!customRole) {
-            return message.reply(`<a:important:1367186288297377834> **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
+            return message.reply(`${config.emojis.important} **|** Anda belum memiliki custom role bertipe **${roleType}**.`);
           }
 
           const maxMembers = roleType === 'boost' ? 3 : 2;
 
           if (customRole.members.length >= maxMembers) {
-            return message.reply(`<a:important:1367186288297377834> **|** Anda sudah mencapai batas anggota untuk role tipe **${roleType}**.`);
+            return message.reply(`${config.emojis.important} **|** Anda sudah mencapai batas anggota untuk role tipe **${roleType}**.`);
           }
 
           const target = message.mentions.members.first() || message.guild.members.cache.get(args[1]);
 
           if (!target) {
-            return message.reply('<a:important:1367186288297377834> **|** Harap mention user yang ingin Anda tambahkan ke custom role.\nContoh: `seracr adduser @username`');
+            return message.reply('${config.emojis.important} **|** Harap mention user yang ingin Anda tambahkan ke custom role.\nContoh: `seracr adduser @username`');
           }
 
           if (customRole.members.includes(target.id)) {
-            return message.reply('<a:important:1367186288297377834> **|** User ini sudah menjadi bagian dari custom role.');
+            return message.reply('${config.emojis.important} **|** User ini sudah menjadi bagian dari custom role.');
           }
 
           const role = message.guild.roles.cache.get(customRole.roleId);
           if (!role) {
-            return message.reply('<a:important:1367186288297377834> **|** Role tidak ditemukan di server.');
+            return message.reply('${config.emojis.important} **|** Role tidak ditemukan di server.');
           }
 
           try {
@@ -477,27 +477,27 @@ module.exports = {
             customRole.members.push(target.id);
             await customRole.save();
 
-            message.channel.send(`<a:check:1367395457529282581> **|** <@${target.id}> berhasil ditambahkan ke custom role <@&${role.id}>.`);
+            message.channel.send(`${config.emojis.check} **|** <@${target.id}> berhasil ditambahkan ke custom role <@&${role.id}>.`);
           } catch (error) {
             console.error(error);
-            message.reply('<a:important:1367186288297377834> **|** Gagal menambahkan user ke role. Periksa apakah bot memiliki izin yang cukup.');
+            message.reply('${config.emojis.important} **|** Gagal menambahkan user ke role. Periksa apakah bot memiliki izin yang cukup.');
           }
         }
 
           else if (sub === 'remove') {
             const filter = m => m.author.id === message.author.id;
 
-            const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID); // ID role Boost
-            const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID); // ID role Donate
+            const isBoost = message.member.roles.cache.has(config.BOOST_ROLE_ID); // ID role Boost
+            const isDonate = message.member.roles.cache.has(config.DONATE_ROLE_ID); // ID role Donate
 
             let roleType;
 
             if (isBoost && isDonate) {
-              await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin diatur.");
+              await message.channel.send(config.emojis.seraphyx + " **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk memilih custom role yang ingin diatur.");
               const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
               const typeInput = collected.first().content.toLowerCase();
               if (!['boost', 'donate'].includes(typeInput)) {
-                return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+                return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
               }
               roleType = typeInput;
             } else if (isBoost) {
@@ -505,7 +505,7 @@ module.exports = {
             } else if (isDonate) {
               roleType = 'donate';
             } else {
-              return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+              return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
             }
 
             const customRole = await CustomRoleModel.findOne({
@@ -519,7 +519,7 @@ module.exports = {
                 embeds: [
                   new EmbedBuilder()
                     .setColor('Red')
-                    .setTitle('<a:important:1367186288297377834> **|** Custom Role Tidak Ditemukan')
+                    .setTitle('${config.emojis.important} **|** Custom Role Tidak Ditemukan')
                     .setDescription(`Anda belum memiliki custom role untuk tipe **${roleType}**.`)
                 ]
               });
@@ -530,7 +530,7 @@ module.exports = {
                 embeds: [
                   new EmbedBuilder()
                     .setColor('Orange')
-                    .setTitle('<:seraphyx:1367175101711388783> **|** Tidak Ada Member Lain')
+                    .setTitle('${config.emojis.seraphyx} **|** Tidak Ada Member Lain')
                     .setDescription('Tidak ada member lain dalam custom role yang dapat dihapus.')
                 ]
               });
@@ -543,7 +543,7 @@ module.exports = {
               embeds: [
                 new EmbedBuilder()
                   .setColor('White')
-                  .setTitle('<:seraphyx:1367175101711388783> **|** Hapus Member dari Custom Role')
+                  .setTitle('${config.emojis.seraphyx} **|** Hapus Member dari Custom Role')
                   .setDescription(`Silakan ketik **mention** atau **ID** dari salah satu user berikut:\n\n${memberMentions}`)
                   .setFooter({ text: 'Waktu input: 30 detik' })
               ]
@@ -558,7 +558,7 @@ module.exports = {
                   embeds: [
                     new EmbedBuilder()
                       .setColor('Red')
-                      .setTitle('<a:important:1367186288297377834> **|** User Tidak Ditemukan')
+                      .setTitle('${config.emojis.important} **|** User Tidak Ditemukan')
                       .setDescription('Pastikan mention atau ID yang Anda masukkan benar.')
                   ]
                 });
@@ -569,7 +569,7 @@ module.exports = {
                   embeds: [
                     new EmbedBuilder()
                       .setColor('Red')
-                      .setTitle('<a:important:1367186288297377834> **|** User Bukan Member Role')
+                      .setTitle('${config.emojis.important} **|** User Bukan Member Role')
                       .setDescription('User tersebut tidak termasuk dalam anggota custom role Anda.')
                   ]
                 });
@@ -580,7 +580,7 @@ module.exports = {
                   embeds: [
                     new EmbedBuilder()
                       .setColor('Red')
-                      .setTitle('<a:important:1367186288297377834> **|** Tidak Bisa Menghapus Diri Sendiri')
+                      .setTitle('${config.emojis.important} **|** Tidak Bisa Menghapus Diri Sendiri')
                       .setDescription('Anda tidak dapat menghapus diri sendiri dari role.')
                   ]
                 });
@@ -601,7 +601,7 @@ module.exports = {
                 embeds: [
                   new EmbedBuilder()
                     .setColor('Green')
-                    .setTitle('<a:check:1367395457529282581> **|** Member Berhasil Dihapus')
+                    .setTitle('${config.emojis.check} **|** Member Berhasil Dihapus')
                     .setDescription(`<@${target.id}> telah dihapus dari custom role Anda.`)
                 ]
               });
@@ -611,7 +611,7 @@ module.exports = {
                 embeds: [
                   new EmbedBuilder()
                     .setColor('Red')
-                    .setTitle('<a:important:1367186288297377834> **|** Waktu Habis atau Kesalahan')
+                    .setTitle('${config.emojis.important} **|** Waktu Habis atau Kesalahan')
                     .setDescription('Anda tidak memberikan input dalam waktu yang ditentukan.')
                 ]
               });
@@ -621,17 +621,17 @@ module.exports = {
             else if (sub === 'info') {
               const filter = m => m.author.id === message.author.id;
 
-              const isBoost = message.member.roles.cache.has(BOOST_ROLE_ID); // ID role Boost
-              const isDonate = message.member.roles.cache.has(DONATE_ROLE_ID); // ID role Donate
+              const isBoost = message.member.roles.cache.has(config.BOOST_ROLE_ID); // ID role Boost
+              const isDonate = message.member.roles.cache.has(config.DONATE_ROLE_ID); // ID role Donate
 
               let roleType;
 
               if (isBoost && isDonate) {
-                await message.channel.send("<:seraphyx:1367175101711388783> **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk melihat info custom role yang sesuai.");
+                await message.channel.send(config.emojis.seraphyx + " **|** Kamu punya role **Boost** dan **Donate**. Ketik `boost` atau `donate` untuk melihat info custom role yang sesuai.");
                 const collected = await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
                 const typeInput = collected.first().content.toLowerCase();
                 if (!['boost', 'donate'].includes(typeInput)) {
-                  return message.channel.send("<a:important:1367186288297377834> **|** Tipe tidak valid. Harus `boost` atau `donate`.");
+                  return message.channel.send(config.emojis.important + " **|** Tipe tidak valid. Harus `boost` atau `donate`.");
                 }
                 roleType = typeInput;
               } else if (isBoost) {
@@ -639,7 +639,7 @@ module.exports = {
               } else if (isDonate) {
                 roleType = 'donate';
               } else {
-                return message.reply("<a:important:1367186288297377834> **|** Anda tidak memiliki role Boost atau Donate.");
+                return message.reply(config.emojis.important + " **|** Anda tidak memiliki role Boost atau Donate.");
               }
 
               const customRole = await CustomRoleModel.findOne({
@@ -653,7 +653,7 @@ module.exports = {
                   embeds: [
                     new EmbedBuilder()
                       .setColor('Red')
-                      .setTitle('<a:important:1367186288297377834> **|** Custom Role Tidak Ditemukan')
+                      .setTitle('${config.emojis.important} **|** Custom Role Tidak Ditemukan')
                       .setDescription(`Anda belum memiliki custom role untuk tipe **${roleType}**.`)
                   ]
                 });
@@ -691,7 +691,7 @@ module.exports = {
                     embeds: [
                       new EmbedBuilder()
                         .setColor('Red')
-                        .setTitle('<a:important:1367186288297377834> **|** Akses Ditolak')
+                        .setTitle('${config.emojis.important} **|** Akses Ditolak')
                         .setDescription('Hanya user dengan **role Staff**, **Manage Roles**, atau **owner server** yang dapat menggunakan perintah ini.')
                     ]
                   });
@@ -705,7 +705,7 @@ module.exports = {
                     embeds: [
                       new EmbedBuilder()
                         .setColor('Red')
-                        .setTitle('<a:important:1367186288297377834> **|** Format Salah')
+                        .setTitle('${config.emojis.important} **|** Format Salah')
                         .setDescription('Gunakan format: `!cusrole delete @user boost` atau `!cusrole delete @user donate`.')
                     ]
                   });
@@ -718,7 +718,7 @@ module.exports = {
                     embeds: [
                       new EmbedBuilder()
                         .setColor('Red')
-                        .setTitle('<a:important:1367186288297377834> **|** Custom Role Tidak Ditemukan')
+                        .setTitle('${config.emojis.important} **|** Custom Role Tidak Ditemukan')
                         .setDescription(`<@${targetUser.id}> tidak memiliki custom role dengan tipe **${type}**.`)
                     ]
                   });
@@ -734,7 +734,7 @@ module.exports = {
                       embeds: [
                         new EmbedBuilder()
                           .setColor('Orange')
-                          .setTitle('<:seraphyx:1367175101711388783> **|** Role Tidak Bisa Dihapus')
+                          .setTitle('${config.emojis.seraphyx} **|** Role Tidak Bisa Dihapus')
                           .setDescription('Gagal menghapus role dari server. Mungkin role sudah dihapus atau bot tidak memiliki izin.')
                       ]
                     });
@@ -747,7 +747,7 @@ module.exports = {
                   embeds: [
                     new EmbedBuilder()
                       .setColor('Green')
-                      .setTitle('<a:check:1367395457529282581> **|** Custom Role Dihapus')
+                      .setTitle('${config.emojis.check} **|** Custom Role Dihapus')
                       .setDescription(`Custom role milik <@${targetUser.id}> dengan tipe **${type}** berhasil dihapus.`)
                   ]
                 });
@@ -758,7 +758,7 @@ module.exports = {
 
       const embed = new EmbedBuilder()
       .setColor('Red')
-      .setDescription(`<:seraphyx:1367175101711388783> **|** List Command:\n\`seracr create\` - **Membuat Custom Role**\n\`seracr edit\` - **Mengedit Custom Role**\n\`seracr add\` - **Menambahkan User ke Custom Role**\n\`seracr remove\` - **Menghapus User dari Custom Role**\n\`seracr info\` - **Melihat Informasi Custom Role**\n\n<:seraphyx:1367175101711388783> **|** Jika kamu menemukan bug atau error, silahkan laporkan ke staff yang sedang online.`);
+      .setDescription(`${config.emojis.seraphyx} **|** List Command:\n\`seracr create\` - **Membuat Custom Role**\n\`seracr edit\` - **Mengedit Custom Role**\n\`seracr add\` - **Menambahkan User ke Custom Role**\n\`seracr remove\` - **Menghapus User dari Custom Role**\n\`seracr info\` - **Melihat Informasi Custom Role**\n\n${config.emojis.seraphyx} **|** Jika kamu menemukan bug atau error, silahkan laporkan ke staff yang sedang online.`);
       message.reply({ embeds: [embed] });
     }
   }

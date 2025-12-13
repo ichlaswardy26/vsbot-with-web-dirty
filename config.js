@@ -9,6 +9,13 @@ module.exports = {
   // ==================== OWNER & ADMIN ====================
   ownerId: process.env.OWNER_IDS ? process.env.OWNER_IDS.split(',') : [],
   
+  // ==================== STAFF USER IDs ====================
+  staffUsers: {
+    executive: process.env.EXECUTIVE_USER_ID || null,
+    supremeVisioner: process.env.SUPREME_VISIONER_USER_ID || null,
+    engineer: process.env.ENGINEER_USER_ID || null,
+  },
+  
   // ==================== MONGODB ====================
   mongoUri: process.env.MONGO_URI,
   
@@ -69,6 +76,9 @@ module.exports = {
     
     // Support
     support: process.env.SUPPORT_CHANNEL_ID || null,
+    
+    // Bio Link System
+    bioLinkConfirmation: process.env.BIO_LINK_CONFIRMATION_CHANNEL_ID || null,
     
     // Voice System
     joinToCreate: process.env.JOIN_TO_CREATE_CHANNEL_ID || null,
@@ -132,6 +142,16 @@ module.exports = {
     socialFollower: process.env.SOCIAL_FOLLOWER_ROLE_ID || null,
     activeMember: process.env.ACTIVE_MEMBER_ROLE_ID || null,
     
+    // Support Package Roles
+    cavernDread: process.env.CAVERN_DREAD_ROLE_ID || null,
+    midnightCovenant: process.env.MIDNIGHT_COVENANT_ROLE_ID || null,
+    dreadLegion: process.env.DREAD_LEGION_ROLE_ID || null,
+    abyssalBlade: process.env.ABYSSAL_BLADE_ROLE_ID || null,
+    valkyrie: process.env.VALKYRIE_ROLE_ID || null,
+    
+    // Special Mention Role
+    mentionRole: process.env.MENTION_ROLE_ID || null,
+    
     // Position Reference Role
     customRolePosition: process.env.CUSTOM_ROLE_POSITION_REF || null,
     
@@ -177,6 +197,18 @@ module.exports = {
     cowoncy: process.env.EMOJI_COWONCY || '🪙',
     donation: process.env.EMOJI_DONATION || '💝',
     foryouCommunity: process.env.EMOJI_FORYOU_COMMUNITY || '🏘️',
+    check: process.env.EMOJI_CHECK || '✅',
+    clouds: process.env.EMOJI_CLOUDS || '☁️',
+    blackBoost: process.env.EMOJI_BLACK_BOOST || '🚀',
+    cross: process.env.EMOJI_CROSS || '❌',
+    owoCash: process.env.EMOJI_OWO_CASH || '🪙',
+    blackBat: process.env.EMOJI_BLACK_BAT || '🦇',
+    cards: process.env.EMOJI_CARDS || '🃏',
+    spider: process.env.EMOJI_SPIDER || '🕷️',
+    darkWyvern: process.env.EMOJI_DARK_WYVERN || '🐉',
+    tako: process.env.EMOJI_TAKO || '🐙',
+    paimonPrimogems: process.env.EMOJI_PAIMON_PRIMOGEMS || '💎',
+    witch: process.env.EMOJI_WITCH || '🧙',
   },
   
   // ==================== IMAGES & ASSETS ====================
@@ -209,7 +241,7 @@ module.exports = {
     
     // Custom Role
     customRolePrice: parseInt(process.env.CUSTOM_ROLE_PRICE) || 1000,
-    customRolePositionRef: process.env.CUSTOM_ROLE_POSITION_REF || '1062374982778376192',
+    customRolePositionRef: process.env.CUSTOM_ROLE_POSITION_REF || null,
     
     // Word Chain
     wordChainTimeout: parseInt(process.env.WORD_CHAIN_TIMEOUT) || 30000, // milliseconds
@@ -224,6 +256,16 @@ module.exports = {
     info: process.env.COLOR_INFO || '#5865F2',
   },
   
+  // ==================== LOGGING CONFIGURATION ====================
+  logging: {
+    level: process.env.LOG_LEVEL || 'INFO',
+    maxFiles: parseInt(process.env.MAX_LOG_FILES) || 5,
+    maxSize: parseInt(process.env.MAX_LOG_SIZE) || 10485760, // 10MB
+  },
+
+  // ==================== ENVIRONMENT ====================
+  nodeEnv: process.env.NODE_ENV || 'development',
+
   // ==================== DEPRECATED (for backward compatibility) ====================
   // These will be removed in future versions
   prefix: process.env.PREFIX || 'sera',

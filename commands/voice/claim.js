@@ -6,15 +6,15 @@ module.exports = {
   async exec(client, message) {
     const member = message.member;
     const voice = member.voice.channel;
-    if (!voice) return message.reply("<a:important:1367186288297377834> **|** Kamu tidak sedang berada di voice channel.");
+    if (!voice) return message.reply(`${config.emojis.important} **|** Kamu tidak sedang berada di voice channel.`);
 
     const VoiceChannelModel = require("../../schemas/voiceChannel");
     const data = await VoiceChannelModel.findOne({ channelId: voice.id });
-    if (!data) return message.reply("<a:important:1367186288297377834> **|** Channel ini bukan custom voice.");
+    if (!data) return message.reply(`${config.emojis.important} **|** Channel ini bukan custom voice.`);
 
     // Cek apakah owner masih berada di voice channel
     const ownerStillHere = voice.members.some(m => m.id === data.ownerId);
-    if (ownerStillHere) return message.reply("<a:important:1367186288297377834> **|** Owner asli masih berada di channel.");
+    if (ownerStillHere) return message.reply(`${config.emojis.important} **|** Owner asli masih berada di channel.`);
 
     // Ambil alih
     data.ownerId = member.id;

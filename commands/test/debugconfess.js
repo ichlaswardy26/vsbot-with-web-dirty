@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const config = require('../../config.js');
 
 module.exports = {
   name: "debugconfess",
@@ -13,8 +14,8 @@ module.exports = {
       return message.reply(permissionError);
     }
 
-    const confessionChannelId = "1376956791757209773";
-    const logChannelId = "1322999470232961035";
+    const confessionChannelId = config.channels.confession;
+    const logChannelId = config.channels.confessionLog;
     
     const confessionChannel = message.guild.channels.cache.get(confessionChannelId);
     const logChannel = message.guild.channels.cache.get(logChannelId);

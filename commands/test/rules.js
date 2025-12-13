@@ -85,7 +85,7 @@ Dilarang share atau spam phising berbentuk link ataupun photo.
 **Sanksi: (Softban)**
 
 12. __** Menggunakan Tag Role Berlebihan**__
-Dilarang Menggunakan Tag Role Berlebihan seperti @everyone/@here/<@946302103209512971>/ atau role lain dalam bentuk spam yang tidak ada tujuan nya.
+Dilarang Menggunakan Tag Role Berlebihan seperti @everyone/@here/<@${config.roles.mentionRole}>/ atau role lain dalam bentuk spam yang tidak ada tujuan nya.
 **Sanksi: (Warn/time out/kick/ban)**
 
 13. __**Patuhi Seluruh Peraturan Yang Ada**__
@@ -96,7 +96,7 @@ Jika melanggar peraturan baik villains atau admin maka akan di tindak tegas deng
 ***3x warning akan mengakibatkan time out/kick/ban. Softban akan membuat akun anda terbanned dari server untuk sementara agar phising tidak terus menerus terjadi.***`)
 
       const small = new TextDisplayBuilder()
-      .setContent(`**Jika ada kendala bug atau error dari bot, bisa langsung menghubungi:**\n> ✮ <@707254056535588924> (Executive)\n> ✮ <@1322543566404456500> (Supreme Visioner)`)
+      .setContent(`**Jika ada kendala bug atau error dari bot, bisa langsung menghubungi:**\n> ✮ <@${config.staffUsers.executive}> (Executive)\n> ✮ <@${config.staffUsers.supremeVisioner}> (Supreme Visioner)`)
 
 
     const container = new ContainerBuilder()

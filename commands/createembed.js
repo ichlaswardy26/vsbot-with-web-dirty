@@ -6,6 +6,7 @@ module.exports = {
   category: "utility",
   async exec(client, message) {
     const rolePermissions = require("../util/rolePermissions");
+const config = require('../config.js');
     
     // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'staff');
@@ -101,7 +102,7 @@ module.exports = {
 
     } catch (error) {
       console.error("Error starting embed creation:", error);
-      message.reply("<a:important:1367186288297377834> **|** Terjadi kesalahan saat membuat embed builder. Silakan coba lagi.");
+      message.reply(`${config.emojis.important} **|** Terjadi kesalahan saat membuat embed builder. Silakan coba lagi.`);
     }
   }
 };

@@ -43,7 +43,7 @@ module.exports = {
     const link = new ButtonBuilder()
       .setLabel('Instagram')
       .setURL('https://instagram.com/vseraphyx')
-      .setEmoji('<a:PaimonPrimogems:1325098046190784532>')
+      .setEmoji('${config.emojis.paimonPrimogems}')
       .setStyle(ButtonStyle.Link);
 
     const row = new ActionRowBuilder().addComponents(link);

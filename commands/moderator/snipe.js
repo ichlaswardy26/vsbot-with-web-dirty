@@ -6,6 +6,7 @@ module.exports = {
 
   async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
+const config = require('../../config.js');
     
     // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'moderator');
@@ -14,7 +15,7 @@ module.exports = {
     }
 
     const snipe = client.snipes.get(message.channel.id);
-    if (!snipe) return message.reply("<a:important:1367186288297377834> **|** Tidak ada pesan yang dihapus di channel ini.");
+    if (!snipe) return message.reply(`${config.emojis.important} **|** Tidak ada pesan yang dihapus di channel ini.`);
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: snipe.author.tag, iconURL: snipe.author.displayAvatarURL({ dynamic: true }) })
