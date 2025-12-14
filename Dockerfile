@@ -17,7 +17,8 @@ RUN apk add --no-cache \
     freetype-dev \
     python3 \
     make \
-    g++
+    g++ \
+    font-dejavu
 
 # Copy package files
 COPY package*.json ./

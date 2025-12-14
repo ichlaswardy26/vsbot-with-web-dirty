@@ -52,7 +52,7 @@ async function createIdentityCard(data, user, guild) {
   ctx.shadowBlur = 0;
 
   // Server Name split: "Villain" left, "Seraphyx" right
-  ctx.font = 'bold 24px Arial';
+  ctx.font = 'bold 24px "DejaVu Sans"';
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
   ctx.fillText('Villain', 50, 50);
@@ -61,7 +61,7 @@ async function createIdentityCard(data, user, guild) {
   ctx.fillText('Seraphyx', 850, 50);
 
   // Title
-  ctx.font = 'bold 48px Arial';
+  ctx.font = 'bold 48px "DejaVu Sans"';
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffffff';
   ctx.fillText("Villain's IDENTITY", 450, 100);
@@ -102,7 +102,7 @@ async function createIdentityCard(data, user, guild) {
   }
 
   // Add user info with stylish layout
-  ctx.font = 'bold 28px Arial';
+  ctx.font = 'bold 28px "DejaVu Sans"';
   ctx.textAlign = 'left';
   ctx.fillStyle = '#ffffff';
 
@@ -137,7 +137,7 @@ async function createIdentityCard(data, user, guild) {
     month: 'long', 
     day: 'numeric' 
   });
-  ctx.font = '20px Arial';
+  ctx.font = '20px "DejaVu Sans"';
   ctx.textAlign = 'left';
   ctx.fillStyle = '#808080';
   ctx.fillText('Joined: ' + joinDate, 50, 470);
