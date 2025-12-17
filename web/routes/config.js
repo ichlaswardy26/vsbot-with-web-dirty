@@ -441,6 +441,87 @@ router.post('/:guildId/restore', validateGuildId, verifyAuth, verifyGuildAccess,
 });
 
 /**
+ * GET /api/config/:guildId/progress
+ * Get configuration progress for dashboard overview
+ * Requirements: Task 18 - Configuration progress indicators
+ */
+router.get('/:guildId/progress', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    const config = await configManager.getConfig(guildId);
+    
+    // Calculate progress for each section
+    const progress = {
+      channels: calculateSectionProgress(config.channels, [
+        'welcome', 'log', 'levelUp', 'confession', 'ticketCategory', 
+        'voiceCreate', 'giveaway', 'snipe', 'wordChain'
+      ]),
+      roles: calculateSectionProgress(config.roles, [
+        'admin', 'moderator', 'muted', 'levelRoles'
+      ]),
+      features: calculateFeaturesProgress(config.features),
+      appearance: calculateSectionProgress(config.appearance, [
+        'embedColor', 'successColor', 'errorColor', 'warningColor'
+      ])
+    };
+    
+    res.json({
+      success: true,
+      data: progress
+    });
+  } catch (error) {
+    console.error('Error getting config progress:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get configuration progress'
+    });
+  }
+});
+
+/**
+ * Calculate progress for a configuration section
+ */
+function calculateSectionProgress(section, fields) {
+  if (!section) return { percentage: 0, configured: 0, total: fields.length };
+  
+  let configured = 0;
+  fields.forEach(field => {
+    const value = section[field];
+    if (value !== null && value !== undefined && value !== '' && 
+        !(Array.isArray(value) && value.length === 0) &&
+        !(typeof value === 'object' && Object.keys(value).length === 0)) {
+      configured++;
+    }
+  });
+  
+  return {
+    percentage: Math.round((configured / fields.length) * 100),
+    configured,
+    total: fields.length
+  };
+}
+
+/**
+ * Calculate features progress
+ */
+function calculateFeaturesProgress(features) {
+  if (!features) return { percentage: 0, enabled: 0, total: 8 };
+  
+  const featureKeys = ['leveling', 'economy', 'welcome', 'tickets', 'giveaways', 'autoResponder', 'wordChain', 'afk'];
+  let enabled = 0;
+  
+  featureKeys.forEach(key => {
+    if (features[key]?.enabled === true) enabled++;
+  });
+  
+  return {
+    percentage: Math.round((enabled / featureKeys.length) * 100),
+    enabled,
+    total: featureKeys.length
+  };
+}
+
+/**
  * DELETE /api/config/:guildId/cache
  * Clear configuration cache
  */

@@ -12,6 +12,7 @@ class Dashboard {
     this.rolesConfig = null;
     this.featuresConfig = null;
     this.appearanceConfig = null;
+    this.overviewDashboard = null;
     this.currentSection = 'overview';
     this.initialized = false;
     this.isMobile = window.innerWidth <= 767.98;
@@ -491,6 +492,9 @@ class Dashboard {
    */
   async initializeSection(section) {
     switch (section) {
+      case 'overview':
+        await this.initializeOverviewSection();
+        break;
       case 'channels':
         await this.initializeChannelsSection();
         break;
@@ -507,8 +511,30 @@ class Dashboard {
         // TODO: Initialize language section
         break;
       default:
-        // Overview section - no special initialization needed
+        // No special initialization needed
         break;
+    }
+  }
+
+  /**
+   * Initialize overview section with dashboard statistics and quick actions
+   * Requirements: Overall user experience (Task 18)
+   */
+  async initializeOverviewSection() {
+    // Only initialize once
+    if (this.overviewDashboard) {
+      // Refresh data on revisit
+      this.overviewDashboard.loadBotStatus();
+      this.overviewDashboard.loadConfigurationProgress();
+      return;
+    }
+
+    try {
+      if (window.OverviewDashboard) {
+        this.overviewDashboard = new OverviewDashboard(this.configManager);
+      }
+    } catch (error) {
+      console.error('Error initializing overview section:', error);
     }
   }
 
@@ -664,29 +690,41 @@ class Dashboard {
    * Save current section configuration
    */
   async saveCurrentSection() {
+    let saved = false;
+    
     switch (this.currentSection) {
       case 'channels':
         if (this.channelsConfig) {
           await this.channelsConfig.saveConfiguration();
+          saved = true;
         }
         break;
       case 'roles':
         if (this.rolesConfig) {
           await this.rolesConfig.saveConfiguration();
+          saved = true;
         }
         break;
       case 'features':
         if (this.featuresConfig) {
           await this.featuresConfig.saveConfiguration();
+          saved = true;
         }
         break;
       case 'appearance':
         if (this.appearanceConfig) {
           await this.appearanceConfig.saveConfiguration();
+          saved = true;
         }
         break;
       default:
         this.configManager.showNotification('No changes to save', 'info');
+    }
+    
+    // Track activity
+    if (saved && this.overviewDashboard) {
+      this.overviewDashboard.addActivity('save', `Saved ${this.currentSection} configuration`);
+      this.overviewDashboard.loadConfigurationProgress();
     }
   }
 
@@ -943,6 +981,12 @@ class Dashboard {
       this.rolesConfig = null;
       this.featuresConfig = null;
       this.appearanceConfig = null;
+      
+      // Track activity
+      if (this.overviewDashboard) {
+        this.overviewDashboard.addActivity('import', 'Imported configuration from file');
+        this.overviewDashboard.loadConfigurationProgress();
+      }
       
       // Reload current section
       await this.initializeSection(this.currentSection);

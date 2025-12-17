@@ -114,6 +114,23 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2" id="sectionTitle">Bot Configuration</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
+                        <!-- Global Search -->
+                        <div class="search-container me-3 d-none d-md-block">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" id="globalSearch" 
+                                       placeholder="Search settings..." aria-label="Search settings">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearch" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <!-- Search Results Dropdown -->
+                            <div class="search-results-dropdown" id="searchResultsDropdown" style="display: none;">
+                                <div class="search-results-list" id="searchResultsList"></div>
+                            </div>
+                        </div>
                         <div class="btn-group me-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="saveConfig">
                                 <i class="fas fa-save me-1"></i> Save Changes
@@ -124,59 +141,269 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Mobile Search Bar -->
+                <div class="mobile-search-bar d-md-none mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" id="mobileGlobalSearch" 
+                               placeholder="Search settings..." aria-label="Search settings">
+                    </div>
+                </div>
 
                 <!-- Content Sections -->
                 <div id="content">
                     <!-- Overview Section -->
                     <div id="overview-section" class="config-section active">
+                        <!-- Quick Actions Bar -->
+                        <div class="quick-actions-bar mb-4">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-primary quick-action-btn" data-action="configure-channels" title="Configure Channels">
+                                    <i class="fas fa-hashtag me-2"></i>Configure Channels
+                                </button>
+                                <button class="btn btn-outline-primary quick-action-btn" data-action="configure-roles" title="Configure Roles">
+                                    <i class="fas fa-users-cog me-2"></i>Configure Roles
+                                </button>
+                                <button class="btn btn-outline-primary quick-action-btn" data-action="toggle-features" title="Manage Features">
+                                    <i class="fas fa-cogs me-2"></i>Manage Features
+                                </button>
+                                <button class="btn btn-outline-success quick-action-btn" data-action="apply-template" title="Apply Template">
+                                    <i class="fas fa-magic me-2"></i>Apply Template
+                                </button>
+                                <button class="btn btn-outline-secondary quick-action-btn" data-action="export-config" title="Export Configuration">
+                                    <i class="fas fa-download me-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Bot Status and Stats Row -->
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="card stat-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon-wrapper mb-2">
+                                            <i class="fas fa-circle stat-icon" id="botStatusIcon"></i>
+                                        </div>
+                                        <div class="stat-value" id="botStatus">Checking...</div>
+                                        <div class="stat-label">Bot Status</div>
+                                        <div class="stat-detail text-muted" id="botUptime">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="card stat-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon-wrapper mb-2">
+                                            <i class="fas fa-server stat-icon text-primary"></i>
+                                        </div>
+                                        <div class="stat-value" id="guildCount">--</div>
+                                        <div class="stat-label">Servers</div>
+                                        <div class="stat-detail text-muted" id="memberCount">-- members</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="card stat-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon-wrapper mb-2">
+                                            <i class="fas fa-terminal stat-icon text-info"></i>
+                                        </div>
+                                        <div class="stat-value" id="commandCount">50+</div>
+                                        <div class="stat-label">Commands</div>
+                                        <div class="stat-detail text-muted" id="commandsUsed">-- used today</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-3">
+                                <div class="card stat-card h-100">
+                                    <div class="card-body text-center">
+                                        <div class="stat-icon-wrapper mb-2">
+                                            <i class="fas fa-puzzle-piece stat-icon text-success"></i>
+                                        </div>
+                                        <div class="stat-value" id="featureCount">--</div>
+                                        <div class="stat-label">Active Features</div>
+                                        <div class="stat-detail text-muted" id="totalFeatures">of -- total</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuration Progress Section -->
+                        <div class="row mt-3">
+                            <div class="col-lg-8">
                                 <div class="card">
-                                    <div class="card-header">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="card-title mb-0">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            Bot Status
+                                            <i class="fas fa-tasks me-2"></i>
+                                            Configuration Progress
                                         </h5>
+                                        <span class="badge bg-primary" id="overallProgress">0%</span>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-sm-6">
-                                                <div class="stat-item">
-                                                    <div class="stat-value" id="botStatus">Online</div>
-                                                    <div class="stat-label">Status</div>
+                                        <div class="overall-progress mb-4">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="fw-bold">Overall Setup Completion</span>
+                                                <span class="text-muted" id="overallProgressText">0%</span>
+                                            </div>
+                                            <div class="progress" style="height: 10px;">
+                                                <div class="progress-bar bg-primary" id="overallProgressBar" style="width: 0%"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="config-progress-list">
+                                            <div class="progress-item" data-section="channels">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="fas fa-hashtag text-muted"></i>
+                                                        <span>Channels Configuration</span>
+                                                        <span class="config-status-badge" id="channels-status-badge"></span>
+                                                    </div>
+                                                    <span class="text-muted" id="channels-progress-text">0%</span>
+                                                </div>
+                                                <div class="progress mt-2">
+                                                    <div class="progress-bar" id="channels-progress-bar" style="width: 0%"></div>
+                                                </div>
+                                                <div class="progress-details text-muted small mt-1" id="channels-progress-details">
+                                                    0 of 0 channels configured
                                                 </div>
                                             </div>
-                                            <div class="col-sm-6">
-                                                <div class="stat-item">
-                                                    <div class="stat-value" id="guildCount">1</div>
-                                                    <div class="stat-label">Servers</div>
+                                            
+                                            <div class="progress-item" data-section="roles">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="fas fa-users-cog text-muted"></i>
+                                                        <span>Roles Configuration</span>
+                                                        <span class="config-status-badge" id="roles-status-badge"></span>
+                                                    </div>
+                                                    <span class="text-muted" id="roles-progress-text">0%</span>
+                                                </div>
+                                                <div class="progress mt-2">
+                                                    <div class="progress-bar" id="roles-progress-bar" style="width: 0%"></div>
+                                                </div>
+                                                <div class="progress-details text-muted small mt-1" id="roles-progress-details">
+                                                    0 of 0 roles configured
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="progress-item" data-section="features">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="fas fa-cogs text-muted"></i>
+                                                        <span>Features Setup</span>
+                                                        <span class="config-status-badge" id="features-status-badge"></span>
+                                                    </div>
+                                                    <span class="text-muted" id="features-progress-text">0%</span>
+                                                </div>
+                                                <div class="progress mt-2">
+                                                    <div class="progress-bar" id="features-progress-bar" style="width: 0%"></div>
+                                                </div>
+                                                <div class="progress-details text-muted small mt-1" id="features-progress-details">
+                                                    0 of 0 features enabled
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="progress-item" data-section="appearance">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="fas fa-paint-brush text-muted"></i>
+                                                        <span>Appearance Settings</span>
+                                                        <span class="config-status-badge" id="appearance-status-badge"></span>
+                                                    </div>
+                                                    <span class="text-muted" id="appearance-progress-text">0%</span>
+                                                </div>
+                                                <div class="progress mt-2">
+                                                    <div class="progress-bar" id="appearance-progress-bar" style="width: 0%"></div>
+                                                </div>
+                                                <div class="progress-details text-muted small mt-1" id="appearance-progress-details">
+                                                    Default appearance
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            
+                            <!-- Quick Setup Guide -->
+                            <div class="col-lg-4">
                                 <div class="card">
                                     <div class="card-header">
                                         <h5 class="card-title mb-0">
-                                            <i class="fas fa-chart-line me-2"></i>
-                                            Quick Stats
+                                            <i class="fas fa-rocket me-2"></i>
+                                            Quick Setup Guide
                                         </h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-sm-6">
-                                                <div class="stat-item">
-                                                    <div class="stat-value" id="commandCount">50+</div>
-                                                    <div class="stat-label">Commands</div>
+                                        <div class="setup-checklist">
+                                            <div class="setup-item" data-step="channels">
+                                                <div class="setup-checkbox">
+                                                    <i class="fas fa-circle-check" id="setup-channels-check"></i>
                                                 </div>
+                                                <div class="setup-content">
+                                                    <div class="setup-title">Configure Channels</div>
+                                                    <div class="setup-desc text-muted small">Set up log channels and feature channels</div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary setup-action" data-section="channels">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </button>
                                             </div>
-                                            <div class="col-sm-6">
-                                                <div class="stat-item">
-                                                    <div class="stat-value" id="featureCount">8</div>
-                                                    <div class="stat-label">Features</div>
+                                            
+                                            <div class="setup-item" data-step="roles">
+                                                <div class="setup-checkbox">
+                                                    <i class="fas fa-circle-check" id="setup-roles-check"></i>
                                                 </div>
+                                                <div class="setup-content">
+                                                    <div class="setup-title">Configure Roles</div>
+                                                    <div class="setup-desc text-muted small">Set up level roles and staff roles</div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary setup-action" data-section="roles">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="setup-item" data-step="features">
+                                                <div class="setup-checkbox">
+                                                    <i class="fas fa-circle-check" id="setup-features-check"></i>
+                                                </div>
+                                                <div class="setup-content">
+                                                    <div class="setup-title">Enable Features</div>
+                                                    <div class="setup-desc text-muted small">Turn on leveling, economy, and more</div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary setup-action" data-section="features">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                            
+                                            <div class="setup-item" data-step="appearance">
+                                                <div class="setup-checkbox">
+                                                    <i class="fas fa-circle-check" id="setup-appearance-check"></i>
+                                                </div>
+                                                <div class="setup-content">
+                                                    <div class="setup-title">Customize Appearance</div>
+                                                    <div class="setup-desc text-muted small">Set colors and emojis</div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-primary setup-action" data-section="appearance">
+                                                    <i class="fas fa-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Recent Activity -->
+                                <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-history me-2"></i>
+                                            Recent Activity
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="activity-list" id="recentActivityList">
+                                            <div class="text-muted text-center py-3">
+                                                <i class="fas fa-clock mb-2"></i>
+                                                <div class="small">No recent activity</div>
                                             </div>
                                         </div>
                                     </div>
@@ -184,41 +411,56 @@
                             </div>
                         </div>
 
-                        <div class="row mt-4">
+                        <!-- System Health Row -->
+                        <div class="row mt-3">
                             <div class="col-12">
                                 <div class="card">
-                                    <div class="card-header">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="card-title mb-0">
-                                            <i class="fas fa-tasks me-2"></i>
-                                            Configuration Status
+                                            <i class="fas fa-heartbeat me-2"></i>
+                                            System Health
                                         </h5>
+                                        <button class="btn btn-sm btn-outline-secondary" id="refreshHealthBtn">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
                                     </div>
                                     <div class="card-body">
-                                        <div class="progress-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Channels Configuration</span>
-                                                <span class="text-muted">75%</span>
+                                        <div class="row">
+                                            <div class="col-md-3 col-6 mb-3">
+                                                <div class="health-item">
+                                                    <div class="health-indicator" id="health-bot">
+                                                        <i class="fas fa-robot"></i>
+                                                    </div>
+                                                    <div class="health-label">Bot Connection</div>
+                                                    <div class="health-status" id="health-bot-status">Checking...</div>
+                                                </div>
                                             </div>
-                                            <div class="progress">
-                                                <div class="progress-bar" style="width: 75%"></div>
+                                            <div class="col-md-3 col-6 mb-3">
+                                                <div class="health-item">
+                                                    <div class="health-indicator" id="health-discord">
+                                                        <i class="fab fa-discord"></i>
+                                                    </div>
+                                                    <div class="health-label">Discord API</div>
+                                                    <div class="health-status" id="health-discord-status">Checking...</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="progress-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Roles Configuration</span>
-                                                <span class="text-muted">60%</span>
+                                            <div class="col-md-3 col-6 mb-3">
+                                                <div class="health-item">
+                                                    <div class="health-indicator" id="health-database">
+                                                        <i class="fas fa-database"></i>
+                                                    </div>
+                                                    <div class="health-label">Database</div>
+                                                    <div class="health-status" id="health-database-status">Checking...</div>
+                                                </div>
                                             </div>
-                                            <div class="progress">
-                                                <div class="progress-bar" style="width: 60%"></div>
-                                            </div>
-                                        </div>
-                                        <div class="progress-item">
-                                            <div class="d-flex justify-content-between">
-                                                <span>Features Setup</span>
-                                                <span class="text-muted">90%</span>
-                                            </div>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-success" style="width: 90%"></div>
+                                            <div class="col-md-3 col-6 mb-3">
+                                                <div class="health-item">
+                                                    <div class="health-indicator" id="health-websocket">
+                                                        <i class="fas fa-plug"></i>
+                                                    </div>
+                                                    <div class="health-label">Real-time Updates</div>
+                                                    <div class="health-status" id="health-websocket-status">Checking...</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -452,6 +694,7 @@
     <script src="/js/features-config.js"></script>
     <script src="/js/appearance-config.js"></script>
     <script src="/js/mobile-responsive.js"></script>
+    <script src="/js/overview-dashboard.js"></script>
     <script src="/js/dashboard.js"></script>
 </body>
 </html>
