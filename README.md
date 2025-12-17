@@ -22,33 +22,61 @@ A comprehensive Discord bot built with Discord.js v14, featuring leveling, econo
 
 ## 🚀 Quick Start
 
-1. **Clone & Install**
+### Option 1: Interactive Setup (Recommended)
 ```bash
 git clone <repository-url>
 cd villain-seraphyx-bot
 npm install
+npm run setup
 ```
 
-2. **Configure Environment**
+### Option 2: Manual Setup
 ```bash
+git clone <repository-url>
+cd villain-seraphyx-bot
+npm install
 cp .env.example .env
 ```
+
 Edit `.env` with your credentials:
 ```env
 TOKEN=your_discord_bot_token
 MONGO_URI=your_mongodb_connection_string
 CLIENT_ID=your_bot_client_id
 GUILD_ID=your_guild_id
-WEBHOOK_TOKEN=your_tako_webhook_token
+OWNER_IDS=your_user_id
 ```
 
-3. **Configure Bot Settings**
-Edit `config.js` with your channel IDs, role IDs, and other settings.
-
-4. **Start the Bot**
+Then start the bot:
 ```bash
 npm start
 ```
+
+📖 **Need detailed setup guide?** Check [SETUP_GUIDE.md](SETUP_GUIDE.md)
+
+## 🌐 Web Dashboard
+
+The bot now includes a modern web dashboard for easy configuration management:
+
+- **🎛️ Visual Configuration** - Configure channels, roles, and features through a user-friendly interface
+- **🔄 Real-time Updates** - Changes apply instantly without restarting the bot
+- **📱 Mobile Responsive** - Manage your bot from any device
+- **🔐 Secure Access** - Discord OAuth2 authentication with role-based permissions
+- **📊 Analytics Dashboard** - Monitor bot performance and usage statistics
+
+### Quick Dashboard Setup
+```bash
+# Enable web dashboard in .env
+WEB_DASHBOARD_ENABLED=true
+WEB_DASHBOARD_PORT=3000
+
+# Start bot with dashboard
+npm start
+```
+
+Access dashboard at: `http://localhost:3000/dashboard`
+
+📋 **Development Status:** See [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) for upcoming features
 
 ## 📚 Commands Reference
 

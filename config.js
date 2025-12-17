@@ -1,6 +1,8 @@
 require("dotenv").config();
+const configManager = require('./util/configManager');
 
-module.exports = {
+// Static configuration (sensitive data from environment)
+const staticConfig = {
   // ==================== BOT CREDENTIALS ====================
   token: process.env.TOKEN,
   clientId: process.env.CLIENT_ID,
@@ -19,9 +21,64 @@ module.exports = {
   // ==================== MONGODB ====================
   mongoUri: process.env.MONGO_URI,
   
-  // ==================== CHANNELS ====================
+  // ==================== API KEYS ====================
+  removeBgApiKey: process.env.REMOVE_BG_API_KEY || null,
+  
+  // ==================== BOT IDs ====================
+  owoBotId: process.env.OWO_BOT_ID || '408785106942164992',
+  
+  // ==================== ENVIRONMENT ====================
+  nodeEnv: process.env.NODE_ENV || 'development',
+  logLevel: process.env.LOG_LEVEL || 'INFO',
+  maxLogFiles: parseInt(process.env.MAX_LOG_FILES) || 5,
+  maxLogSize: parseInt(process.env.MAX_LOG_SIZE) || 10485760,
+  
+  // ==================== WEBHOOK ====================
+  webhookToken: process.env.WEBHOOK_TOKEN || null,
+};
+
+// Dynamic configuration getter
+async function getConfig(guildId = null) {
+  const targetGuildId = guildId || staticConfig.guildId;
+  
+  if (!targetGuildId) {
+    console.warn('No guild ID provided, using static config only');
+    return staticConfig;
+  }
+
+  try {
+    const webConfig = await configManager.getConfig(targetGuildId);
+    
+    // Merge static and web config
+    return {
+      ...staticConfig,
+      ...webConfig,
+      // Ensure sensitive data is not overridden
+      token: staticConfig.token,
+      mongoUri: staticConfig.mongoUri,
+      ownerId: staticConfig.ownerId,
+      staffUsers: staticConfig.staffUsers,
+      removeBgApiKey: staticConfig.removeBgApiKey,
+      webhookToken: staticConfig.webhookToken,
+    };
+  } catch (error) {
+    console.error('Error loading web config, falling back to static config:', error);
+    return staticConfig;
+  }
+}
+
+// Legacy support - export static config directly
+module.exports = {
+  ...staticConfig,
+  
+  // New methods for dynamic config
+  getConfig,
+  getStaticConfig: () => staticConfig,
+  configManager,
+  
+  // Backward compatibility - these will be deprecated
   channels: {
-    // Welcome & Goodbye
+    // These will be loaded dynamically, but provide fallbacks
     welcome: process.env.WELCOME_CHANNEL_ID || null,
     welcome2: process.env.WELCOME2_CHANNEL_ID || null,
     welcomeLog: process.env.WELCOME_LOG_CHANNEL_ID || null,
@@ -45,9 +102,6 @@ module.exports = {
     
     // Donation
     donation: process.env.DONATION_CHANNEL_ID || null,
-    
-    // Chat Channels
-    chat1: process.env.CHAT_CHANNEL_1_ID || null,
     chat2: process.env.CHAT_CHANNEL_2_ID || null,
     chat3: process.env.CHAT_CHANNEL_3_ID || null,
     chat4: process.env.CHAT_CHANNEL_4_ID || null,
