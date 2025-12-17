@@ -3,6 +3,7 @@ const router = express.Router();
 const configManager = require('../../util/configManager');
 const { verifyAuth, verifyGuildAccess } = require('../middleware/auth');
 const { validateGuildId, validateConfigSection, sanitizeInput, validateConfigStructure } = require('../middleware/validation');
+const { auditLogger } = require('../services/auditLogger');
 
 // ==================== GET ROUTES ====================
 
@@ -66,6 +67,9 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
     // Validate configuration
     const validation = configManager.validateConfig(updates);
     if (!validation.isValid) {
+      // Audit log validation failure
+      await auditLogger.logConfigChange(req, guildId, null, updates, false, 'Validation failed');
+      
       return res.status(400).json({
         success: false,
         error: 'Invalid configuration',
@@ -73,7 +77,17 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
       });
     }
     
+    // Get old config for audit comparison
+    const oldConfig = await configManager.getConfig(guildId);
+    
     const config = await configManager.updateConfig(guildId, updates, userId);
+    
+    // Audit log successful configuration change
+    await auditLogger.logConfigChange(req, guildId, null, {
+      oldConfig: oldConfig,
+      newConfig: updates,
+      changedFields: Object.keys(updates)
+    }, true);
     
     // Broadcast configuration change via WebSocket
     const websocketService = req.app.get('websocketService');
@@ -91,6 +105,9 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
     });
   } catch (error) {
     console.error('Error updating config:', error);
+    
+    // Audit log error
+    await auditLogger.logConfigChange(req, req.params.guildId, null, req.body, false, error.message);
     
     // Broadcast error via WebSocket
     const websocketService = req.app.get('websocketService');
@@ -116,7 +133,17 @@ router.put('/:guildId/:section', validateGuildId, validateConfigSection, sanitiz
     const updates = req.body;
     const userId = req.user.id;
     
+    // Get old section data for audit comparison
+    const oldSectionData = await configManager.getConfigSection(guildId, section);
+    
     const sectionData = await configManager.updateConfigSection(guildId, section, updates, userId);
+    
+    // Audit log successful section update
+    await auditLogger.logConfigChange(req, guildId, section, {
+      oldValue: oldSectionData,
+      newValue: updates,
+      changedFields: Object.keys(updates)
+    }, true);
     
     // Broadcast configuration change via WebSocket
     const websocketService = req.app.get('websocketService');
@@ -134,6 +161,9 @@ router.put('/:guildId/:section', validateGuildId, validateConfigSection, sanitiz
     });
   } catch (error) {
     console.error('Error updating config section:', error);
+    
+    // Audit log error
+    await auditLogger.logConfigChange(req, req.params.guildId, req.params.section, req.body, false, error.message);
     
     // Broadcast error via WebSocket
     const websocketService = req.app.get('websocketService');
@@ -271,6 +301,9 @@ router.post('/:guildId/export', validateGuildId, verifyAuth, verifyGuildAccess, 
     const { guildId } = req.params;
     const config = await configManager.exportConfig(guildId);
     
+    // Audit log export
+    await auditLogger.logConfigExport(req, guildId);
+    
     res.json({
       success: true,
       data: config,
@@ -323,6 +356,9 @@ router.post('/:guildId/import', validateGuildId, verifyAuth, verifyGuildAccess, 
     
     const result = await configManager.importConfig(guildId, configData, userId);
     
+    // Audit log successful import
+    await auditLogger.logConfigImport(req, guildId, result.appliedSections, true);
+    
     res.json({
       success: true,
       data: result.data,
@@ -332,6 +368,9 @@ router.post('/:guildId/import', validateGuildId, verifyAuth, verifyGuildAccess, 
     });
   } catch (error) {
     console.error('Error importing config:', error);
+    
+    // Audit log failed import
+    await auditLogger.logConfigImport(req, req.params.guildId, [], false, error.message);
     
     // Return detailed validation errors
     const response = {

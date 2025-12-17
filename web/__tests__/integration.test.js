@@ -81,7 +81,8 @@ describe('Web Server Integration Tests', () => {
       bot: {
         status: 'ready',
         guilds: 1
-      }
+      },
+      websocket: null
     });
   });
 });

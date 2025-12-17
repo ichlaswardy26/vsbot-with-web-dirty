@@ -133,7 +133,8 @@ describe('Web Server Core Functionality', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toBe('Not found');
+      expect(response.body.error.code).toBe('NOT_FOUND');
+      expect(response.body.error.message).toBe('The requested resource was not found');
     });
 
     test('should validate request size', async () => {

@@ -5,14 +5,30 @@ const passport = require('passport');
 const path = require('path');
 const mongoose = require('mongoose');
 const http = require('http');
+const cookieParser = require('cookie-parser');
 
 // Import middleware and routes
 const { configurePassport, requireAuth, cleanupExpiredSessions } = require('./middleware/auth');
 const { limiters } = require('./middleware/rateLimiter');
-const { validateRequest, addRequestId, logRequest } = require('./middleware/validation');
+const { validateRequest, addRequestId } = require('./middleware/validation');
+const { csrfProtection, getCsrfToken } = require('./middleware/csrf');
+const { 
+  enhancedSanitization, 
+  securityHeaders, 
+  requestSizeLimiter, 
+  suspiciousActivityDetector,
+  sessionSecurity,
+  auditMiddleware 
+} = require('./middleware/security');
 const authRoutes = require('./routes/auth');
 const configRoutes = require('./routes/config');
 const { getWebSocketService } = require('./services/websocket');
+
+// Import error handling and logging services
+const { errorMiddleware } = require('./services/errorHandler');
+const { webLogger, requestLoggingMiddleware } = require('./services/webLogger');
+const { debugMiddleware, createDebugRoutes, isDebugMode } = require('./services/debugTools');
+const { auditLogger, AuditEventType } = require('./services/auditLogger');
 
 class WebServer {
   constructor(client) {
@@ -38,16 +54,31 @@ class WebServer {
 
     // Request tracking and logging
     this.app.use(addRequestId);
-    if (process.env.NODE_ENV !== 'production') {
-      this.app.use(logRequest);
+    this.app.use(requestLoggingMiddleware);
+    
+    // Debug middleware (only in development)
+    if (isDebugMode) {
+      this.app.use(debugMiddleware);
     }
+
+    // Security: Request size limiter (DoS prevention)
+    this.app.use(requestSizeLimiter());
+
+    // Security: Suspicious activity detection
+    this.app.use(suspiciousActivityDetector);
 
     // Request validation
     this.app.use(validateRequest());
 
+    // Cookie parser (required for CSRF)
+    this.app.use(cookieParser());
+
     // Body parsing middleware
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // Security: Enhanced input sanitization
+    this.app.use(enhancedSanitization);
 
     // Static files
     this.app.use('/css', express.static(path.join(__dirname, 'public/css')));
@@ -59,10 +90,12 @@ class WebServer {
       secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
       resave: false,
       saveUninitialized: false,
+      name: 'sessionId', // Custom session cookie name
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        sameSite: 'strict' // CSRF protection
       }
     };
 
@@ -82,38 +115,16 @@ class WebServer {
     this.sessionMiddleware = session(sessionConfig);
     this.app.use(this.sessionMiddleware);
 
+    // Security: Session security enhancements
+    this.app.use(sessionSecurity);
+
     // Passport configuration
     configurePassport();
     this.app.use(passport.initialize());
     this.app.use(passport.session());
 
-    // Security headers
-    this.app.use((req, res, next) => {
-      // Basic security headers
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('X-Frame-Options', 'DENY');
-      res.setHeader('X-XSS-Protection', '1; mode=block');
-      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-      
-      // Content Security Policy
-      const csp = [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-        "img-src 'self' data: https://cdn.discordapp.com",
-        "connect-src 'self' ws: wss:",
-        "font-src 'self' https://cdn.jsdelivr.net",
-        "frame-ancestors 'none'"
-      ].join('; ');
-      res.setHeader('Content-Security-Policy', csp);
-      
-      // HSTS for production
-      if (process.env.NODE_ENV === 'production') {
-        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-      }
-      
-      next();
-    });
+    // Security: Comprehensive security headers
+    this.app.use(securityHeaders());
 
     // CORS configuration
     this.app.use((req, res, next) => {
@@ -125,8 +136,9 @@ class WebServer {
       }
       
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Expose-Headers', 'X-CSRF-Token');
       
       if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
@@ -134,17 +146,81 @@ class WebServer {
       
       next();
     });
+
+    // Security: Audit logging for all state-changing requests
+    this.app.use(auditMiddleware);
   }
 
+
   setupRoutes() {
-    // Authentication routes (with rate limiting)
+    // CSRF token endpoint (for SPAs)
+    this.app.get('/api/csrf-token', getCsrfToken);
+
+    // Authentication routes (with rate limiting, no CSRF for OAuth flow)
     this.app.use('/auth', limiters.auth, authRoutes);
 
-    // API routes (with rate limiting)
-    this.app.use('/api/config', limiters.config, configRoutes);
-    this.app.use('/api/channels', limiters.api, require('./routes/channels'));
-    this.app.use('/api/roles', limiters.api, require('./routes/roles'));
-    this.app.use('/api/templates', limiters.api, require('./routes/templates'));
+    // CSRF protection for API routes (state-changing operations)
+    const csrfMiddleware = csrfProtection({
+      ignorePaths: ['/auth/', '/api/csrf-token', '/health', '/api/health']
+    });
+
+    // API routes (with rate limiting and CSRF protection)
+    this.app.use('/api/config', limiters.config, csrfMiddleware, configRoutes);
+    this.app.use('/api/channels', limiters.api, csrfMiddleware, require('./routes/channels'));
+    this.app.use('/api/roles', limiters.api, csrfMiddleware, require('./routes/roles'));
+    this.app.use('/api/templates', limiters.api, csrfMiddleware, require('./routes/templates'));
+
+    // Audit log endpoint (admin only)
+    this.app.get('/api/audit-logs', requireAuth, async (req, res) => {
+      try {
+        const { guildId, userId, eventType, startDate, endDate, limit } = req.query;
+        
+        const logs = await auditLogger.queryLogs({
+          guildId,
+          userId,
+          eventType,
+          startDate,
+          endDate,
+          limit: parseInt(limit) || 100
+        });
+        
+        res.json({
+          success: true,
+          data: logs
+        });
+      } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch audit logs'
+        });
+      }
+    });
+
+    // Audit stats endpoint
+    this.app.get('/api/audit-stats', requireAuth, async (req, res) => {
+      try {
+        const { guildId } = req.query;
+        const stats = await auditLogger.getStats(guildId);
+        
+        res.json({
+          success: true,
+          data: stats
+        });
+      } catch (error) {
+        console.error('Error fetching audit stats:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch audit stats'
+        });
+      }
+    });
+
+    // Debug routes (only in development)
+    if (isDebugMode) {
+      const debugRouter = require('express').Router();
+      this.app.use('/debug', createDebugRoutes(debugRouter));
+    }
 
     // Dashboard route (protected)
     this.app.get('/dashboard', requireAuth, (req, res) => {
@@ -242,26 +318,19 @@ class WebServer {
   setupErrorHandling() {
     // 404 handler
     this.app.use((req, res) => {
+      webLogger.logApiResponse(req.requestId, 404, 0, { path: req.path });
       res.status(404).json({
         success: false,
-        error: 'Not found',
-        message: 'The requested resource was not found'
+        error: {
+          code: 'NOT_FOUND',
+          message: 'The requested resource was not found',
+          requestId: req.requestId
+        }
       });
     });
 
-    // Global error handler
-    this.app.use((err, req, res, next) => {
-      console.error('Web server error:', err);
-      
-      // Don't leak error details in production
-      const isDevelopment = process.env.NODE_ENV !== 'production';
-      
-      res.status(err.status || 500).json({
-        success: false,
-        error: isDevelopment ? err.message : 'Internal server error',
-        ...(isDevelopment && { stack: err.stack })
-      });
-    });
+    // Global error handler using centralized error middleware
+    this.app.use(errorMiddleware);
   }
 
   async start() {
@@ -290,6 +359,7 @@ class WebServer {
         console.log(`Web dashboard running on port ${this.port}`);
         console.log(`Dashboard URL: http://localhost:${this.port}/dashboard`);
         console.log('WebSocket server initialized');
+        console.log('Security measures enabled: CSRF, Rate Limiting, Audit Logging');
       });
 
       return this.server;
@@ -300,6 +370,11 @@ class WebServer {
   }
 
   async stop() {
+    // Flush audit logs before shutdown
+    if (auditLogger) {
+      await auditLogger.flushBuffer();
+    }
+
     // Shutdown WebSocket service first
     if (this.websocketService) {
       this.websocketService.shutdown();
