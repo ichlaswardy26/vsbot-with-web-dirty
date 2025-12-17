@@ -3734,3 +3734,48 @@ img {
     cursor: pointer;
   }
 }
+
+
+/* ==================== Template Cards ==================== */
+.template-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+}
+
+.template-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(88, 101, 242, 0.15);
+}
+
+.template-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(88, 101, 242, 0.1);
+  border-radius: 0.5rem;
+  flex-shrink: 0;
+}
+
+.template-card .card-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 0.75rem;
+}
+
+.apply-template-btn {
+  transition: all 0.2s ease;
+}
+
+/* Mobile responsive for templates */
+@media (max-width: 767.98px) {
+  .template-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .template-icon i {
+    font-size: 1.5rem !important;
+  }
+}
