@@ -51,34 +51,36 @@ module.exports = {
      * Show system performance statistics
      */
     async showSystemStats(message) {
+        const config = require('../../config');
         const stats = performanceMonitor.getSystemStats();
         
         const embed = new EmbedBuilder()
-            .setTitle('📊 System Performance Statistics')
-            .setColor('#5865F2')
+            .setTitle('📊 Statistik Performa Sistem')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // System overview
         embed.addFields({
-            name: '🖥️ System Overview',
+            name: '🖥️ Ringkasan Sistem',
             value: [
                 `**Uptime:** ${stats.uptimeFormatted}`,
-                `**Commands Executed:** ${stats.commandsExecuted.toLocaleString()}`,
-                `**Error Rate:** ${stats.errorRate.toFixed(2)}%`,
-                `**Avg Response Time:** ${stats.averageResponseTime.toFixed(2)}ms`,
-                `**Commands/Min:** ${stats.commandsPerMinute.toFixed(2)}`
+                `**Command Dieksekusi:** ${stats.commandsExecuted.toLocaleString()}`,
+                `**Tingkat Error:** ${stats.errorRate.toFixed(2)}%`,
+                `**Waktu Respons Rata-rata:** ${stats.averageResponseTime.toFixed(2)}ms`,
+                `**Command/Menit:** ${stats.commandsPerMinute.toFixed(2)}`
             ].join('\n'),
             inline: true
         });
 
         // Memory usage
         embed.addFields({
-            name: '💾 Memory Usage',
+            name: '💾 Penggunaan Memori',
             value: [
-                `**Current:** ${stats.memoryUsageFormatted.current}`,
-                `**Peak:** ${stats.memoryUsageFormatted.peak}`,
+                `**Saat Ini:** ${stats.memoryUsageFormatted.current}`,
+                `**Puncak:** ${stats.memoryUsageFormatted.peak}`,
                 `**Total Heap:** ${stats.memoryUsageFormatted.total}`,
-                `**Usage:** ${((stats.currentMemoryUsage / (1024 * 1024 * 1024)) * 100).toFixed(1)}%`
+                `**Penggunaan:** ${((stats.currentMemoryUsage / (1024 * 1024 * 1024)) * 100).toFixed(1)}%`
             ].join('\n'),
             inline: true
         });
@@ -87,12 +89,12 @@ module.exports = {
         if (stats.topCommands.length > 0) {
             const topCommandsText = stats.topCommands
                 .map((cmd, index) => 
-                    `${index + 1}. **${cmd.name}** (${cmd.executions}x, ${cmd.averageTime.toFixed(2)}ms avg)`
+                    `${index + 1}. **${cmd.name}** (${cmd.executions}x, ${cmd.averageTime.toFixed(2)}ms rata-rata)`
                 )
                 .join('\n');
 
             embed.addFields({
-                name: '🏆 Top Commands',
+                name: '🏆 Command Teratas',
                 value: topCommandsText,
                 inline: false
             });
@@ -101,36 +103,37 @@ module.exports = {
         // Performance indicators
         const indicators = [];
         if (stats.averageResponseTime < 100) {
-            indicators.push('🟢 Response Time: Excellent');
+            indicators.push('🟢 Waktu Respons: Sangat Baik');
         } else if (stats.averageResponseTime < 500) {
-            indicators.push('🟡 Response Time: Good');
+            indicators.push('🟡 Waktu Respons: Baik');
         } else {
-            indicators.push('🔴 Response Time: Slow');
+            indicators.push('🔴 Waktu Respons: Lambat');
         }
 
         if (stats.errorRate < 1) {
-            indicators.push('🟢 Error Rate: Excellent');
+            indicators.push('🟢 Tingkat Error: Sangat Baik');
         } else if (stats.errorRate < 5) {
-            indicators.push('🟡 Error Rate: Acceptable');
+            indicators.push('🟡 Tingkat Error: Dapat Diterima');
         } else {
-            indicators.push('🔴 Error Rate: High');
+            indicators.push('🔴 Tingkat Error: Tinggi');
         }
 
         const memoryUsagePercent = (stats.currentMemoryUsage / (1024 * 1024 * 1024)) * 100;
         if (memoryUsagePercent < 50) {
-            indicators.push('🟢 Memory Usage: Good');
+            indicators.push('🟢 Penggunaan Memori: Baik');
         } else if (memoryUsagePercent < 80) {
-            indicators.push('🟡 Memory Usage: Moderate');
+            indicators.push('🟡 Penggunaan Memori: Sedang');
         } else {
-            indicators.push('🔴 Memory Usage: High');
+            indicators.push('🔴 Penggunaan Memori: Tinggi');
         }
 
         embed.addFields({
-            name: '📈 Performance Indicators',
+            name: '📈 Indikator Performa',
             value: indicators.join('\n'),
             inline: false
         });
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         await message.channel.send({ embeds: [embed] });
     },
 
@@ -138,6 +141,7 @@ module.exports = {
      * Show command performance statistics
      */
     async showCommandStats(message, commandName) {
+        const config = require('../../config');
         const stats = performanceMonitor.getCommandStats(commandName);
         
         if (commandName && !stats) {
@@ -145,30 +149,31 @@ module.exports = {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle(commandName ? `📊 Command Stats: ${commandName}` : '📊 All Command Statistics')
-            .setColor('#5865F2')
+            .setTitle(commandName ? `📊 Statistik Command: ${commandName}` : '📊 Statistik Semua Command')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         if (commandName) {
             // Single command stats
             embed.addFields(
                 {
-                    name: '📈 Execution Statistics',
+                    name: '📈 Statistik Eksekusi',
                     value: [
-                        `**Total Executions:** ${stats.totalExecutions.toLocaleString()}`,
-                        `**Successful:** ${stats.successfulExecutions.toLocaleString()}`,
-                        `**Failed:** ${stats.failedExecutions.toLocaleString()}`,
-                        `**Success Rate:** ${stats.successRate.toFixed(2)}%`
+                        `**Total Eksekusi:** ${stats.totalExecutions.toLocaleString()}`,
+                        `**Berhasil:** ${stats.successfulExecutions.toLocaleString()}`,
+                        `**Gagal:** ${stats.failedExecutions.toLocaleString()}`,
+                        `**Tingkat Sukses:** ${stats.successRate.toFixed(2)}%`
                     ].join('\n'),
                     inline: true
                 },
                 {
-                    name: '⏱️ Performance Metrics',
+                    name: '⏱️ Metrik Performa',
                     value: [
-                        `**Average Time:** ${stats.averageExecutionTime.toFixed(2)}ms`,
-                        `**Min Time:** ${stats.minExecutionTime.toFixed(2)}ms`,
-                        `**Max Time:** ${stats.maxExecutionTime.toFixed(2)}ms`,
-                        `**Avg Memory:** ${this.formatBytes(stats.averageMemoryUsage)}`
+                        `**Waktu Rata-rata:** ${stats.averageExecutionTime.toFixed(2)}ms`,
+                        `**Waktu Min:** ${stats.minExecutionTime.toFixed(2)}ms`,
+                        `**Waktu Maks:** ${stats.maxExecutionTime.toFixed(2)}ms`,
+                        `**Memori Rata-rata:** ${this.formatBytes(stats.averageMemoryUsage)}`
                     ].join('\n'),
                     inline: true
                 }
@@ -186,7 +191,7 @@ module.exports = {
                     .join('\n');
 
                 embed.addFields({
-                    name: '🕐 Recent Executions',
+                    name: '🕐 Eksekusi Terbaru',
                     value: recentText,
                     inline: false
                 });
@@ -200,12 +205,12 @@ module.exports = {
             if (allStats.length > 0) {
                 const commandList = allStats
                     .map(([name, cmdStats], index) => 
-                        `${index + 1}. **${name}** - ${cmdStats.totalExecutions}x (${cmdStats.successRate.toFixed(1)}% success, ${cmdStats.averageExecutionTime.toFixed(2)}ms avg)`
+                        `${index + 1}. **${name}** - ${cmdStats.totalExecutions}x (${cmdStats.successRate.toFixed(1)}% sukses, ${cmdStats.averageExecutionTime.toFixed(2)}ms rata-rata)`
                     )
                     .join('\n');
 
                 embed.addFields({
-                    name: '📋 Command Performance Overview',
+                    name: '📋 Ringkasan Performa Command',
                     value: commandList,
                     inline: false
                 });
@@ -216,12 +221,12 @@ module.exports = {
                 const avgResponseTime = allStats.reduce((sum, [,stats]) => sum + stats.averageExecutionTime, 0) / allStats.length;
 
                 embed.addFields({
-                    name: '📊 Summary',
+                    name: '📊 Ringkasan',
                     value: [
-                        `**Total Commands Tracked:** ${allStats.length}`,
-                        `**Total Executions:** ${totalExecutions.toLocaleString()}`,
-                        `**Average Success Rate:** ${avgSuccessRate.toFixed(2)}%`,
-                        `**Average Response Time:** ${avgResponseTime.toFixed(2)}ms`
+                        `**Total Command Tercatat:** ${allStats.length}`,
+                        `**Total Eksekusi:** ${totalExecutions.toLocaleString()}`,
+                        `**Tingkat Sukses Rata-rata:** ${avgSuccessRate.toFixed(2)}%`,
+                        `**Waktu Respons Rata-rata:** ${avgResponseTime.toFixed(2)}ms`
                     ].join('\n'),
                     inline: false
                 });
@@ -230,6 +235,7 @@ module.exports = {
             }
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         await message.channel.send({ embeds: [embed] });
     },
 
@@ -237,15 +243,17 @@ module.exports = {
      * Show performance alerts
      */
     async showAlerts(message) {
+        const config = require('../../config');
         const alerts = performanceMonitor.getPerformanceAlerts();
         
         const embed = new EmbedBuilder()
-            .setTitle('⚠️ Performance Alerts')
-            .setColor(alerts.length > 0 ? '#FEE75C' : '#57F287')
+            .setTitle('⚠️ Alert Performa')
+            .setColor(alerts.length > 0 ? (config.colors?.warning || '#FEE75C') : (config.colors?.success || '#57F287'))
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         if (alerts.length === 0) {
-            embed.setDescription('✅ Tidak ada alert performance saat ini. Semua sistem berjalan normal.');
+            embed.setDescription('✅ Tidak ada alert performa saat ini. Semua sistem berjalan normal.');
         } else {
             const alertsByLevel = {
                 critical: alerts.filter(a => a.level === 'critical'),
@@ -255,7 +263,7 @@ module.exports = {
 
             if (alertsByLevel.critical.length > 0) {
                 embed.addFields({
-                    name: '🔴 Critical Alerts',
+                    name: '🔴 Alert Kritis',
                     value: alertsByLevel.critical.map(a => `• ${a.message}`).join('\n'),
                     inline: false
                 });
@@ -263,7 +271,7 @@ module.exports = {
 
             if (alertsByLevel.warning.length > 0) {
                 embed.addFields({
-                    name: '🟡 Warning Alerts',
+                    name: '🟡 Alert Peringatan',
                     value: alertsByLevel.warning.map(a => `• ${a.message}`).join('\n'),
                     inline: false
                 });
@@ -271,24 +279,25 @@ module.exports = {
 
             if (alertsByLevel.info.length > 0) {
                 embed.addFields({
-                    name: '🔵 Info Alerts',
+                    name: '🔵 Alert Info',
                     value: alertsByLevel.info.map(a => `• ${a.message}`).join('\n'),
                     inline: false
                 });
             }
 
             embed.addFields({
-                name: '💡 Recommendations',
+                name: '💡 Rekomendasi',
                 value: [
-                    '• Monitor memory usage regularly',
-                    '• Check for slow commands and optimize',
-                    '• Review error logs for recurring issues',
-                    '• Consider restarting if memory usage is high'
+                    '• Pantau penggunaan memori secara berkala',
+                    '• Periksa command yang lambat dan optimalkan',
+                    '• Tinjau log error untuk masalah berulang',
+                    '• Pertimbangkan restart jika penggunaan memori tinggi'
                 ].join('\n'),
                 inline: false
             });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         await message.channel.send({ embeds: [embed] });
     },
 
@@ -296,11 +305,13 @@ module.exports = {
      * Show log statistics
      */
     async showLogStats(message) {
+        const config = require('../../config');
         const logStats = await logger.getLogStats();
         
         const embed = new EmbedBuilder()
-            .setTitle('📋 Log Statistics')
-            .setColor('#5865F2')
+            .setTitle('📋 Statistik Log')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         if (Object.keys(logStats).length === 0) {
@@ -309,28 +320,29 @@ module.exports = {
             const logFiles = Object.entries(logStats)
                 .sort(([,a], [,b]) => b.size - a.size)
                 .map(([filename, stats]) => 
-                    `**${filename}** - ${stats.sizeFormatted} (Modified: <t:${Math.floor(stats.modified.getTime() / 1000)}:R>)`
+                    `**${filename}** - ${stats.sizeFormatted} (Diubah: <t:${Math.floor(stats.modified.getTime() / 1000)}:R>)`
                 )
                 .join('\n');
 
             embed.addFields({
-                name: '📁 Log Files',
+                name: '📁 File Log',
                 value: logFiles,
                 inline: false
             });
 
             const totalSize = Object.values(logStats).reduce((sum, stats) => sum + stats.size, 0);
             embed.addFields({
-                name: '📊 Summary',
+                name: '📊 Ringkasan',
                 value: [
-                    `**Total Files:** ${Object.keys(logStats).length}`,
-                    `**Total Size:** ${logger.formatBytes(totalSize)}`,
-                    `**Log Directory:** ./logs/`
+                    `**Total File:** ${Object.keys(logStats).length}`,
+                    `**Total Ukuran:** ${logger.formatBytes(totalSize)}`,
+                    `**Direktori Log:** ./logs/`
                 ].join('\n'),
                 inline: false
             });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         await message.channel.send({ embeds: [embed] });
     },
 
@@ -338,6 +350,7 @@ module.exports = {
      * Reset performance statistics
      */
     async resetStats(message) {
+        const config = require('../../config');
         if (!rolePermissions.isAdmin(message.member)) {
             return message.reply('❌ **|** Hanya admin yang dapat mereset statistik.');
         }
@@ -345,13 +358,15 @@ module.exports = {
         performanceMonitor.resetMetrics();
         
         const embed = new EmbedBuilder()
-            .setTitle('🔄 Statistics Reset')
-            .setColor('#57F287')
-            .setDescription('✅ Semua statistik performance telah direset.')
+            .setTitle('🔄 Statistik Direset')
+            .setColor(config.colors?.success || '#57F287')
+            .setDescription('✅ Semua statistik performa telah direset.')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
+            .setFooter({ text: `Direset oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         await message.channel.send({ embeds: [embed] });
-        await logger.log('INFO', 'ADMIN', `Performance statistics reset by ${message.author.tag}`, {
+        await logger.log('INFO', 'ADMIN', `Statistik performa direset oleh ${message.author.tag}`, {
             userId: message.author.id,
             guildId: message.guild.id
         });
@@ -361,33 +376,37 @@ module.exports = {
      * Show help for performance command
      */
     async showHelp(message) {
+        const config = require('../../config');
         const embed = new EmbedBuilder()
-            .setTitle('📊 Performance Command Help')
-            .setColor('#5865F2')
-            .setDescription('Monitor bot performance and statistics')
+            .setTitle('📊 Bantuan Command Performance')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setDescription('Pantau performa bot dan statistik')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
                 {
-                    name: '📋 Available Subcommands',
+                    name: '📋 Subcommand Tersedia',
                     value: [
-                        '`performance system` - Show system performance stats',
-                        '`performance commands [name]` - Show command performance stats',
-                        '`performance alerts` - Show performance alerts',
-                        '`performance logs` - Show log file statistics',
-                        '`performance reset` - Reset all statistics (admin only)'
+                        '`performance system` - Tampilkan statistik performa sistem',
+                        '`performance commands [nama]` - Tampilkan statistik performa command',
+                        '`performance alerts` - Tampilkan alert performa',
+                        '`performance logs` - Tampilkan statistik file log',
+                        '`performance reset` - Reset semua statistik (admin saja)'
                     ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '💡 Examples',
+                    name: '💡 Contoh',
                     value: [
-                        '`performance` - Show system stats (default)',
-                        '`performance commands` - Show all command stats',
-                        '`performance commands addxp` - Show stats for addxp command',
-                        '`performance alerts` - Check for performance issues'
+                        '`performance` - Tampilkan statistik sistem (default)',
+                        '`performance commands` - Tampilkan semua statistik command',
+                        '`performance commands addxp` - Tampilkan statistik untuk command addxp',
+                        '`performance alerts` - Periksa masalah performa'
                     ].join('\n'),
                     inline: false
                 }
-            );
+            )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
+            .setTimestamp();
 
         await message.channel.send({ embeds: [embed] });
     },

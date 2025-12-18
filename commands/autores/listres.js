@@ -1,38 +1,52 @@
 const Responder = require('../../schemas/autoresponder');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const config = require('../../config.js');
 
 module.exports = {
   name: 'listresponder',
   aliases: ["listres"],
-  description: 'List all autoresponders',
-  category: 'Autoresponder',
+  description: 'Tampilkan daftar semua autoresponder',
+  category: 'autores',
   async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
     
-    // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'admin');
     if (permissionError) {
       return message.reply(permissionError);
     }
+    
     try {
       const responders = await Responder.find();
       if (responders.length === 0) {
-        return message.reply('No autoresponders found.');
+        const emptyEmbed = new EmbedBuilder()
+          .setColor(config.colors?.warning || '#FEE75C')
+          .setTitle(`${config.emojis?.info || 'ℹ️'} Tidak Ada Autoresponder`)
+          .setDescription(`Belum ada autoresponder yang dibuat.\nGunakan \`${config.prefix}addres\` untuk menambahkan.`)
+          .setTimestamp();
+        return message.reply({ embeds: [emptyEmbed] });
       }
 
       const embed = new EmbedBuilder()
-        .setColor('#0099ff')
-        .setTitle('Autoresponders List')
-        .setDescription('Ini dia list auto responder:')
+        .setColor(config.colors?.primary || '#5865F2')
+        .setTitle('📋 Daftar Autoresponder')
+        .setDescription(`Total: **${responders.length}** autoresponder`)
+        .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
         .setTimestamp();
 
-      // Ambil maksimal 10 autoresponder
       const respondersToShow = responders.slice(0, 10);
 
-      // Menambahkan fields dengan format "Auto Responder 1-10"
       respondersToShow.forEach((r, index) => {
         const position = index + 1;
-        embed.addFields({ name: `Auto Responder ${position}`, value: `Trigger: \`${r.trigger}\`\nResponse: ${r.response}`, inline: false });
+        embed.addFields({ 
+          name: `#${position} 🎯 ${r.trigger}`, 
+          value: `💬 ${r.response.substring(0, 100)}${r.response.length > 100 ? '...' : ''}`, 
+          inline: false 
+        });
+      });
+
+      embed.setFooter({ 
+        text: `Halaman 1/${Math.ceil(responders.length / 10)} • Diminta oleh ${message.author.username}`, 
+        iconURL: message.author.displayAvatarURL() 
       });
 
       let row;
@@ -41,56 +55,92 @@ module.exports = {
           .addComponents(
             new ButtonBuilder()
               .setCustomId('more_responders')
-              .setLabel('Lihat yang lainnya.')
+              .setLabel('📄 Halaman Selanjutnya')
               .setStyle(ButtonStyle.Primary),
           );
       }
 
-      // Mengirim embed dan button jika ada
       const replyMessage = await message.reply({ embeds: [embed], components: row ? [row] : [] });
 
-      // Mengatur filter untuk button click
       if (row) {
         const filter = i => {
-          i.deferUpdate(); // Menghindari timeout pada button
+          i.deferUpdate();
           return i.customId === 'more_responders' && i.user.id === message.author.id;
         };
 
-        const collector = replyMessage.createMessageComponentCollector({ filter, time: 60000 }); // 1 menit
+        const collector = replyMessage.createMessageComponentCollector({ filter, time: 60000 });
+        let currentPage = 1;
 
         collector.on('collect', async i => {
-          // Tampilkan autoresponder selanjutnya
-          const currentCount = respondersToShow.length;
-          const nextResponders = responders.slice(currentCount, currentCount + 10);
+          currentPage++;
+          const startIndex = (currentPage - 1) * 10;
+          const nextResponders = responders.slice(startIndex, startIndex + 10);
 
           if (nextResponders.length === 0) {
-            return i.followUp({ content: 'Tidak ditemukan lagi autoresponder.', ephemeral: true });
+            currentPage = 1;
+            const firstResponders = responders.slice(0, 10);
+            const newEmbed = new EmbedBuilder()
+              .setColor(config.colors?.primary || '#5865F2')
+              .setTitle('📋 Daftar Autoresponder')
+              .setDescription(`Total: **${responders.length}** autoresponder`)
+              .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
+              .setTimestamp();
+
+            firstResponders.forEach((r, index) => {
+              newEmbed.addFields({ 
+                name: `#${index + 1} 🎯 ${r.trigger}`, 
+                value: `💬 ${r.response.substring(0, 100)}${r.response.length > 100 ? '...' : ''}`, 
+                inline: false 
+              });
+            });
+
+            newEmbed.setFooter({ 
+              text: `Halaman 1/${Math.ceil(responders.length / 10)} • Diminta oleh ${message.author.username}`, 
+              iconURL: message.author.displayAvatarURL() 
+            });
+
+            await i.editReply({ embeds: [newEmbed], components: [row] });
+            return;
           }
 
           const newEmbed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('Autoresponders List')
-            .setDescription('Berikut adalah set autoresponder berikutnya:')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle('📋 Daftar Autoresponder')
+            .setDescription(`Total: **${responders.length}** autoresponder`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
             .setTimestamp();
 
           nextResponders.forEach((r, index) => {
-            const position = currentCount + index + 1; // Posisi yang benar dalam daftar total
-            newEmbed.addFields({ name: `Auto Responder ${position}`, value: `Trigger: \`${r.trigger}\`\nResponse: ${r.response}`, inline: false });
+            const position = startIndex + index + 1;
+            newEmbed.addFields({ 
+              name: `#${position} 🎯 ${r.trigger}`, 
+              value: `💬 ${r.response.substring(0, 100)}${r.response.length > 100 ? '...' : ''}`, 
+              inline: false 
+            });
           });
 
-          await i.update({ embeds: [newEmbed], components: [row] });
+          newEmbed.setFooter({ 
+            text: `Halaman ${currentPage}/${Math.ceil(responders.length / 10)} • Diminta oleh ${message.author.username}`, 
+            iconURL: message.author.displayAvatarURL() 
+          });
+
+          await i.editReply({ embeds: [newEmbed], components: [row] });
         });
 
         collector.on('end', () => {
-          // Menghapus button setelah waktu habis
           row.components[0].setDisabled(true);
-          replyMessage.edit({ components: [row] });
+          replyMessage.edit({ components: [row] }).catch(() => {});
         });
       }
 
     } catch (err) {
       console.error(err);
-      message.reply('Failed to list autoresponders.');
+      const errorEmbed = new EmbedBuilder()
+        .setColor(config.colors?.error || '#ED4245')
+        .setTitle(`${config.emojis?.cross || '❌'} Terjadi Kesalahan`)
+        .setDescription('Gagal menampilkan daftar autoresponder.')
+        .setTimestamp();
+      message.reply({ embeds: [errorEmbed] });
     }
   },
 };

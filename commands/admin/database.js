@@ -2,11 +2,12 @@ const { EmbedBuilder } = require('discord.js');
 const databaseOptimizer = require('../../util/databaseOptimizer');
 const logger = require('../../util/logger');
 const rolePermissions = require('../../util/rolePermissions');
+const config = require('../../config.js');
 
 module.exports = {
     name: 'database',
     aliases: ['db', 'dbstats', 'optimize'],
-    description: 'Database management and optimization commands',
+    description: 'Manajemen dan optimasi database',
     category: 'admin',
     usage: 'database [stats|optimize|cleanup|recommendations]',
     
@@ -42,21 +43,18 @@ module.exports = {
         } catch (error) {
             console.error('Error in database command:', error);
             await logger.logError(error, 'database command');
-            message.reply('❌ **|** Terjadi kesalahan saat mengakses database.');
+            message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat mengakses database.`);
         }
     },
 
-    /**
-     * Show database statistics
-     */
     async showDatabaseStats(message) {
         const loadingMsg = await message.channel.send('🔄 **|** Mengambil statistik database...');
         
         const stats = await databaseOptimizer.analyzeCollectionStats();
         
         const embed = new EmbedBuilder()
-            .setTitle('📊 Database Statistics')
-            .setColor('#5865F2')
+            .setTitle('📊 Statistik Database')
+            .setColor(config.colors?.primary || '#5865F2')
             .setTimestamp();
 
         if (Object.keys(stats).length === 0) {
@@ -64,7 +62,6 @@ module.exports = {
             return loadingMsg.edit({ content: null, embeds: [embed] });
         }
 
-        // Calculate totals
         let totalDocuments = 0;
         let totalSize = 0;
         let totalIndexes = 0;
@@ -86,22 +83,19 @@ module.exports = {
             });
         }
 
-        // Sort collections by document count
         collections.sort((a, b) => b.documents - a.documents);
 
-        // Overview
         embed.addFields({
-            name: '📈 Overview',
+            name: '📈 Ringkasan',
             value: [
-                `**Total Collections:** ${collections.length}`,
-                `**Total Documents:** ${totalDocuments.toLocaleString()}`,
-                `**Total Size:** ${databaseOptimizer.formatBytes(totalSize)}`,
-                `**Total Indexes:** ${totalIndexes}`
+                `**Total Koleksi:** ${collections.length}`,
+                `**Total Dokumen:** ${totalDocuments.toLocaleString()}`,
+                `**Total Ukuran:** ${databaseOptimizer.formatBytes(totalSize)}`,
+                `**Total Index:** ${totalIndexes}`
             ].join('\n'),
             inline: true
         });
 
-        // Top collections
         const topCollections = collections.slice(0, 5)
             .map((coll, index) => 
                 `${index + 1}. **${coll.name}** - ${coll.documents.toLocaleString()} docs (${databaseOptimizer.formatBytes(coll.size)})`
@@ -110,67 +104,67 @@ module.exports = {
 
         if (topCollections) {
             embed.addFields({
-                name: '🏆 Top Collections',
+                name: '🏆 Koleksi Terbesar',
                 value: topCollections,
                 inline: false
             });
         }
 
-        // Index information
         const indexInfo = collections
             .filter(coll => coll.documents > 0)
-            .map(coll => `**${coll.name}:** ${coll.indexes} indexes`)
+            .map(coll => `**${coll.name}:** ${coll.indexes} index`)
             .slice(0, 8)
             .join('\n');
 
         if (indexInfo) {
             embed.addFields({
-                name: '🔍 Index Information',
+                name: '🔍 Informasi Index',
                 value: indexInfo,
                 inline: true
             });
         }
 
-        // Performance indicators
         const indicators = [];
         const avgDocsPerCollection = totalDocuments / collections.length;
         
         if (avgDocsPerCollection < 1000) {
-            indicators.push('🟢 Collection Size: Good');
+            indicators.push('🟢 Ukuran Koleksi: Baik');
         } else if (avgDocsPerCollection < 10000) {
-            indicators.push('🟡 Collection Size: Moderate');
+            indicators.push('🟡 Ukuran Koleksi: Sedang');
         } else {
-            indicators.push('🔴 Collection Size: Large');
+            indicators.push('🔴 Ukuran Koleksi: Besar');
         }
 
         const avgIndexesPerCollection = totalIndexes / collections.length;
         if (avgIndexesPerCollection >= 2) {
-            indicators.push('🟢 Indexing: Good');
+            indicators.push('🟢 Indexing: Baik');
         } else {
-            indicators.push('🟡 Indexing: Needs Attention');
+            indicators.push('🟡 Indexing: Perlu Perhatian');
         }
 
         embed.addFields({
-            name: '📊 Performance Indicators',
+            name: '📊 Indikator Performa',
             value: indicators.join('\n'),
             inline: false
+        });
+
+        embed.setFooter({ 
+            text: `Diminta oleh ${message.author.username}`,
+            iconURL: message.author.displayAvatarURL({ dynamic: true })
         });
 
         await loadingMsg.edit({ content: null, embeds: [embed] });
     },
 
-    /**
-     * Optimize database
-     */
     async optimizeDatabase(message) {
-        const confirmMsg = await message.channel.send('⚠️ **|** Database optimization akan dimulai. Proses ini mungkin memakan waktu beberapa menit. Lanjutkan? (ketik `yes` untuk konfirmasi)');
+        const confirmMsg = await message.channel.send('⚠️ **|** Optimasi database akan dimulai. Proses ini mungkin memakan waktu beberapa menit. Lanjutkan? (ketik `yes` untuk konfirmasi)');
         
         const filter = m => m.author.id === message.author.id && m.content.toLowerCase() === 'yes';
         
         try {
             await message.channel.awaitMessages({ filter, max: 1, time: 30000, errors: ['time'] });
         } catch {
-            return confirmMsg.edit('❌ **|** Optimization dibatalkan (timeout).');
+            return confirmMsg.edit(`${config.emojis?.cross || "❌"} **|** Optimasi dibatalkan (waktu habis).`);
         }
 
         const optimizingMsg = await message.channel.send('🔄 **|** Mengoptimasi database... Mohon tunggu...');
@@ -178,22 +172,22 @@ module.exports = {
         const result = await databaseOptimizer.optimizeDatabase();
         
         const embed = new EmbedBuilder()
-            .setTitle('🔧 Database Optimization Results')
-            .setColor(result.success ? '#57F287' : '#ED4245')
+            .setTitle('🔧 Hasil Optimasi Database')
+            .setColor(result.success ? (config.colors?.success || '#57F287') : (config.colors?.error || '#ED4245'))
             .setTimestamp();
 
         if (result.success) {
-            embed.setDescription('✅ Database optimization berhasil diselesaikan!');
+            embed.setDescription('✅ Optimasi database berhasil diselesaikan!');
             
             embed.addFields(
                 {
-                    name: '📊 Results',
+                    name: '📊 Hasil',
                     value: [
-                        `**Execution Time:** ${result.executionTime}ms`,
-                        `**Indexes Created:** ${result.results.indexesCreated}`,
-                        `**Collections Analyzed:** ${result.results.collectionsAnalyzed}`,
-                        `**Optimizations Applied:** ${result.results.optimizationsApplied}`,
-                        `**Records Removed:** ${result.results.recordsRemoved || 0}`
+                        `**Waktu Eksekusi:** ${result.executionTime}ms`,
+                        `**Index Dibuat:** ${result.results.indexesCreated}`,
+                        `**Koleksi Dianalisis:** ${result.results.collectionsAnalyzed}`,
+                        `**Optimasi Diterapkan:** ${result.results.optimizationsApplied}`,
+                        `**Record Dihapus:** ${result.results.recordsRemoved || 0}`
                     ].join('\n'),
                     inline: false
                 }
@@ -201,68 +195,62 @@ module.exports = {
 
             if (result.results.errors && result.results.errors.length > 0) {
                 embed.addFields({
-                    name: '⚠️ Warnings',
+                    name: '⚠️ Peringatan',
                     value: result.results.errors.slice(0, 3).join('\n'),
                     inline: false
                 });
             }
         } else {
-            embed.setDescription('❌ Database optimization gagal.');
+            embed.setDescription(`${config.emojis?.cross || "❌"} Optimasi database gagal.`);
             embed.addFields({
                 name: 'Error',
-                value: result.error || 'Unknown error occurred',
+                value: result.error || 'Terjadi kesalahan tidak diketahui',
                 inline: false
             });
         }
 
         await optimizingMsg.edit({ content: null, embeds: [embed] });
         
-        // Log the optimization
         await logger.log('INFO', 'DATABASE', 
-            `Database optimization ${result.success ? 'completed' : 'failed'} by ${message.author.tag}`,
+            `Optimasi database ${result.success ? 'berhasil' : 'gagal'} oleh ${message.author.tag}`,
             { userId: message.author.id, guildId: message.guild.id, result }
         );
     },
 
-    /**
-     * Show database cleanup options
-     */
     async cleanupDatabase(message) {
         const embed = new EmbedBuilder()
-            .setTitle('🧹 Database Cleanup')
-            .setColor('#FEE75C')
-            .setDescription('Pilih jenis cleanup yang ingin dilakukan:')
+            .setTitle('🧹 Pembersihan Database')
+            .setColor(config.colors?.warning || '#FEE75C')
+            .setDescription('Pilih jenis pembersihan yang ingin dilakukan:')
             .addFields(
                 {
-                    name: '🗑️ Available Cleanup Options',
+                    name: '🗑️ Opsi Pembersihan',
                     value: [
                         '`database cleanup old` - Hapus data lama (warns >90 hari, giveaway selesai >30 hari)',
-                        '`database cleanup activity` - Hapus activity data lama (>90 hari)',
-                        '`database cleanup all` - Jalankan semua cleanup (HATI-HATI!)'
+                        '`database cleanup activity` - Hapus data aktivitas lama (>90 hari)',
+                        '`database cleanup all` - Jalankan semua pembersihan (HATI-HATI!)'
                     ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '⚠️ Warning',
-                    value: 'Cleanup akan menghapus data secara permanen. Pastikan Anda sudah backup jika diperlukan.',
+                    name: '⚠️ Peringatan',
+                    value: 'Pembersihan akan menghapus data secara permanen. Pastikan sudah backup jika diperlukan.',
                     inline: false
                 }
-            );
+            )
+            .setFooter({ text: `Diminta oleh ${message.author.username}` });
 
         await message.channel.send({ embeds: [embed] });
     },
 
-    /**
-     * Show optimization recommendations
-     */
     async showRecommendations(message) {
         const loadingMsg = await message.channel.send('🔄 **|** Menganalisis database untuk rekomendasi...');
         
         const recommendations = await databaseOptimizer.getOptimizationRecommendations();
         
         const embed = new EmbedBuilder()
-            .setTitle('💡 Database Optimization Recommendations')
-            .setColor('#5865F2')
+            .setTitle('💡 Rekomendasi Optimasi Database')
+            .setColor(config.colors?.primary || '#5865F2')
             .setTimestamp();
 
         if (recommendations.length === 0) {
@@ -270,14 +258,13 @@ module.exports = {
             return loadingMsg.edit({ content: null, embeds: [embed] });
         }
 
-        // Group recommendations by priority
         const highPriority = recommendations.filter(r => r.priority === 'high');
         const mediumPriority = recommendations.filter(r => r.priority === 'medium');
         const lowPriority = recommendations.filter(r => r.priority === 'low');
 
         if (highPriority.length > 0) {
             embed.addFields({
-                name: '🔴 High Priority',
+                name: '🔴 Prioritas Tinggi',
                 value: highPriority.map(r => `• ${r.message}`).join('\n'),
                 inline: false
             });
@@ -285,7 +272,7 @@ module.exports = {
 
         if (mediumPriority.length > 0) {
             embed.addFields({
-                name: '🟡 Medium Priority',
+                name: '🟡 Prioritas Sedang',
                 value: mediumPriority.map(r => `• ${r.message}`).join('\n'),
                 inline: false
             });
@@ -293,19 +280,19 @@ module.exports = {
 
         if (lowPriority.length > 0) {
             embed.addFields({
-                name: '🟢 Low Priority',
+                name: '🟢 Prioritas Rendah',
                 value: lowPriority.map(r => `• ${r.message}`).join('\n'),
                 inline: false
             });
         }
 
         embed.addFields({
-            name: '🔧 Next Steps',
+            name: '🔧 Langkah Selanjutnya',
             value: [
-                '• Run `database optimize` to apply automatic optimizations',
-                '• Consider manual schema changes for high priority items',
-                '• Monitor performance after applying changes',
-                '• Schedule regular optimization runs'
+                '• Jalankan `database optimize` untuk optimasi otomatis',
+                '• Pertimbangkan perubahan schema untuk item prioritas tinggi',
+                '• Monitor performa setelah menerapkan perubahan',
+                '• Jadwalkan optimasi rutin'
             ].join('\n'),
             inline: false
         });
@@ -313,65 +300,59 @@ module.exports = {
         await loadingMsg.edit({ content: null, embeds: [embed] });
     },
 
-    /**
-     * Show detailed performance metrics
-     */
     async showPerformanceMetrics(message) {
-        const loadingMsg = await message.channel.send('🔄 **|** Mengambil metrics database...');
+        const loadingMsg = await message.channel.send('🔄 **|** Mengambil metrik database...');
         
         const metrics = await databaseOptimizer.getPerformanceMetrics();
         
         const embed = new EmbedBuilder()
-            .setTitle('📈 Database Performance Metrics')
-            .setColor('#5865F2')
+            .setTitle('📈 Metrik Performa Database')
+            .setColor(config.colors?.primary || '#5865F2')
             .setTimestamp();
 
         if (metrics.error) {
-            embed.setDescription(`❌ Error: ${metrics.error}`);
+            embed.setDescription(`${config.emojis?.cross || "❌"} Error: ${metrics.error}`);
             return loadingMsg.edit({ content: null, embeds: [embed] });
         }
 
-        // Server information
         if (metrics.server) {
             embed.addFields({
-                name: '🖥️ Server Info',
+                name: '🖥️ Info Server',
                 value: [
-                    `**Version:** ${metrics.server.version}`,
-                    `**Uptime:** ${Math.floor(metrics.server.uptime / 3600)} hours`,
-                    `**Connections:** ${metrics.server.connections?.current || 'N/A'}`,
-                    `**Memory:** ${databaseOptimizer.formatBytes(metrics.server.memory?.resident * 1024 * 1024 || 0)}`
+                    `**Versi:** ${metrics.server.version}`,
+                    `**Uptime:** ${Math.floor(metrics.server.uptime / 3600)} jam`,
+                    `**Koneksi:** ${metrics.server.connections?.current || 'N/A'}`,
+                    `**Memori:** ${databaseOptimizer.formatBytes(metrics.server.memory?.resident * 1024 * 1024 || 0)}`
                 ].join('\n'),
                 inline: true
             });
         }
 
-        // Database statistics
         if (metrics.database) {
             embed.addFields({
-                name: '💾 Database Stats',
+                name: '💾 Statistik Database',
                 value: [
-                    `**Collections:** ${metrics.database.collections}`,
-                    `**Documents:** ${metrics.database.objects?.toLocaleString() || 'N/A'}`,
-                    `**Data Size:** ${databaseOptimizer.formatBytes(metrics.database.dataSize || 0)}`,
-                    `**Index Size:** ${databaseOptimizer.formatBytes(metrics.database.indexSize || 0)}`
+                    `**Koleksi:** ${metrics.database.collections}`,
+                    `**Dokumen:** ${metrics.database.objects?.toLocaleString() || 'N/A'}`,
+                    `**Ukuran Data:** ${databaseOptimizer.formatBytes(metrics.database.dataSize || 0)}`,
+                    `**Ukuran Index:** ${databaseOptimizer.formatBytes(metrics.database.indexSize || 0)}`
                 ].join('\n'),
                 inline: true
             });
         }
 
-        // Connection status
         if (metrics.connection) {
             const connectionStates = {
-                0: 'Disconnected',
-                1: 'Connected',
-                2: 'Connecting',
-                3: 'Disconnecting'
+                0: 'Terputus',
+                1: 'Terhubung',
+                2: 'Menghubungkan',
+                3: 'Memutuskan'
             };
 
             embed.addFields({
-                name: '🔗 Connection Info',
+                name: '🔗 Info Koneksi',
                 value: [
-                    `**Status:** ${connectionStates[metrics.connection.readyState] || 'Unknown'}`,
+                    `**Status:** ${connectionStates[metrics.connection.readyState] || 'Tidak Diketahui'}`,
                     `**Host:** ${metrics.connection.host || 'N/A'}`,
                     `**Port:** ${metrics.connection.port || 'N/A'}`,
                     `**Database:** ${metrics.connection.name || 'N/A'}`
@@ -380,16 +361,15 @@ module.exports = {
             });
         }
 
-        // Optimization history
         if (metrics.optimization?.lastOptimization) {
             const lastOpt = metrics.optimization.lastOptimization;
             embed.addFields({
-                name: '🔧 Last Optimization',
+                name: '🔧 Optimasi Terakhir',
                 value: [
-                    `**Time:** <t:${Math.floor(lastOpt.timestamp.getTime() / 1000)}:R>`,
-                    `**Duration:** ${lastOpt.executionTime}ms`,
-                    `**Indexes Created:** ${lastOpt.results.indexesCreated}`,
-                    `**Records Removed:** ${lastOpt.results.recordsRemoved || 0}`
+                    `**Waktu:** <t:${Math.floor(lastOpt.timestamp.getTime() / 1000)}:R>`,
+                    `**Durasi:** ${lastOpt.executionTime}ms`,
+                    `**Index Dibuat:** ${lastOpt.results.indexesCreated}`,
+                    `**Record Dihapus:** ${lastOpt.results.recordsRemoved || 0}`
                 ].join('\n'),
                 inline: false
             });
@@ -398,46 +378,44 @@ module.exports = {
         await loadingMsg.edit({ content: null, embeds: [embed] });
     },
 
-    /**
-     * Show help for database command
-     */
     async showHelp(message) {
         const embed = new EmbedBuilder()
-            .setTitle('📊 Database Command Help')
-            .setColor('#5865F2')
-            .setDescription('Database management and optimization tools')
+            .setTitle('📊 Bantuan Command Database')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setDescription('Alat manajemen dan optimasi database')
             .addFields(
                 {
-                    name: '📋 Available Subcommands',
+                    name: '📋 Subcommand Tersedia',
                     value: [
-                        '`database stats` - Show database statistics',
-                        '`database optimize` - Run database optimization',
-                        '`database cleanup` - Show cleanup options',
-                        '`database recommendations` - Get optimization recommendations',
-                        '`database metrics` - Show detailed performance metrics'
+                        '`database stats` - Tampilkan statistik database',
+                        '`database optimize` - Jalankan optimasi database',
+                        '`database cleanup` - Tampilkan opsi pembersihan',
+                        '`database recommendations` - Dapatkan rekomendasi optimasi',
+                        '`database metrics` - Tampilkan metrik performa detail'
                     ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '💡 Examples',
+                    name: '💡 Contoh',
                     value: [
-                        '`database` - Show stats (default)',
-                        '`database optimize` - Optimize database performance',
-                        '`database recommendations` - Get improvement suggestions'
+                        '`database` - Tampilkan stats (default)',
+                        '`database optimize` - Optimasi performa database',
+                        '`database recommendations` - Dapatkan saran perbaikan'
                     ].join('\n'),
                     inline: false
                 },
                 {
-                    name: '⚠️ Important Notes',
+                    name: '⚠️ Catatan Penting',
                     value: [
-                        '• Optimization may take several minutes',
-                        '• Always backup before major operations',
-                        '• Monitor performance after changes',
-                        '• Run optimization during low usage periods'
+                        '• Optimasi mungkin memakan waktu beberapa menit',
+                        '• Selalu backup sebelum operasi besar',
+                        '• Monitor performa setelah perubahan',
+                        '• Jalankan optimasi saat penggunaan rendah'
                     ].join('\n'),
                     inline: false
                 }
-            );
+            )
+            .setFooter({ text: `Diminta oleh ${message.author.username}` });
 
         await message.channel.send({ embeds: [embed] });
     }

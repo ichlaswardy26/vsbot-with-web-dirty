@@ -6,7 +6,7 @@ const auditLogger = require("../../util/auditLogger");
 
 module.exports = {
   name: "warn",
-  description: "Memberikan peringatan kepada member.",
+  description: "Memberikan peringatan kepada member",
   category: "moderator",
   usage: "warn @user [alasan]",
 
@@ -17,17 +17,23 @@ module.exports = {
       return message.reply(permissionError);
     }
 
-    const importantEmoji = config.emojis?.important || "❗";
-    const banEmoji = config.emojis?.ban || "🔨";
-
     const target = message.mentions.members.first();
     if (!target) {
-      return message.reply(`${importantEmoji} **|** Tolong mention member yang ingin diperingatkan.`);
+      return message.reply(`${config.emojis?.important || "❗"} **|** Mention member yang ingin diperingatkan!`);
     }
 
-    const reason = args.slice(1).join(" ") || "Tidak ada alasan diberikan.";
+    if (target.id === message.author.id) {
+      return message.reply(`${config.emojis?.cross || "❌"} **|** Kamu tidak dapat memperingatkan dirimu sendiri!`);
+    }
+
+    if (target.user.bot) {
+      return message.reply(`${config.emojis?.cross || "❌"} **|** Kamu tidak dapat memperingatkan bot!`);
+    }
+
+    const reason = args.slice(1).join(" ") || "Tidak ada alasan diberikan";
 
     try {
+      // Save warning to database
       await Warn.create({
         guildId: message.guild.id,
         userId: target.id,
@@ -35,36 +41,57 @@ module.exports = {
         reason,
       });
 
+      // Get total warnings
+      const totalWarnings = await Warn.countDocuments({
+        guildId: message.guild.id,
+        userId: target.id
+      });
+
       // Log to audit system
       await auditLogger.logWarn(message.guild, message.author, target.user, reason);
 
       // Try to DM the user
       try {
-        await target.send({
-          embeds: [
-            new EmbedBuilder()
-              .setTitle("⚠️ Kamu Telah Diperingatkan")
-              .setDescription(`Kamu menerima peringatan dari server **${message.guild.name}**.`)
-              .addFields(
-                { name: "Moderator", value: message.author.tag, inline: true },
-                { name: "Alasan", value: reason, inline: false }
-              )
-              .setColor(config.colors?.warning || 0xffcc00)
-              .setTimestamp()
-          ],
-        });
+        const dmEmbed = new EmbedBuilder()
+          .setTitle("⚠️ Kamu Mendapat Peringatan")
+          .setDescription(`Kamu menerima peringatan dari server **${message.guild.name}**`)
+          .setColor(config.colors?.warning || "#FEE75C")
+          .addFields(
+            { name: "👮 Moderator", value: `${message.author.tag}`, inline: true },
+            { name: "📝 Alasan", value: reason, inline: false },
+            { name: "⚠️ Total Peringatan", value: `${totalWarnings}`, inline: true }
+          )
+          .setThumbnail(message.guild.iconURL({ dynamic: true }))
+          .setFooter({ text: "Harap patuhi peraturan server!" })
+          .setTimestamp();
+
+        await target.send({ embeds: [dmEmbed] });
       } catch {
-        message.channel.send(`⚠️ Tidak bisa mengirim DM ke ${target.user.tag}.`);
+        // User has DMs disabled
       }
 
+      // Send confirmation embed
       const successEmbed = new EmbedBuilder()
-        .setDescription(`${banEmoji} **|** <@${target.user.id}> telah diperingatkan.`)
-        .setColor("White");
+        .setTitle("⚠️ Peringatan Diberikan")
+        .setDescription(`${target} telah diberikan peringatan.`)
+        .setColor(config.colors?.warning || "#FEE75C")
+        .addFields(
+          { name: "👤 Member", value: `${target.user.tag}`, inline: true },
+          { name: "👮 Moderator", value: `${message.author.tag}`, inline: true },
+          { name: "📝 Alasan", value: reason, inline: false },
+          { name: "⚠️ Total Peringatan", value: `${totalWarnings}`, inline: true }
+        )
+        .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
+        .setFooter({ 
+          text: `ID: ${target.id}`,
+          iconURL: message.author.displayAvatarURL({ dynamic: true })
+        })
+        .setTimestamp();
 
       message.channel.send({ embeds: [successEmbed] });
     } catch (error) {
       console.error("[warn] Error:", error.message);
-      message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat memberikan warning!`);
+      message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat memberikan peringatan!`);
     }
   },
 };

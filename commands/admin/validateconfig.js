@@ -35,12 +35,12 @@ module.exports = {
                 
                 // Bot permissions issues
                 if (results.validations.botPermissions && !results.validations.botPermissions.valid) {
-                    issues.push(`🤖 **Bot Permissions:** ${results.validations.botPermissions.error}`);
+                    issues.push(`🤖 **Permission Bot:** ${results.validations.botPermissions.error}`);
                 }
 
                 // Role hierarchy issues
                 if (results.validations.roleHierarchy && !results.validations.roleHierarchy.valid) {
-                    issues.push(`📊 **Role Hierarchy:** ${results.validations.roleHierarchy.error}`);
+                    issues.push(`📊 **Hierarki Role:** ${results.validations.roleHierarchy.error}`);
                 }
 
                 // Role configuration issues
@@ -52,13 +52,13 @@ module.exports = {
                         }
                     }
                     if (roleIssues.length > 0) {
-                        issues.push(`👥 **Role Issues:**\n${roleIssues.join('\n')}`);
+                        issues.push(`👥 **Masalah Role:**\n${roleIssues.join('\n')}`);
                     }
                 }
 
                 if (issues.length > 0) {
                     embed.addFields({
-                        name: '⚠️ Issues Found',
+                        name: '⚠️ Masalah Ditemukan',
                         value: issues.join('\n\n'),
                         inline: false
                     });
@@ -69,11 +69,11 @@ module.exports = {
             const recommendations = [];
             
             if (results.validations.roleHierarchy && !results.validations.roleHierarchy.valid) {
-                recommendations.push('• Move bot role higher in server role hierarchy');
+                recommendations.push('• Pindahkan role bot lebih tinggi di hierarki role server');
             }
             
             if (results.validations.botPermissions && !results.validations.botPermissions.valid) {
-                recommendations.push('• Grant missing permissions to bot role');
+                recommendations.push('• Berikan permission yang hilang ke role bot');
             }
 
             // Check for missing role configurations
@@ -87,12 +87,12 @@ module.exports = {
             }
             
             if (missingRoles.length > 0) {
-                recommendations.push(`• Configure missing roles: ${missingRoles.join(', ')}`);
+                recommendations.push(`• Konfigurasi role yang hilang: ${missingRoles.join(', ')}`);
             }
 
             if (recommendations.length > 0) {
                 embed.addFields({
-                    name: '💡 Recommendations',
+                    name: '💡 Rekomendasi',
                     value: recommendations.join('\n'),
                     inline: false
                 });
@@ -100,12 +100,12 @@ module.exports = {
 
             // Add configuration status
             const configStatus = [];
-            configStatus.push(`📊 **Validation Time:** <t:${Math.floor(results.timestamp.getTime() / 1000)}:R>`);
-            configStatus.push(`🔧 **Bot Version:** ${require('../../package.json').version}`);
-            configStatus.push(`📈 **Guild Members:** ${message.guild.memberCount}`);
+            configStatus.push(`📊 **Waktu Validasi:** <t:${Math.floor(results.timestamp.getTime() / 1000)}:R>`);
+            configStatus.push(`🔧 **Versi Bot:** ${require('../../package.json').version}`);
+            configStatus.push(`📈 **Anggota Server:** ${message.guild.memberCount}`);
             
             embed.addFields({
-                name: '📋 System Info',
+                name: '📋 Info Sistem',
                 value: configStatus.join('\n'),
                 inline: false
             });
@@ -115,22 +115,22 @@ module.exports = {
             // If there are critical issues, send additional help
             if (!results.overall) {
                 const helpEmbed = new EmbedBuilder()
-                    .setTitle('🆘 Need Help?')
+                    .setTitle('🆘 Butuh Bantuan?')
                     .setColor('#FEE75C')
                     .setDescription('Konfigurasi bot memiliki masalah yang perlu diperbaiki.')
                     .addFields(
                         {
-                            name: '📚 Documentation',
+                            name: '📚 Dokumentasi',
                             value: 'Lihat `PERMISSIONS.md` untuk panduan lengkap',
                             inline: true
                         },
                         {
-                            name: '🧪 Testing',
+                            name: '🧪 Pengujian',
                             value: 'Gunakan `testpermissions` untuk debug permission',
                             inline: true
                         },
                         {
-                            name: '🔄 Re-validate',
+                            name: '🔄 Validasi Ulang',
                             value: 'Jalankan command ini lagi setelah perbaikan',
                             inline: true
                         }
@@ -143,11 +143,11 @@ module.exports = {
             console.error('Error in validateconfig command:', error);
             
             const errorEmbed = new EmbedBuilder()
-                .setTitle('❌ Validation Error')
+                .setTitle('❌ Error Validasi')
                 .setColor('#ED4245')
                 .setDescription('Terjadi kesalahan saat memvalidasi konfigurasi.')
                 .addFields({
-                    name: 'Error Details',
+                    name: 'Detail Error',
                     value: `\`\`\`${error.message}\`\`\``,
                     inline: false
                 });

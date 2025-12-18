@@ -280,8 +280,9 @@ const webConfigSchema = new mongoose.Schema({
   },
   
   // ==================== LANGUAGE SETTINGS ====================
+  // Note: Multi-language removed, Indonesian only
   language: {
-    default: { type: String, default: 'en' },
+    default: { type: String, default: 'id' },
     available: [{ type: String }]
   },
   

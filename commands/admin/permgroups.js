@@ -51,22 +51,25 @@ module.exports = {
                     await this.handleTree(message, args.slice(1), client);
                     break;
                 default: {
+                    const config = require('../../config');
                     const helpEmbed = new EmbedBuilder()
-                        .setColor('#0099ff')
-                        .setTitle('📋 Permission Groups Help')
-                        .setDescription('Manage permission groups and inheritance')
+                        .setColor(config.colors?.primary || '#5865F2')
+                        .setTitle('📋 Bantuan Grup Permission')
+                        .setDescription('Kelola grup permission dan inheritance')
+                        .setThumbnail(message.guild.iconURL({ dynamic: true }))
                         .addFields(
-                            { name: 'List Groups', value: '`permgroups list`', inline: false },
-                            { name: 'Create Group', value: '`permgroups create <name> <permissions> [inherits] [description]`', inline: false },
-                            { name: 'Delete Group', value: '`permgroups delete <name>`', inline: false },
-                            { name: 'Assign to User', value: '`permgroups assign-user <user> <group> [reason]`', inline: false },
-                            { name: 'Remove from User', value: '`permgroups remove-user <user> <group> [reason]`', inline: false },
-                            { name: 'Assign to Role', value: '`permgroups assign-role <role> <group> [reason]`', inline: false },
-                            { name: 'Remove from Role', value: '`permgroups remove-role <role> <group> [reason]`', inline: false },
-                            { name: 'Check User', value: '`permgroups check-user <user>`', inline: false },
-                            { name: 'Check Role', value: '`permgroups check-role <role>`', inline: false },
-                            { name: 'Show Tree', value: '`permgroups tree [group]`', inline: false }
+                            { name: 'Daftar Grup', value: '`permgroups list`', inline: false },
+                            { name: 'Buat Grup', value: '`permgroups create <nama> <permissions> [inherits] [deskripsi]`', inline: false },
+                            { name: 'Hapus Grup', value: '`permgroups delete <nama>`', inline: false },
+                            { name: 'Assign ke Pengguna', value: '`permgroups assign-user <user> <grup> [alasan]`', inline: false },
+                            { name: 'Hapus dari Pengguna', value: '`permgroups remove-user <user> <grup> [alasan]`', inline: false },
+                            { name: 'Assign ke Role', value: '`permgroups assign-role <role> <grup> [alasan]`', inline: false },
+                            { name: 'Hapus dari Role', value: '`permgroups remove-role <role> <grup> [alasan]`', inline: false },
+                            { name: 'Cek Pengguna', value: '`permgroups check-user <user>`', inline: false },
+                            { name: 'Cek Role', value: '`permgroups check-role <role>`', inline: false },
+                            { name: 'Tampilkan Tree', value: '`permgroups tree [grup]`', inline: false }
                         )
+                        .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
                         .setTimestamp();
                     
                     return message.reply({ embeds: [helpEmbed] });
@@ -80,17 +83,19 @@ module.exports = {
     },
 
     async handleList(message) {
+        const config = require('../../config');
         const allGroups = rolePermissions.getAllGroups();
         const groupNames = Object.keys(allGroups);
 
         if (groupNames.length === 0) {
-            return message.reply('❌ **|** Tidak ada permission group yang tersedia.');
+            return message.reply('❌ **|** Tidak ada grup permission yang tersedia.');
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('📋 Available Permission Groups')
-            .setDescription(`Total: ${groupNames.length} group(s)`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle('📋 Grup Permission Tersedia')
+            .setDescription(`Total: ${groupNames.length} grup`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         for (const groupName of groupNames.slice(0, 10)) { // Limit to 10 groups
@@ -99,27 +104,30 @@ module.exports = {
             
             embed.addFields({
                 name: `${group.custom ? '🔧' : '🏛️'} ${groupName}`,
-                value: `**Description:** ${group.description}\n**Direct Permissions:** ${group.permissions.join(', ') || 'None'}\n**Inherits:** ${group.inherits.join(', ') || 'None'}\n**All Permissions:** ${permissions.allPermissions.join(', ') || 'None'}`,
+                value: `**Deskripsi:** ${group.description}\n**Permission Langsung:** ${group.permissions.join(', ') || 'Tidak ada'}\n**Mewarisi:** ${group.inherits.join(', ') || 'Tidak ada'}\n**Semua Permission:** ${permissions.allPermissions.join(', ') || 'Tidak ada'}`,
                 inline: false
             });
         }
 
         if (groupNames.length > 10) {
-            embed.setFooter({ text: `Showing 10 of ${groupNames.length} groups` });
+            embed.setFooter({ text: `Menampilkan 10 dari ${groupNames.length} grup` });
+        } else {
+            embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         }
 
         message.reply({ embeds: [embed] });
     },
 
     async handleCreate(message, args) {
+        const config = require('../../config');
         if (args.length < 2) {
-            return message.reply('❌ **|** Usage: `permgroups create <name> <permissions> [inherits] [description]`\n**Example:** `permgroups create my-group admin,staff server-manager "Custom admin group"`');
+            return message.reply('❌ **|** Penggunaan: `permgroups create <nama> <permissions> [inherits] [deskripsi]`\n**Contoh:** `permgroups create my-group admin,staff server-manager "Grup admin kustom"`');
         }
 
         const groupName = args[0];
         const permissionsStr = args[1];
         const inheritsStr = args[2] || '';
-        const description = args.slice(3).join(' ') || 'Custom permission group';
+        const description = args.slice(3).join(' ') || 'Grup permission kustom';
 
         const permissions = permissionsStr.split(',').map(p => p.trim());
         const inherits = inheritsStr ? inheritsStr.split(',').map(g => g.trim()) : [];
@@ -133,28 +141,31 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal membuat permission group: ${result.error}`);
+            return message.reply(`❌ **|** Gagal membuat grup permission: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#00ff00')
-            .setTitle('✅ Permission Group Created')
+            .setColor(config.colors?.success || '#57F287')
+            .setTitle('✅ Grup Permission Dibuat')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
-                { name: 'Group Name', value: groupName, inline: true },
-                { name: 'Direct Permissions', value: result.directPermissions.join(', ') || 'None', inline: true },
-                { name: 'Inherits From', value: result.inherits.join(', ') || 'None', inline: true },
-                { name: 'All Permissions', value: result.permissions.join(', ') || 'None', inline: false },
-                { name: 'Description', value: description, inline: false },
-                { name: 'Created By', value: message.author.tag, inline: true }
+                { name: 'Nama Grup', value: groupName, inline: true },
+                { name: 'Permission Langsung', value: result.directPermissions.join(', ') || 'Tidak ada', inline: true },
+                { name: 'Mewarisi Dari', value: result.inherits.join(', ') || 'Tidak ada', inline: true },
+                { name: 'Semua Permission', value: result.permissions.join(', ') || 'Tidak ada', inline: false },
+                { name: 'Deskripsi', value: description, inline: false },
+                { name: 'Dibuat Oleh', value: message.author.tag, inline: true }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleDelete(message, args) {
+        const config = require('../../config');
         if (args.length < 1) {
-            return message.reply('❌ **|** Usage: `permgroups delete <name>`');
+            return message.reply('❌ **|** Penggunaan: `permgroups delete <nama>`');
         }
 
         const groupName = args[0];
@@ -162,35 +173,38 @@ module.exports = {
         const result = await rolePermissions.deletePermissionGroup(groupName, message.author.id);
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal menghapus permission group: ${result.error}`);
+            return message.reply(`❌ **|** Gagal menghapus grup permission: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#ff9900')
-            .setTitle('🗑️ Permission Group Deleted')
+            .setColor(config.colors?.warning || '#FEE75C')
+            .setTitle('🗑️ Grup Permission Dihapus')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
-                { name: 'Group Name', value: result.deletedGroup, inline: true },
-                { name: 'Deleted By', value: message.author.tag, inline: true }
+                { name: 'Nama Grup', value: result.deletedGroup, inline: true },
+                { name: 'Dihapus Oleh', value: message.author.tag, inline: true }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleAssignUser(message, args, client) {
+        const config = require('../../config');
         if (args.length < 2) {
-            return message.reply('❌ **|** Usage: `permgroups assign-user <user> <group> [reason]`');
+            return message.reply('❌ **|** Penggunaan: `permgroups assign-user <user> <grup> [alasan]`');
         }
 
         const userMention = args[0];
         const groupName = args[1];
-        const reason = args.slice(2).join(' ') || 'No reason provided';
+        const reason = args.slice(2).join(' ') || 'Tidak ada alasan';
 
         // Parse user
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         const result = await rolePermissions.assignGroupToUser(
@@ -202,39 +216,42 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal assign group ke user: ${result.error}`);
+            return message.reply(`❌ **|** Gagal assign grup ke pengguna: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#00ff00')
-            .setTitle('✅ Permission Group Assigned to User')
+            .setColor(config.colors?.success || '#57F287')
+            .setTitle('✅ Grup Permission Diberikan ke Pengguna')
+            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-                { name: 'Group', value: result.groupName, inline: true },
-                { name: 'Permissions', value: result.permissions.join(', '), inline: false },
-                { name: 'All User Groups', value: result.allUserGroups.join(', '), inline: false },
-                { name: 'Assigned By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Pengguna', value: `${user.tag} (${user.id})`, inline: true },
+                { name: 'Grup', value: result.groupName, inline: true },
+                { name: 'Permission', value: result.permissions.join(', '), inline: false },
+                { name: 'Semua Grup Pengguna', value: result.allUserGroups.join(', '), inline: false },
+                { name: 'Diberikan Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleRemoveUser(message, args, client) {
+        const config = require('../../config');
         if (args.length < 2) {
-            return message.reply('❌ **|** Usage: `permgroups remove-user <user> <group> [reason]`');
+            return message.reply('❌ **|** Penggunaan: `permgroups remove-user <user> <grup> [alasan]`');
         }
 
         const userMention = args[0];
         const groupName = args[1];
-        const reason = args.slice(2).join(' ') || 'No reason provided';
+        const reason = args.slice(2).join(' ') || 'Tidak ada alasan';
 
         // Parse user
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         const result = await rolePermissions.removeGroupFromUser(
@@ -246,32 +263,35 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal remove group dari user: ${result.error}`);
+            return message.reply(`❌ **|** Gagal menghapus grup dari pengguna: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#ff9900')
-            .setTitle('🔄 Permission Group Removed from User')
+            .setColor(config.colors?.warning || '#FEE75C')
+            .setTitle('🔄 Grup Permission Dihapus dari Pengguna')
+            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-                { name: 'Removed Group', value: result.removedGroup, inline: true },
-                { name: 'Remaining Groups', value: result.remainingGroups.join(', ') || 'None', inline: false },
-                { name: 'Removed By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Pengguna', value: `${user.tag} (${user.id})`, inline: true },
+                { name: 'Grup Dihapus', value: result.removedGroup, inline: true },
+                { name: 'Grup Tersisa', value: result.remainingGroups.join(', ') || 'Tidak ada', inline: false },
+                { name: 'Dihapus Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleAssignRole(message, args) {
+        const config = require('../../config');
         if (args.length < 2) {
-            return message.reply('❌ **|** Usage: `permgroups assign-role <role> <group> [reason]`');
+            return message.reply('❌ **|** Penggunaan: `permgroups assign-role <role> <grup> [alasan]`');
         }
 
         const roleMention = args[0];
         const groupName = args[1];
-        const reason = args.slice(2).join(' ') || 'No reason provided';
+        const reason = args.slice(2).join(' ') || 'Tidak ada alasan';
 
         // Parse role
         const roleId = roleMention.replace(/[<@&>]/g, '');
@@ -288,33 +308,36 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal assign group ke role: ${result.error}`);
+            return message.reply(`❌ **|** Gagal assign grup ke role: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#00ff00')
-            .setTitle('✅ Permission Group Assigned to Role')
+            .setColor(config.colors?.success || '#57F287')
+            .setTitle('✅ Grup Permission Diberikan ke Role')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
                 { name: 'Role', value: `${role.name} (${role.id})`, inline: true },
-                { name: 'Group', value: result.groupName, inline: true },
-                { name: 'Permissions', value: result.permissions.join(', '), inline: false },
-                { name: 'All Role Groups', value: result.allRoleGroups.join(', '), inline: false },
-                { name: 'Assigned By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Grup', value: result.groupName, inline: true },
+                { name: 'Permission', value: result.permissions.join(', '), inline: false },
+                { name: 'Semua Grup Role', value: result.allRoleGroups.join(', '), inline: false },
+                { name: 'Diberikan Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleRemoveRole(message, args) {
+        const config = require('../../config');
         if (args.length < 2) {
-            return message.reply('❌ **|** Usage: `permgroups remove-role <role> <group> [reason]`');
+            return message.reply('❌ **|** Penggunaan: `permgroups remove-role <role> <grup> [alasan]`');
         }
 
         const roleMention = args[0];
         const groupName = args[1];
-        const reason = args.slice(2).join(' ') || 'No reason provided';
+        const reason = args.slice(2).join(' ') || 'Tidak ada alasan';
 
         // Parse role
         const roleId = roleMention.replace(/[<@&>]/g, '');
@@ -331,54 +354,57 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal remove group dari role: ${result.error}`);
+            return message.reply(`❌ **|** Gagal menghapus grup dari role: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#ff9900')
-            .setTitle('🔄 Permission Group Removed from Role')
+            .setColor(config.colors?.warning || '#FEE75C')
+            .setTitle('🔄 Grup Permission Dihapus dari Role')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
                 { name: 'Role', value: `${role.name} (${role.id})`, inline: true },
-                { name: 'Removed Group', value: result.removedGroup, inline: true },
-                { name: 'Remaining Groups', value: result.remainingGroups.join(', ') || 'None', inline: false },
-                { name: 'Removed By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Grup Dihapus', value: result.removedGroup, inline: true },
+                { name: 'Grup Tersisa', value: result.remainingGroups.join(', ') || 'Tidak ada', inline: false },
+                { name: 'Dihapus Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleCheckUser(message, args, client) {
+        const config = require('../../config');
         if (args.length < 1) {
-            return message.reply('❌ **|** Usage: `permgroups check-user <user>`');
+            return message.reply('❌ **|** Penggunaan: `permgroups check-user <user>`');
         }
 
         const userMention = args[0];
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         const member = await message.guild.members.fetch(user.id).catch(() => null);
         if (!member) {
-            return message.reply('❌ **|** User tidak ditemukan di server ini.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan di server ini.');
         }
 
         const userGroups = rolePermissions.getUserGroups(user.id, message.guild.id);
         const completePermissions = await rolePermissions.getCompleteUserPermissions(member);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle(`👤 User Permission Groups - ${user.tag}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle(`👤 Grup Permission Pengguna - ${user.tag}`)
             .setThumbnail(user.displayAvatarURL())
             .setTimestamp();
 
         // User groups
         embed.addFields({
-            name: '👥 Direct User Groups',
-            value: userGroups.length > 0 ? userGroups.join(', ') : 'None',
+            name: '👥 Grup Pengguna Langsung',
+            value: userGroups.length > 0 ? userGroups.join(', ') : 'Tidak ada',
             inline: false
         });
 
@@ -388,32 +414,34 @@ module.exports = {
                 .map(rg => `**${rg.roleName}:** ${rg.groups.join(', ')}`)
                 .join('\n');
             embed.addFields({
-                name: '🎭 Role Groups',
+                name: '🎭 Grup Role',
                 value: roleGroupsText,
                 inline: false
             });
         } else {
             embed.addFields({
-                name: '🎭 Role Groups',
-                value: 'None',
+                name: '🎭 Grup Role',
+                value: 'Tidak ada',
                 inline: false
             });
         }
 
         // Inherited permissions
         embed.addFields({
-            name: '🔗 Inherited Permissions',
+            name: '🔗 Permission Diwarisi',
             value: completePermissions.inheritedPermissions.length > 0 ? 
-                completePermissions.inheritedPermissions.join(', ') : 'None',
+                completePermissions.inheritedPermissions.join(', ') : 'Tidak ada',
             inline: false
         });
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handleCheckRole(message, args) {
+        const config = require('../../config');
         if (args.length < 1) {
-            return message.reply('❌ **|** Usage: `permgroups check-role <role>`');
+            return message.reply('❌ **|** Penggunaan: `permgroups check-role <role>`');
         }
 
         const roleMention = args[0];
@@ -426,13 +454,14 @@ module.exports = {
         const roleGroups = rolePermissions.getRoleGroups(role.id);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle(`🎭 Role Permission Groups - ${role.name}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle(`🎭 Grup Permission Role - ${role.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         embed.addFields({
-            name: '👥 Assigned Groups',
-            value: roleGroups.length > 0 ? roleGroups.join(', ') : 'None',
+            name: '👥 Grup yang Diberikan',
+            value: roleGroups.length > 0 ? roleGroups.join(', ') : 'Tidak ada',
             inline: false
         });
 
@@ -446,37 +475,40 @@ module.exports = {
             }
 
             embed.addFields({
-                name: '🔗 All Permissions from Groups',
-                value: Array.from(allPermissions).join(', ') || 'None',
+                name: '🔗 Semua Permission dari Grup',
+                value: Array.from(allPermissions).join(', ') || 'Tidak ada',
                 inline: false
             });
         }
 
         embed.addFields(
-            { name: 'Role ID', value: role.id, inline: true },
-            { name: 'Members', value: role.members.size.toString(), inline: true },
-            { name: 'Color', value: role.hexColor, inline: true }
+            { name: 'ID Role', value: role.id, inline: true },
+            { name: 'Anggota', value: role.members.size.toString(), inline: true },
+            { name: 'Warna', value: role.hexColor, inline: true }
         );
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handleTree(message, args) {
+        const config = require('../../config');
         const groupName = args[0];
         
         if (groupName) {
             // Show tree for specific group
             const groupDetails = rolePermissions.getGroupDetails(groupName);
             if (!groupDetails) {
-                return message.reply('❌ **|** Permission group tidak ditemukan.');
+                return message.reply('❌ **|** Grup permission tidak ditemukan.');
             }
 
             const permissionInheritance = require('../../util/permissionInheritance');
             const tree = permissionInheritance.getInheritanceTree(groupName);
 
             const embed = new EmbedBuilder()
-                .setColor('#0099ff')
-                .setTitle(`🌳 Inheritance Tree - ${groupName}`)
+                .setColor(config.colors?.primary || '#5865F2')
+                .setTitle(`🌳 Tree Inheritance - ${groupName}`)
+                .setThumbnail(message.guild.iconURL({ dynamic: true }))
                 .setTimestamp();
 
             let treeText = '';
@@ -484,11 +516,12 @@ module.exports = {
                 const indent = '  '.repeat(node.depth);
                 const prefix = node.depth === 0 ? '🔹' : '└─';
                 treeText += `${indent}${prefix} **${node.name}**\n`;
-                treeText += `${indent}   Permissions: ${node.permissions.join(', ') || 'None'}\n`;
-                treeText += `${indent}   Description: ${node.description}\n\n`;
+                treeText += `${indent}   Permission: ${node.permissions.join(', ') || 'Tidak ada'}\n`;
+                treeText += `${indent}   Deskripsi: ${node.description}\n\n`;
             }
 
-            embed.setDescription(treeText || 'No inheritance tree found');
+            embed.setDescription(treeText || 'Tree inheritance tidak ditemukan');
+            embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
             message.reply({ embeds: [embed] });
         } else {
             // Show all groups overview
@@ -496,9 +529,10 @@ module.exports = {
             const groupNames = Object.keys(allGroups);
 
             const embed = new EmbedBuilder()
-                .setColor('#0099ff')
-                .setTitle('🌳 All Permission Groups Overview')
-                .setDescription(`Total: ${groupNames.length} group(s)`)
+                .setColor(config.colors?.primary || '#5865F2')
+                .setTitle('🌳 Ringkasan Semua Grup Permission')
+                .setDescription(`Total: ${groupNames.length} grup`)
+                .setThumbnail(message.guild.iconURL({ dynamic: true }))
                 .setTimestamp();
 
             let groupsText = '';
@@ -506,14 +540,16 @@ module.exports = {
                 const group = allGroups[name];
                 const icon = group.custom ? '🔧' : '🏛️';
                 groupsText += `${icon} **${name}** - ${group.description}\n`;
-                groupsText += `   Permissions: ${group.permissions.join(', ') || 'None'}\n`;
-                groupsText += `   Inherits: ${group.inherits.join(', ') || 'None'}\n\n`;
+                groupsText += `   Permission: ${group.permissions.join(', ') || 'Tidak ada'}\n`;
+                groupsText += `   Mewarisi: ${group.inherits.join(', ') || 'Tidak ada'}\n\n`;
             }
 
-            embed.setDescription(groupsText || 'No groups found');
+            embed.setDescription(groupsText || 'Tidak ada grup ditemukan');
             
             if (groupNames.length > 15) {
-                embed.setFooter({ text: `Showing 15 of ${groupNames.length} groups. Use 'permgroups tree <group>' for specific inheritance tree.` });
+                embed.setFooter({ text: `Menampilkan 15 dari ${groupNames.length} grup. Gunakan 'permgroups tree <grup>' untuk tree inheritance spesifik.` });
+            } else {
+                embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
             }
 
             message.reply({ embeds: [embed] });

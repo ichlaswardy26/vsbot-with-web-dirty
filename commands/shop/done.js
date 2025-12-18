@@ -1,53 +1,85 @@
+const { EmbedBuilder } = require("discord.js");
 const ExclusiveItem = require("../../schemas/ExclusiveItem");
+const config = require("../../config.js");
 
 module.exports = {
   name: "done",
   description: "Konfirmasi pembelian item exclusive oleh admin",
+  category: "shop",
+  usage: "done @user <nama item>",
   async exec(client, message, args) {
     const rolePermissions = require("../../util/rolePermissions");
     
-    // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'shop');
     if (permissionError) {
       return message.reply(permissionError);
     }
 
-    // ambil user mention dan nama item
     const user = message.mentions.users.first();
     const itemName = args.slice(1).join(" ");
 
     if (!user || !itemName) {
-      return message.reply("⚠️ Gunakan format: `..done @user <nama item>`");
+      const helpEmbed = new EmbedBuilder()
+        .setColor(config.colors?.warning || '#FEE75C')
+        .setTitle(`${config.emojis?.info || 'ℹ️'} Cara Penggunaan`)
+        .setDescription('Konfirmasi pembelian item exclusive.')
+        .addFields(
+          { name: '📝 Format', value: `\`${config.prefix}done @user <nama item>\``, inline: false },
+          { name: '📌 Contoh', value: `\`${config.prefix}done @User Owo Cash\``, inline: false }
+        )
+        .setFooter({ text: `Diminta oleh ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+        .setTimestamp();
+      return message.reply({ embeds: [helpEmbed] });
     }
 
-    // cari item berdasarkan nama
     const item = await ExclusiveItem.findOne({
       guildId: message.guild.id,
       name: itemName,
     });
 
     if (!item) {
-      return message.reply(`❌ Item **${itemName}** tidak ditemukan.`);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(config.colors?.error || '#ED4245')
+        .setTitle(`${config.emojis?.cross || '❌'} Item Tidak Ditemukan`)
+        .setDescription(`Item **${itemName}** tidak ditemukan di shop.`)
+        .setTimestamp();
+      return message.reply({ embeds: [errorEmbed] });
     }
 
-    // cek apakah user ada di daftar pembeli
     if (!item.buyers.includes(user.id)) {
-      return message.reply(`⚠️ ${user.tag} belum membeli item **${item.name}**.`);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(config.colors?.warning || '#FEE75C')
+        .setTitle(`${config.emojis?.info || 'ℹ️'} Belum Membeli`)
+        .setDescription(`${user} belum membeli item **${item.name}**.`)
+        .setTimestamp();
+      return message.reply({ embeds: [errorEmbed] });
     }
 
-    // jika sudah dikonfirmasi sebelumnya (buat field baru optional)
     if (!item.confirmedBuyers) item.confirmedBuyers = [];
     if (item.confirmedBuyers.includes(user.id)) {
-      return message.reply(`ℹ️ Pembelian oleh ${user.tag} untuk **${item.name}** sudah dikonfirmasi sebelumnya.`);
+      const infoEmbed = new EmbedBuilder()
+        .setColor(config.colors?.info || '#5865F2')
+        .setTitle(`${config.emojis?.info || 'ℹ️'} Sudah Dikonfirmasi`)
+        .setDescription(`Pembelian oleh ${user} untuk **${item.name}** sudah dikonfirmasi sebelumnya.`)
+        .setTimestamp();
+      return message.reply({ embeds: [infoEmbed] });
     }
 
-    // tambahkan ke daftar confirmed
     item.confirmedBuyers.push(user.id);
     await item.save();
 
-    // kirim pesan konfirmasi
-    return message.channel.send(
-      `✅ Pembelian oleh **${user.tag}** untuk item **${item.name}** telah dikonfirmasi!\n(Slot tetap sama — tidak berkurang)`
-    );
+    const successEmbed = new EmbedBuilder()
+      .setColor(config.colors?.success || '#57F287')
+      .setTitle(`${config.emojis?.check || '✅'} Pembelian Dikonfirmasi`)
+      .setThumbnail(user.displayAvatarURL({ dynamic: true, size: 256 }))
+      .addFields(
+        { name: '👤 Pembeli', value: `${user}`, inline: true },
+        { name: '📦 Item', value: item.name, inline: true },
+        { name: '📊 Status', value: 'Dikonfirmasi', inline: true }
+      )
+      .setFooter({ text: `Dikonfirmasi oleh ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+      .setTimestamp();
+
+    return message.channel.send({ embeds: [successEmbed] });
   },
 };

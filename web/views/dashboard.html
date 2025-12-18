@@ -113,12 +113,6 @@
                                 <span>Appearance</span>
                             </a>
                         </li>
-                        <li class="nav-item" role="none">
-                            <a class="nav-link" href="#language" data-section="language" role="menuitem">
-                                <i class="fas fa-globe" aria-hidden="true"></i>
-                                <span>Language</span>
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </nav>
@@ -567,63 +561,6 @@
                             <div class="text-center py-5">
                                 <div class="loading-spinner mb-3"></div>
                                 <p class="text-muted">Loading appearance configuration...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Language Settings Section -->
-                    <div id="language-section" class="config-section">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div>
-                                <h2>Language Settings</h2>
-                                <p class="text-muted mb-0">Configure bot language and localization preferences</p>
-                            </div>
-                        </div>
-                        
-                        <div id="language-config-container">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="fas fa-language me-2"></i>Language Configuration
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <form id="language-config-form">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label for="default-language" class="form-label">Default Language</label>
-                                                <select class="form-select" id="default-language" name="language.default">
-                                                    <option value="en" selected>English</option>
-                                                    <option value="id">Bahasa Indonesia</option>
-                                                </select>
-                                                <div class="form-text">Primary language for bot responses</div>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Available Languages</label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="lang-en" value="en" checked disabled>
-                                                    <label class="form-check-label" for="lang-en">English (Always enabled)</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="lang-id" value="id">
-                                                    <label class="form-check-label" for="lang-id">Bahasa Indonesia</label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            <strong>Note:</strong> Language settings affect bot command responses and system messages. 
-                                            Users can also set their personal language preference using the <code>/language</code> command.
-                                        </div>
-                                        
-                                        <div class="form-actions mt-4">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-save me-2"></i>Save Language Settings
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
                             </div>
                         </div>
                     </div>

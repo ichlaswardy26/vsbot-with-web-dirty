@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const configManager = require('../../util/configManager');
+const config = require('../../config');
 const { verifyAuth, verifyGuildAccess } = require('../middleware/auth');
 const { validateGuildId, validateConfigSection, sanitizeInput, validateConfigStructure } = require('../middleware/validation');
 const { auditLogger } = require('../services/auditLogger');
@@ -141,7 +142,7 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
     // Get old config for audit comparison
     const oldConfig = await configManager.getConfig(guildId);
     
-    const config = await configManager.updateConfig(guildId, updates, userId);
+    const updatedConfig = await configManager.updateConfig(guildId, updates, userId);
     
     // Invalidate cache for this guild
     cacheService.invalidateGuild(guildId);
@@ -162,9 +163,17 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
       });
     }
     
+    // Reload bot's config cache so changes take effect immediately
+    try {
+      await config.reloadConfig();
+      console.log(`[Config] Bot config reloaded after dashboard update for guild ${guildId}`);
+    } catch (reloadError) {
+      console.error('[Config] Failed to reload bot config:', reloadError);
+    }
+    
     res.json({
       success: true,
-      data: config,
+      data: updatedConfig,
       message: 'Configuration updated successfully'
     });
   } catch (error) {
@@ -220,6 +229,14 @@ router.put('/:guildId/:section', validateGuildId, validateConfigSection, sanitiz
         userId: req.user.id,
         username: req.user.username
       });
+    }
+    
+    // Reload bot's config cache so changes take effect immediately
+    try {
+      await config.reloadConfig();
+      console.log(`[Config] Bot config reloaded after dashboard update for guild ${guildId} section ${section}`);
+    } catch (reloadError) {
+      console.error('[Config] Failed to reload bot config:', reloadError);
     }
     
     res.json({
@@ -427,6 +444,14 @@ router.post('/:guildId/import', validateGuildId, verifyAuth, verifyGuildAccess, 
     // Audit log successful import
     await auditLogger.logConfigImport(req, guildId, result.appliedSections, true);
     
+    // Reload bot's config cache so changes take effect immediately
+    try {
+      await config.reloadConfig();
+      console.log(`[Config] Bot config reloaded after import for guild ${guildId}`);
+    } catch (reloadError) {
+      console.error('[Config] Failed to reload bot config:', reloadError);
+    }
+    
     res.json({
       success: true,
       data: result.data,
@@ -493,6 +518,14 @@ router.post('/:guildId/restore', validateGuildId, verifyAuth, verifyGuildAccess,
     const userId = req.user.id;
     
     const result = await configManager.restoreFromBackup(guildId, backupData, userId);
+    
+    // Reload bot's config cache so changes take effect immediately
+    try {
+      await config.reloadConfig();
+      console.log(`[Config] Bot config reloaded after restore for guild ${guildId}`);
+    } catch (reloadError) {
+      console.error('[Config] Failed to reload bot config:', reloadError);
+    }
     
     res.json({
       success: true,
@@ -609,11 +642,19 @@ router.post('/:guildId/reset', verifyAuth, verifyGuildAccess, async (req, res) =
     
     // Create new default config
     const defaultConfig = configManager.getDefaultConfig(guildId);
-    const config = await configManager.updateConfig(guildId, defaultConfig, userId);
+    const resetConfig = await configManager.updateConfig(guildId, defaultConfig, userId);
+    
+    // Reload bot's config cache so changes take effect immediately
+    try {
+      await config.reloadConfig();
+      console.log(`[Config] Bot config reloaded after reset for guild ${guildId}`);
+    } catch (reloadError) {
+      console.error('[Config] Failed to reload bot config:', reloadError);
+    }
     
     res.json({
       success: true,
-      data: config,
+      data: resetConfig,
       message: 'Configuration reset to defaults'
     });
   } catch (error) {

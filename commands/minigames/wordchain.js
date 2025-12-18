@@ -1,9 +1,10 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 const wordChainManager = require("../../util/wordChainManager");
+const config = require("../../config.js");
 
 module.exports = {
   name: "wordchain",
-  description: "Start a Mini Word Chain Game",
+  description: "Mulai permainan Word Chain",
   category: "minigames",
   async exec(client, message) {
     try {
@@ -11,7 +12,7 @@ module.exports = {
       
       // Check if there's already an active game in this channel
       if (wordChainManager.getGame(channelId)) {
-        return message.reply("❌ There's already an active word chain game in this channel!");
+        return message.reply(`${config.emojis?.cross || "❌"} **|** Sudah ada permainan word chain yang aktif di channel ini!`);
       }
 
       // Create new game session with command runner as lobby master
@@ -28,36 +29,38 @@ module.exports = {
       const game = wordChainManager.getGame(channelId);
       const playerCount = game.players.length;
       const lobbyMaster = game.players.find(p => p.isLobbyMaster);
-      const playerListText = lobbyMaster ? `@${lobbyMaster.username} 👑` : "None";
+      const playerListText = lobbyMaster ? `@${lobbyMaster.username} 👑` : "Tidak ada";
 
       const maxRollsText = (game.maxRolls === 999) ? 'Unlimited' : `${game.maxRolls || 1}`;
       const lobbyEmbed = new EmbedBuilder()
+        .setTitle("🎮 Word Chain - Lobby")
         .setDescription(
-          `**Level: ${game.difficulty}**\n` +
-          `**Language: ID**\n` +
-          `**Time Limit: ${game.timeLimit}s per turn**\n` +
-          `**Max Rolls: ${maxRollsText} per player**\n` +
-          `**Bot Opponent: ${game.botEnabled ? 'Enabled' : 'Disabled'}**\n\n` +
-          `**Player List [${playerCount}]**\n` +
+          `**Level:** ${game.difficulty}\n` +
+          `**Bahasa:** Indonesia\n` +
+          `**Batas Waktu:** ${game.timeLimit} detik per giliran\n` +
+          `**Max Rolls:** ${maxRollsText} per pemain\n` +
+          `**Bot Lawan:** ${game.botEnabled ? 'Aktif' : 'Nonaktif'}\n\n` +
+          `**Daftar Pemain [${playerCount}]**\n` +
           `${playerListText}`
         )
-        .setColor(0x2ecc71)
-        .setFooter({ text: "Max 10 Player | Based on KBBI" })
+        .setColor(config.colors?.success || "#57F287")
+        .setFooter({ text: "Maksimal 10 Pemain | Berdasarkan KBBI" })
+        .setTimestamp();
 
       // Create buttons matching the example
       const joinButton = new ButtonBuilder()
         .setCustomId("wc_join")
-        .setLabel("Join")
+        .setLabel("Gabung")
         .setStyle(ButtonStyle.Success);
 
       const startButton = new ButtonBuilder()
         .setCustomId("wc_start")
-        .setLabel("Start")
+        .setLabel("Mulai")
         .setStyle(ButtonStyle.Primary);
 
       const exitButton = new ButtonBuilder()
         .setCustomId("wc_exit")
-        .setLabel("Exit")
+        .setLabel("Keluar")
         .setStyle(ButtonStyle.Danger);
 
       const kickButton = new ButtonBuilder()
@@ -67,7 +70,7 @@ module.exports = {
 
       const settingsButton = new ButtonBuilder()
         .setCustomId("wc_settings")
-        .setLabel("Settings")
+        .setLabel("Pengaturan")
         .setStyle(ButtonStyle.Primary);
 
       const actionRow1 = new ActionRowBuilder()
@@ -87,7 +90,7 @@ module.exports = {
 
     } catch (error) {
       console.error("Error creating word chain game:", error);
-      message.reply("❌ An error occurred while creating the game. Please try again.");
+      message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat membuat permainan. Silakan coba lagi.`);
     }
   }
 };

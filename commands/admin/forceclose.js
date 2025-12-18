@@ -3,11 +3,12 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: "forceclose",
-  description: "Force close current ticket (admin only)",
+  description: "Tutup paksa tiket saat ini (admin saja)",
   category: "admin",
   
   async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
+    const config = require('../../config');
     
     const permissionError = rolePermissions.checkPermission(message.member, 'admin');
     if (permissionError) {
@@ -16,14 +17,14 @@ module.exports = {
 
     // Check if this is a ticket channel
     if (!message.channel.name.startsWith('ticket-') && !message.channel.name.startsWith('partner-')) {
-      return message.reply("❌ Command ini hanya bisa digunakan di channel ticket.");
+      return message.reply("❌ **|** Command ini hanya bisa digunakan di channel ticket.");
     }
 
     try {
       const ticket = await Ticket.findOne({ channelId: message.channel.id });
       
       if (!ticket) {
-        return message.reply("❌ Tidak menemukan data tiket di database.");
+        return message.reply("❌ **|** Tidak menemukan data tiket di database.");
       }
 
       // Update ticket status
@@ -34,12 +35,14 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle("🔒 Tiket Ditutup Paksa")
         .setDescription(`Tiket ditutup oleh admin: ${message.author}`)
+        .setColor(config.colors?.error || '#ED4245')
+        .setThumbnail(message.guild.iconURL({ dynamic: true }))
         .addFields(
-          { name: "User", value: `<@${ticket.userId}>`, inline: true },
+          { name: "Pengguna", value: `<@${ticket.userId}>`, inline: true },
           { name: "Channel", value: `#${message.channel.name}`, inline: true },
           { name: "Dibuka", value: `<t:${Math.floor(ticket.createdAt / 1000)}:R>`, inline: true }
         )
-        .setColor(0xff3e3e)
+        .setFooter({ text: `Ditutup oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
         .setTimestamp();
 
       await message.reply({ embeds: [embed] });
@@ -51,7 +54,7 @@ module.exports = {
 
     } catch (error) {
       console.error('Error force closing ticket:', error);
-      message.reply("❌ Terjadi kesalahan saat menutup tiket.");
+      message.reply("❌ **|** Terjadi kesalahan saat menutup tiket.");
     }
   }
 };

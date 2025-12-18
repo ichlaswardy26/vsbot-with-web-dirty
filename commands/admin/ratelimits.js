@@ -10,6 +10,7 @@ module.exports = {
     usage: 'ratelimits [user] [category]',
     
     async exec(client, message, args) {
+        const config = require('../../config');
         // Check permission using standardized system
         const permissionError = rolePermissions.checkPermission(message.member, 'staff');
         if (permissionError) {
@@ -21,14 +22,14 @@ module.exports = {
 
         try {
             const embed = new EmbedBuilder()
-                .setTitle('⏰ Rate Limits & Cooldowns')
-                .setColor('#5865F2')
+                .setTitle('⏰ Rate Limit & Cooldown')
+                .setColor(config.colors?.primary || '#5865F2')
                 .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
                 .setTimestamp();
 
             // Add user info
             embed.addFields({
-                name: '👤 User',
+                name: '👤 Pengguna',
                 value: `${targetUser.tag} (${targetUser.id})`,
                 inline: false
             });
@@ -40,7 +41,7 @@ module.exports = {
             if (isExempt) {
                 embed.addFields({
                     name: '🛡️ Status',
-                    value: '✅ User is exempt from rate limits',
+                    value: '✅ Pengguna dikecualikan dari rate limit',
                     inline: false
                 });
             }
@@ -54,7 +55,7 @@ module.exports = {
                 if (status) {
                     const percentage = status.percentage;
                     const progressBar = createProgressBar(percentage, 10);
-                    const resetText = status.resetIn > 0 ? `Reset in ${status.resetIn}s` : 'Ready';
+                    const resetText = status.resetIn > 0 ? `Reset dalam ${status.resetIn}d` : 'Siap';
                     
                     rateLimitStatus.push(
                         `**${cat.toUpperCase()}**`,
@@ -67,8 +68,8 @@ module.exports = {
 
             if (rateLimitStatus.length > 0) {
                 embed.addFields({
-                    name: '📊 Rate Limit Status',
-                    value: rateLimitStatus.join('\n') || 'No active rate limits',
+                    name: '📊 Status Rate Limit',
+                    value: rateLimitStatus.join('\n') || 'Tidak ada rate limit aktif',
                     inline: false
                 });
             }
@@ -78,12 +79,12 @@ module.exports = {
                 const status = rateLimiter.getRateLimitStatus(targetUser.id, category);
                 if (status) {
                     embed.addFields({
-                        name: `🔍 ${category.toUpperCase()} Details`,
+                        name: `🔍 Detail ${category.toUpperCase()}`,
                         value: [
-                            `Uses: ${status.uses}/${status.maxUses}`,
-                            `Percentage: ${status.percentage}%`,
-                            `Reset: ${status.resetIn > 0 ? `${status.resetIn} seconds` : 'Ready'}`,
-                            `Status: ${status.uses >= status.maxUses ? '🔴 Limited' : '🟢 Available'}`
+                            `Penggunaan: ${status.uses}/${status.maxUses}`,
+                            `Persentase: ${status.percentage}%`,
+                            `Reset: ${status.resetIn > 0 ? `${status.resetIn} detik` : 'Siap'}`,
+                            `Status: ${status.uses >= status.maxUses ? '🔴 Terbatas' : '🟢 Tersedia'}`
                         ].join('\n'),
                         inline: true
                     });
@@ -93,12 +94,12 @@ module.exports = {
             // Get system statistics
             const stats = rateLimiter.getStats();
             embed.addFields({
-                name: '📈 System Statistics',
+                name: '📈 Statistik Sistem',
                 value: [
-                    `Active Cooldowns: ${stats.activeCooldowns}`,
-                    `Active Rate Limits: ${stats.activeRateLimits}`,
-                    `Categories: ${stats.categories.length}`,
-                    `Rate Limit Categories: ${stats.rateLimitCategories.length}`
+                    `Cooldown Aktif: ${stats.activeCooldowns}`,
+                    `Rate Limit Aktif: ${stats.activeRateLimits}`,
+                    `Kategori: ${stats.categories.length}`,
+                    `Kategori Rate Limit: ${stats.rateLimitCategories.length}`
                 ].join('\n'),
                 inline: true
             });
@@ -110,13 +111,13 @@ module.exports = {
             for (const cmd of commonCommands) {
                 const remaining = rateLimiter.getRemainingCooldown(targetUser.id, cmd);
                 if (remaining > 0) {
-                    cooldownInfo.push(`${cmd}: ${remaining}s`);
+                    cooldownInfo.push(`${cmd}: ${remaining}d`);
                 }
             }
 
             if (cooldownInfo.length > 0) {
                 embed.addFields({
-                    name: '⏳ Active Cooldowns',
+                    name: '⏳ Cooldown Aktif',
                     value: cooldownInfo.join('\n'),
                     inline: true
                 });
@@ -125,11 +126,11 @@ module.exports = {
             // Add management options for admins
             if (rolePermissions.isAdmin(message.member)) {
                 embed.addFields({
-                    name: '🔧 Admin Actions',
+                    name: '🔧 Aksi Admin',
                     value: [
-                        '`ratelimits reset <user> <category>` - Reset rate limit',
+                        '`ratelimits reset <user> <kategori>` - Reset rate limit',
                         '`ratelimits cooldown <user> <command>` - Reset cooldown',
-                        '`ratelimits stats` - Detailed statistics'
+                        '`ratelimits stats` - Statistik detail'
                     ].join('\n'),
                     inline: false
                 });
@@ -141,7 +142,7 @@ module.exports = {
                     
                     if (resetUser && categories.includes(resetCategory)) {
                         rateLimiter.resetRateLimit(resetUser.id, resetCategory);
-                        embed.setFooter({ text: `✅ Reset ${resetCategory} rate limit for ${resetUser.tag}` });
+                        embed.setFooter({ text: `✅ Reset rate limit ${resetCategory} untuk ${resetUser.tag}` });
                     }
                 }
 
@@ -151,16 +152,20 @@ module.exports = {
                     
                     if (resetUser) {
                         rateLimiter.resetCooldown(resetUser.id, resetCommand);
-                        embed.setFooter({ text: `✅ Reset ${resetCommand} cooldown for ${resetUser.tag}` });
+                        embed.setFooter({ text: `✅ Reset cooldown ${resetCommand} untuk ${resetUser.tag}` });
                     }
                 }
+            }
+
+            if (!embed.data.footer) {
+                embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
             }
 
             await message.channel.send({ embeds: [embed] });
 
         } catch (error) {
             console.error('Error in ratelimits command:', error);
-            message.reply('❌ **|** Terjadi kesalahan saat mengambil data rate limits.');
+            message.reply('❌ **|** Terjadi kesalahan saat mengambil data rate limit.');
         }
     }
 };

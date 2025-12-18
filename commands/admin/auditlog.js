@@ -18,7 +18,7 @@ module.exports = {
     async exec(client, message, args) {
         // Check permissions
         if (!message.member.permissions.has('Administrator')) {
-            return message.reply('❌ You need Administrator permission to view audit logs.');
+            return message.reply('❌ **|** Kamu membutuhkan permission Administrator untuk melihat audit log.');
         }
         
         const guildId = message.guild.id;
@@ -54,23 +54,23 @@ module.exports = {
         const logs = await auditLogger.getRecentLogs(guildId, 10);
         
         if (logs.length === 0) {
-            return message.reply('📜 No audit logs found.');
+            return message.reply('📜 **|** Tidak ada audit log yang ditemukan.');
         }
         
-        const embed = this.createLogsEmbed(logs, 'Recent Audit Logs');
+        const embed = this.createLogsEmbed(logs, 'Audit Log Terbaru', message);
         
         const filterMenu = new StringSelectMenuBuilder()
             .setCustomId('audit_filter')
-            .setPlaceholder('Filter by action type')
+            .setPlaceholder('Filter berdasarkan tipe aksi')
             .addOptions([
-                { label: 'All Actions', value: 'all', emoji: '📋' },
-                { label: 'Warnings', value: 'WARN', emoji: '⚠️' },
-                { label: 'Mutes', value: 'MUTE', emoji: '🔇' },
-                { label: 'Kicks', value: 'KICK', emoji: '👢' },
-                { label: 'Bans', value: 'BAN', emoji: '🔨' },
-                { label: 'Economy', value: 'SOULS', emoji: '💰' },
-                { label: 'XP/Levels', value: 'XP', emoji: '📊' },
-                { label: 'Config Changes', value: 'CONFIG_UPDATE', emoji: '⚙️' },
+                { label: 'Semua Aksi', value: 'all', emoji: '📋' },
+                { label: 'Peringatan', value: 'WARN', emoji: '⚠️' },
+                { label: 'Mute', value: 'MUTE', emoji: '🔇' },
+                { label: 'Kick', value: 'KICK', emoji: '👢' },
+                { label: 'Ban', value: 'BAN', emoji: '🔨' },
+                { label: 'Ekonomi', value: 'SOULS', emoji: '💰' },
+                { label: 'XP/Level', value: 'XP', emoji: '📊' },
+                { label: 'Perubahan Config', value: 'CONFIG_UPDATE', emoji: '⚙️' },
                 { label: 'AutoMod', value: 'AUTOMOD_TRIGGER', emoji: '🛡️' }
             ]);
         
@@ -78,12 +78,12 @@ module.exports = {
         const row2 = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('audit_refresh')
-                .setLabel('Refresh')
+                .setLabel('Segarkan')
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔄'),
             new ButtonBuilder()
                 .setCustomId('audit_stats')
-                .setLabel('Statistics')
+                .setLabel('Statistik')
                 .setStyle(ButtonStyle.Primary)
                 .setEmoji('📊')
         );
@@ -116,15 +116,15 @@ module.exports = {
                     filteredLogs = await auditLogger.getLogsByAction(guildId, filter, 10);
                 }
                 
-                const newEmbed = this.createLogsEmbed(filteredLogs, `Audit Logs - ${filter}`);
+                const newEmbed = this.createLogsEmbed(filteredLogs, `Audit Log - ${filter}`, message);
                 await interaction.update({ embeds: [newEmbed] });
             } else if (interaction.customId === 'audit_refresh') {
                 const freshLogs = await auditLogger.getRecentLogs(guildId, 10);
-                const newEmbed = this.createLogsEmbed(freshLogs, 'Recent Audit Logs');
+                const newEmbed = this.createLogsEmbed(freshLogs, 'Audit Log Terbaru', message);
                 await interaction.update({ embeds: [newEmbed] });
             } else if (interaction.customId === 'audit_stats') {
                 const stats = await auditLogger.getStats(guildId, 30);
-                const statsEmbed = this.createStatsEmbed(stats);
+                const statsEmbed = this.createStatsEmbed(stats, message);
                 await interaction.update({ embeds: [statsEmbed] });
             }
         });
@@ -138,11 +138,11 @@ module.exports = {
         const logs = await auditLogger.getLogsByUser(guildId, userId, 15);
         
         if (logs.length === 0) {
-            return message.reply('📜 No audit logs found for this user.');
+            return message.reply('📜 **|** Tidak ada audit log yang ditemukan untuk pengguna ini.');
         }
         
         const user = await message.client.users.fetch(userId).catch(() => null);
-        const embed = this.createLogsEmbed(logs, `Audit Logs - ${user?.tag || userId}`);
+        const embed = this.createLogsEmbed(logs, `Audit Log - ${user?.tag || userId}`, message);
         
         return message.reply({ embeds: [embed] });
     },
@@ -151,29 +151,31 @@ module.exports = {
         const logs = await auditLogger.getLogsByAction(guildId, action, 15);
         
         if (logs.length === 0) {
-            return message.reply(`📜 No ${action} logs found.`);
+            return message.reply(`📜 **|** Tidak ada log ${action} yang ditemukan.`);
         }
         
-        const embed = this.createLogsEmbed(logs, `Audit Logs - ${action}`);
+        const embed = this.createLogsEmbed(logs, `Audit Log - ${action}`, message);
         
         return message.reply({ embeds: [embed] });
     },
     
     async showStats(message, guildId) {
         const stats = await auditLogger.getStats(guildId, 30);
-        const embed = this.createStatsEmbed(stats);
+        const embed = this.createStatsEmbed(stats, message);
         
         return message.reply({ embeds: [embed] });
     },
     
-    createLogsEmbed(logs, title) {
+    createLogsEmbed(logs, title, message) {
+        const config = require('../../config');
         const embed = new EmbedBuilder()
             .setTitle(`📜 ${title}`)
-            .setColor('#5865F2')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setThumbnail(message?.guild?.iconURL({ dynamic: true }))
             .setTimestamp();
         
         if (logs.length === 0) {
-            embed.setDescription('No logs found.');
+            embed.setDescription('Tidak ada log yang ditemukan.');
             return embed;
         }
         
@@ -184,23 +186,25 @@ module.exports = {
             const target = log.targetTag || log.targetId || 'N/A';
             const reason = log.reason ? ` - ${log.reason.substring(0, 50)}` : '';
             
-            return `${emoji} **${log.action}** by ${executor}\n└ Target: ${target}${reason} ${time}`;
+            return `${emoji} **${log.action}** oleh ${executor}\n└ Target: ${target}${reason} ${time}`;
         }).join('\n\n');
         
         embed.setDescription(description.substring(0, 4000));
-        embed.setFooter({ text: `Showing ${logs.length} log(s)` });
+        embed.setFooter({ text: `Menampilkan ${logs.length} log`, iconURL: message?.author?.displayAvatarURL() });
         
         return embed;
     },
     
-    createStatsEmbed(stats) {
+    createStatsEmbed(stats, message) {
+        const config = require('../../config');
         const embed = new EmbedBuilder()
-            .setTitle('📊 Audit Log Statistics (Last 30 Days)')
-            .setColor('#5865F2')
+            .setTitle('📊 Statistik Audit Log (30 Hari Terakhir)')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setThumbnail(message?.guild?.iconURL({ dynamic: true }))
             .setTimestamp();
         
         if (stats.length === 0) {
-            embed.setDescription('No statistics available.');
+            embed.setDescription('Tidak ada statistik yang tersedia.');
             return embed;
         }
         
@@ -214,7 +218,8 @@ module.exports = {
         }).join('\n\n');
         
         embed.setDescription(description);
-        embed.addFields({ name: 'Total Actions', value: `${total}`, inline: true });
+        embed.addFields({ name: 'Total Aksi', value: `${total}`, inline: true });
+        embed.setFooter({ text: `Diminta oleh ${message?.author?.tag || 'Unknown'}`, iconURL: message?.author?.displayAvatarURL() });
         
         return embed;
     },

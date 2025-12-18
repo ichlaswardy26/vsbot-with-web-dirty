@@ -2,11 +2,12 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: "debugticket",
-  description: "Debug ticket configuration",
+  description: "Debug konfigurasi ticket",
   category: "admin",
   
   async exec(client, message) {
     const rolePermissions = require("../../util/rolePermissions");
+    const config = require('../../config');
     
     // Check permission using standardized system
     const permissionError = rolePermissions.checkPermission(message.member, 'admin');
@@ -14,33 +15,35 @@ module.exports = {
       return message.reply(permissionError);
     }
 
-    const config = client.config;
+    const botConfig = client.config;
     
     const embed = new EmbedBuilder()
-      .setTitle("🔧 Ticket Configuration Debug")
-      .setColor(0x00ff00)
+      .setTitle("🔧 Debug Konfigurasi Ticket")
+      .setColor(config.colors?.primary || '#5865F2')
+      .setThumbnail(message.guild.iconURL({ dynamic: true }))
       .addFields(
         { 
-          name: "Staff Role ID", 
-          value: `${config.roles?.staff || 'Not set'}`, 
+          name: "ID Role Staff", 
+          value: `${botConfig.roles?.staff || 'Tidak diatur'}`, 
           inline: true 
         },
         { 
-          name: "Ticket Category ID", 
-          value: `${config.categories?.ticket || 'Not set'}`, 
+          name: "ID Kategori Ticket", 
+          value: `${botConfig.categories?.ticket || 'Tidak diatur'}`, 
           inline: true 
         },
         { 
-          name: "Ticket Log Channel ID", 
-          value: `${config.channels?.ticketLogs || 'Not set'}`, 
+          name: "ID Channel Log Ticket", 
+          value: `${botConfig.channels?.ticketLogs || 'Tidak diatur'}`, 
           inline: true 
         },
         {
-          name: "User Roles",
-          value: message.member.roles.cache.map(r => `${r.name} (${r.id})`).slice(0, 10).join('\n') || 'No roles',
+          name: "Role Pengguna",
+          value: message.member.roles.cache.map(r => `${r.name} (${r.id})`).slice(0, 10).join('\n') || 'Tidak ada role',
           inline: false
         }
       )
+      .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
       .setTimestamp();
 
     await message.reply({ embeds: [embed] });

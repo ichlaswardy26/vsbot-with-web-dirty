@@ -36,21 +36,24 @@ module.exports = {
                     await this.handleCheck(message, args.slice(1), client);
                     break;
                 default: {
+                    const config = require('../../config');
                     const helpEmbed = new EmbedBuilder()
-                        .setColor('#0099ff')
-                        .setTitle('📋 Temporary Permissions Help')
-                        .setDescription('Manage temporary permissions for users')
+                        .setColor(config.colors?.primary || '#5865F2')
+                        .setTitle('📋 Bantuan Permission Sementara')
+                        .setDescription('Kelola permission sementara untuk pengguna')
+                        .setThumbnail(message.guild.iconURL({ dynamic: true }))
                         .addFields(
-                            { name: 'Grant Permission', value: '`temppermissions grant <user> <permission> <duration> [reason]`', inline: false },
-                            { name: 'Revoke Permission', value: '`temppermissions revoke <user> [permission] [reason]`', inline: false },
-                            { name: 'Extend Permission', value: '`temppermissions extend <user> <duration> [reason]`', inline: false },
-                            { name: 'List Permissions', value: '`temppermissions list [user]`', inline: false },
-                            { name: 'Check Permissions', value: '`temppermissions check <user>`', inline: false }
+                            { name: 'Berikan Permission', value: '`temppermissions grant <user> <permission> <durasi> [alasan]`', inline: false },
+                            { name: 'Cabut Permission', value: '`temppermissions revoke <user> [permission] [alasan]`', inline: false },
+                            { name: 'Perpanjang Permission', value: '`temppermissions extend <user> <durasi> [alasan]`', inline: false },
+                            { name: 'Daftar Permission', value: '`temppermissions list [user]`', inline: false },
+                            { name: 'Cek Permission', value: '`temppermissions check <user>`', inline: false }
                         )
                         .addFields(
-                            { name: 'Valid Permissions', value: 'admin, staff, moderator, economy, giveaway, ticket, shop', inline: false },
-                            { name: 'Duration Format', value: '1s, 30m, 2h, 7d (max: 7 days)', inline: false }
+                            { name: 'Permission Valid', value: 'admin, staff, moderator, economy, giveaway, ticket, shop', inline: false },
+                            { name: 'Format Durasi', value: '1s, 30m, 2h, 7d (maks: 7 hari)', inline: false }
                         )
+                        .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
                         .setTimestamp();
                     
                     return message.reply({ embeds: [helpEmbed] });
@@ -64,25 +67,26 @@ module.exports = {
     },
 
     async handleGrant(message, args, client) {
+        const config = require('../../config');
         if (args.length < 3) {
-            return message.reply('❌ **|** Usage: `temppermissions grant <user> <permission> <duration> [reason]`');
+            return message.reply('❌ **|** Penggunaan: `temppermissions grant <user> <permission> <durasi> [alasan]`');
         }
 
         const userMention = args[0];
         const permission = args[1].toLowerCase();
         const duration = args[2];
-        const reason = args.slice(3).join(' ') || 'No reason provided';
+        const reason = args.slice(3).join(' ') || 'Tidak ada alasan';
 
         // Parse user
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         const member = await message.guild.members.fetch(user.id).catch(() => null);
         if (!member) {
-            return message.reply('❌ **|** User tidak ditemukan di server ini.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan di server ini.');
         }
 
         // Grant temporary permission
@@ -96,39 +100,42 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal memberikan temporary permission: ${result.error}`);
+            return message.reply(`❌ **|** Gagal memberikan permission sementara: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#00ff00')
-            .setTitle('✅ Temporary Permission Granted')
+            .setColor(config.colors?.success || '#57F287')
+            .setTitle('✅ Permission Sementara Diberikan')
+            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
+                { name: 'Pengguna', value: `${user.tag} (${user.id})`, inline: true },
                 { name: 'Permission', value: result.permissions.join(', '), inline: true },
-                { name: 'Duration', value: result.durationFormatted, inline: true },
-                { name: 'Expires', value: `<t:${Math.floor(result.expiry / 1000)}:R>`, inline: true },
-                { name: 'Granted By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Durasi', value: result.durationFormatted, inline: true },
+                { name: 'Berakhir', value: `<t:${Math.floor(result.expiry / 1000)}:R>`, inline: true },
+                { name: 'Diberikan Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleRevoke(message, args, client) {
+        const config = require('../../config');
         if (args.length < 1) {
-            return message.reply('❌ **|** Usage: `temppermissions revoke <user> [permission] [reason]`');
+            return message.reply('❌ **|** Penggunaan: `temppermissions revoke <user> [permission] [alasan]`');
         }
 
         const userMention = args[0];
         const permission = args[1]?.toLowerCase() || null;
-        const reason = args.slice(permission ? 2 : 1).join(' ') || 'No reason provided';
+        const reason = args.slice(permission ? 2 : 1).join(' ') || 'Tidak ada alasan';
 
         // Parse user
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         // Revoke temporary permission
@@ -141,38 +148,41 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal mencabut temporary permission: ${result.error}`);
+            return message.reply(`❌ **|** Gagal mencabut permission sementara: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#ff9900')
-            .setTitle('🔄 Temporary Permission Revoked')
+            .setColor(config.colors?.warning || '#FEE75C')
+            .setTitle('🔄 Permission Sementara Dicabut')
+            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-                { name: 'Revoked Permissions', value: result.revokedPermissions.join(', ') || 'All', inline: true },
-                { name: 'Remaining Permissions', value: result.remainingPermissions.join(', ') || 'None', inline: true },
-                { name: 'Revoked By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Pengguna', value: `${user.tag} (${user.id})`, inline: true },
+                { name: 'Permission Dicabut', value: result.revokedPermissions.join(', ') || 'Semua', inline: true },
+                { name: 'Permission Tersisa', value: result.remainingPermissions.join(', ') || 'Tidak ada', inline: true },
+                { name: 'Dicabut Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleExtend(message, args, client) {
+        const config = require('../../config');
         if (args.length < 2) {
-            return message.reply('❌ **|** Usage: `temppermissions extend <user> <duration> [reason]`');
+            return message.reply('❌ **|** Penggunaan: `temppermissions extend <user> <durasi> [alasan]`');
         }
 
         const userMention = args[0];
         const additionalDuration = args[1];
-        const reason = args.slice(2).join(' ') || 'No reason provided';
+        const reason = args.slice(2).join(' ') || 'Tidak ada alasan';
 
         // Parse user
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         // Extend temporary permission
@@ -185,25 +195,28 @@ module.exports = {
         );
 
         if (!result.success) {
-            return message.reply(`❌ **|** Gagal memperpanjang temporary permission: ${result.error}`);
+            return message.reply(`❌ **|** Gagal memperpanjang permission sementara: ${result.error}`);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('⏰ Temporary Permission Extended')
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle('⏰ Permission Sementara Diperpanjang')
+            .setThumbnail(user.displayAvatarURL({ dynamic: true }))
             .addFields(
-                { name: 'User', value: `${user.tag} (${user.id})`, inline: true },
-                { name: 'Additional Duration', value: result.additionalDurationFormatted, inline: true },
-                { name: 'New Expiry', value: `<t:${Math.floor(result.newExpiry / 1000)}:R>`, inline: true },
-                { name: 'Extended By', value: message.author.tag, inline: true },
-                { name: 'Reason', value: reason, inline: false }
+                { name: 'Pengguna', value: `${user.tag} (${user.id})`, inline: true },
+                { name: 'Durasi Tambahan', value: result.additionalDurationFormatted, inline: true },
+                { name: 'Berakhir Baru', value: `<t:${Math.floor(result.newExpiry / 1000)}:R>`, inline: true },
+                { name: 'Diperpanjang Oleh', value: message.author.tag, inline: true },
+                { name: 'Alasan', value: reason, inline: false }
             )
+            .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
             .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleList(message, args, client) {
+        const config = require('../../config');
         const userMention = args[0];
         let user = null;
 
@@ -218,58 +231,62 @@ module.exports = {
 
         if (permissions.length === 0) {
             const message_text = user ? 
-                `❌ **|** ${user} tidak memiliki temporary permission yang aktif.` :
-                '❌ **|** Tidak ada temporary permission yang aktif di server ini.';
+                `❌ **|** ${user} tidak memiliki permission sementara yang aktif.` :
+                '❌ **|** Tidak ada permission sementara yang aktif di server ini.';
             return message.reply(message_text);
         }
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle(`📋 Active Temporary Permissions${user ? ` - ${user.tag}` : ''}`)
-            .setDescription(`Total: ${permissions.length} active permission(s)`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle(`📋 Permission Sementara Aktif${user ? ` - ${user.tag}` : ''}`)
+            .setDescription(`Total: ${permissions.length} permission aktif`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         for (const perm of permissions.slice(0, 10)) { // Limit to 10 entries
             const permUser = await client.users.fetch(perm.userId).catch(() => null);
-            const userName = permUser ? permUser.tag : `Unknown User (${perm.userId})`;
+            const userName = permUser ? permUser.tag : `Pengguna Tidak Dikenal (${perm.userId})`;
             
             embed.addFields({
                 name: `👤 ${userName}`,
-                value: `**Permissions:** ${perm.permissions.join(', ')}\n**Expires:** <t:${Math.floor(perm.expiry / 1000)}:R>\n**Time Left:** ${perm.timeRemainingFormatted}`,
+                value: `**Permission:** ${perm.permissions.join(', ')}\n**Berakhir:** <t:${Math.floor(perm.expiry / 1000)}:R>\n**Sisa Waktu:** ${perm.timeRemainingFormatted}`,
                 inline: true
             });
         }
 
         if (permissions.length > 10) {
-            embed.setFooter({ text: `Showing 10 of ${permissions.length} permissions` });
+            embed.setFooter({ text: `Menampilkan 10 dari ${permissions.length} permission` });
+        } else {
+            embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         }
 
         message.reply({ embeds: [embed] });
     },
 
     async handleCheck(message, args, client) {
+        const config = require('../../config');
         if (args.length < 1) {
-            return message.reply('❌ **|** Usage: `temppermissions check <user>`');
+            return message.reply('❌ **|** Penggunaan: `temppermissions check <user>`');
         }
 
         const userMention = args[0];
         const userId = userMention.replace(/[<@!>]/g, '');
         const user = await client.users.fetch(userId).catch(() => null);
         if (!user) {
-            return message.reply('❌ **|** User tidak ditemukan.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan.');
         }
 
         const member = await message.guild.members.fetch(user.id).catch(() => null);
         if (!member) {
-            return message.reply('❌ **|** User tidak ditemukan di server ini.');
+            return message.reply('❌ **|** Pengguna tidak ditemukan di server ini.');
         }
 
         // Get complete user permissions
         const completePermissions = await rolePermissions.getCompleteUserPermissions(member);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle(`🔍 Complete Permission Analysis - ${user.tag}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle(`🔍 Analisis Permission Lengkap - ${user.tag}`)
             .setThumbnail(user.displayAvatarURL())
             .setTimestamp();
 
@@ -279,8 +296,8 @@ module.exports = {
             .map(([permission]) => permission);
         
         embed.addFields({
-            name: '🎯 Direct Permissions',
-            value: directPerms.length > 0 ? directPerms.join(', ') : 'None',
+            name: '🎯 Permission Langsung',
+            value: directPerms.length > 0 ? directPerms.join(', ') : 'Tidak ada',
             inline: false
         });
 
@@ -288,14 +305,14 @@ module.exports = {
         if (completePermissions.temporaryPermissions) {
             const tempPerms = completePermissions.temporaryPermissions;
             embed.addFields({
-                name: '⏰ Temporary Permissions',
-                value: `**Permissions:** ${tempPerms.permissions.join(', ')}\n**Expires:** <t:${Math.floor(tempPerms.expiry / 1000)}:R>\n**Time Left:** ${tempPerms.timeRemainingFormatted}`,
+                name: '⏰ Permission Sementara',
+                value: `**Permission:** ${tempPerms.permissions.join(', ')}\n**Berakhir:** <t:${Math.floor(tempPerms.expiry / 1000)}:R>\n**Sisa Waktu:** ${tempPerms.timeRemainingFormatted}`,
                 inline: false
             });
         } else {
             embed.addFields({
-                name: '⏰ Temporary Permissions',
-                value: 'None',
+                name: '⏰ Permission Sementara',
+                value: 'Tidak ada',
                 inline: false
             });
         }
@@ -303,14 +320,14 @@ module.exports = {
         // Inherited permissions
         if (completePermissions.inheritedPermissions.length > 0) {
             embed.addFields({
-                name: '🔗 Inherited Permissions',
+                name: '🔗 Permission Diwarisi',
                 value: completePermissions.inheritedPermissions.join(', '),
                 inline: false
             });
         } else {
             embed.addFields({
-                name: '🔗 Inherited Permissions',
-                value: 'None',
+                name: '🔗 Permission Diwarisi',
+                value: 'Tidak ada',
                 inline: false
             });
         }
@@ -318,7 +335,7 @@ module.exports = {
         // User groups
         if (completePermissions.userGroups.length > 0) {
             embed.addFields({
-                name: '👥 User Groups',
+                name: '👥 Grup Pengguna',
                 value: completePermissions.userGroups.join(', '),
                 inline: false
             });
@@ -330,7 +347,7 @@ module.exports = {
                 .map(rg => `**${rg.roleName}:** ${rg.groups.join(', ')}`)
                 .join('\n');
             embed.addFields({
-                name: '🎭 Role Groups',
+                name: '🎭 Grup Role',
                 value: roleGroupsText,
                 inline: false
             });
@@ -338,11 +355,12 @@ module.exports = {
 
         // All effective permissions
         embed.addFields({
-            name: '✅ All Effective Permissions',
-            value: completePermissions.allPermissions.length > 0 ? completePermissions.allPermissions.join(', ') : 'None',
+            name: '✅ Semua Permission Efektif',
+            value: completePermissions.allPermissions.length > 0 ? completePermissions.allPermissions.join(', ') : 'Tidak ada',
             inline: false
         });
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     }
 };

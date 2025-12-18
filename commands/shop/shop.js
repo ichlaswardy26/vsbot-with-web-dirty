@@ -2,13 +2,20 @@ const {
   ActionRowBuilder, 
   ButtonBuilder, 
   ButtonStyle,
+  EmbedBuilder,
+  ContainerBuilder, 
+  SeparatorBuilder, 
+  TextDisplayBuilder, 
+  MediaGalleryBuilder, 
+  MediaGalleryItemBuilder, 
+  MessageFlags 
 } = require("discord.js");
 const ShopRole = require("../../schemas/ShopRole");
 const config = require("../../config.js");
 
 module.exports = {
   name: "shop",
-  aliases: ["wos"],
+  aliases: ["wos", "toko"],
   description: "Lihat daftar role yang dijual",
   async exec(client, message) {
     let roles = await ShopRole.find({ guildId: message.guild.id });
@@ -22,50 +29,51 @@ module.exports = {
 
     // Ambil ulang data setelah filter expired
     roles = await ShopRole.find({ guildId: message.guild.id });
-    if (!roles.length) return message.reply("⚠️ Belum ada role di shop!");
+    
+    if (!roles.length) {
+      const emptyEmbed = new EmbedBuilder()
+        .setTitle("🛒 Shop Kosong")
+        .setDescription("Belum ada role yang dijual di shop saat ini.")
+        .setColor(config.colors?.warning || "#FEE75C")
+        .setFooter({ text: "Hubungi admin untuk menambahkan item" });
+        
+      return message.reply({ embeds: [emptyEmbed] });
+    }
 
     const exclusiveRoles = roles.filter(r => r.exclusive);
     const normalRoles = roles.filter(r => !r.exclusive);
 
-    // === Container-based Shop Display ===
-    const { 
-      ContainerBuilder, 
-      SeparatorBuilder, 
-      TextDisplayBuilder, 
-      MediaGalleryBuilder, 
-      MediaGalleryItemBuilder, 
-      MessageFlags 
-    } = require("discord.js");
+    const soulsEmoji = config.emojis?.souls || "💰";
 
     // Banner
     const banner = new MediaGalleryBuilder().addItems(
       new MediaGalleryItemBuilder().setURL(
-        message.guild.iconURL({ dynamic: true }) || config.images.defaultGif
+        message.guild.iconURL({ dynamic: true }) || config.images?.defaultGif || "https://i.imgur.com/AfFp7pu.png"
       )
     );
 
     // Title
-    const titleText = new TextDisplayBuilder().setContent("## 𝕎𝔼𝕃𝕃 𝕆𝔽 𝕊𝕆𝕌𝕃𝕊");
+    const titleText = new TextDisplayBuilder().setContent("## 🛒 𝕎𝔼𝕃𝕃 𝕆𝔽 𝕊𝕆𝕌𝕃𝕊");
 
     // Exclusive roles section
     let exclusiveSection = null;
     if (exclusiveRoles.length) {
-      const exclusiveText = "**🌟 Exclusive Role (Limited Time):**\n" +
+      const exclusiveText = "**🌟 Role Exclusive (Terbatas):**\n" +
         exclusiveRoles.map(r => {
           const unix = r.expiresAt ? Math.floor(r.expiresAt.getTime() / 1000) : null;
-          const exp = unix ? `⏳ Expired <t:${unix}:R>` : "";
-          return `✴️ **${r.name}**〔Gradient: ${r.gradient ? "ON" : "OFF"} || Rarity: ${r.rarity || "Common"}〕\n${config.emojis.souls} **${r.price}** (**${r.buyers.length}/${r.slots}**) ${exp}`;
-        }).join("\n");
+          const exp = unix ? `⏳ Berakhir <t:${unix}:R>` : "";
+          return `✴️ **${r.name}**〔Gradient: ${r.gradient ? "ON" : "OFF"} || Rarity: ${r.rarity || "Common"}〕\n${soulsEmoji} **${r.price.toLocaleString()}** (**${r.buyers.length}/${r.slots}** slot) ${exp}`;
+        }).join("\n\n");
       exclusiveSection = new TextDisplayBuilder().setContent(exclusiveText);
     }
 
     // Normal roles section
     let normalSection = null;
     if (normalRoles.length) {
-      const normalText = "\n" +
+      const normalText = "**📦 Role Reguler:**\n" +
         normalRoles.map(r => {
           const desc = r.description || "_Tidak ada deskripsi._";
-          return `${config.emojis.souls} **${r.price}** - **${r.name}**\n${desc}`;
+          return `${soulsEmoji} **${r.price.toLocaleString()}** - **${r.name}**\n> ${desc}`;
         }).join("\n\n");
       normalSection = new TextDisplayBuilder().setContent(normalText);
     }
@@ -75,15 +83,17 @@ module.exports = {
       `### ⚠️ Peringatan Sistem
 Jika bot mengalami error atau gangguan teknis, proses redeem tidak sah.
 > 📝 Mohon segera lapor ke admin jika mengalami masalah tersebut.
-> ✅ Redeem hanya berlaku saat sistem berjalan normal.`
+> ✅ Redeem hanya berlaku saat sistem berjalan normal.
+> 💡 Gunakan \`buy <nama>\` untuk membeli item.`
     );
 
     // Button row
     const itemButtonRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("view_exclusive_items")
-        .setLabel("Exclusive")
+        .setLabel("Lihat Item Exclusive")
         .setStyle(ButtonStyle.Secondary)
+        .setEmoji("⭐")
     );
 
     // Build container layout

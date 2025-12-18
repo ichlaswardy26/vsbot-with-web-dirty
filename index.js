@@ -188,6 +188,22 @@ const initialize = async () => {
   // Connect to database first
   await connectDB();
   
+  // Initialize configuration from database
+  console.log('[Config] Loading configuration from database...');
+  try {
+    await config.initializeConfig();
+    console.log('[Config] Configuration loaded successfully');
+    
+    // Log loaded config summary
+    const loadedConfig = config.configLoader.get();
+    console.log(`[Config] Prefix: ${loadedConfig.prefix}`);
+    console.log(`[Config] Channels configured: ${Object.keys(loadedConfig.channels || {}).filter(k => loadedConfig.channels[k]).length}`);
+    console.log(`[Config] Roles configured: ${Object.keys(loadedConfig.roles || {}).filter(k => loadedConfig.roles[k]).length}`);
+  } catch (error) {
+    console.error('[Config] Failed to load configuration:', error);
+    console.log('[Config] Using default configuration');
+  }
+  
   // Load handlers
   const handlerFiles = readdirSync("./handlers/").filter(file => file.endsWith('.js'));
   for (const file of handlerFiles) {

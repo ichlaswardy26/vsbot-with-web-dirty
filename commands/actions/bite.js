@@ -4,36 +4,42 @@ const config = require("../../config.js");
 
 module.exports = {
   name: "bite",
-  description: "Bite someone!",
+  aliases: ["gigit"],
+  description: "Gigit seseorang!",
   category: "action",
   usage: "bite @user",
   async exec(client, message) {
-    const importantEmoji = config.emojis?.important || "❗";
-    
     const target = message.mentions.users.first();
+    
     if (!target) {
-      return message.reply(`${importantEmoji} **|** Mention seseorang!`);
+      return message.reply(`${config.emojis?.important || "❗"} **|** Mention seseorang yang ingin kamu gigit!`);
     }
+    
     if (target.id === client.user.id) {
-      return message.reply(`${importantEmoji} **|** Kamu tidak dapat melakukannya ke bot!`);
+      return message.reply(`${config.emojis?.important || "❗"} **|** Jangan gigit aku! 😱`);
     }
     
     if (target.id === message.author.id) {
-      return message.reply(`${importantEmoji} **|** Kamu tidak dapat melakukannya ke diri sendiri!`);
+      return message.reply(`${config.emojis?.important || "❗"} **|** Kamu tidak bisa menggigit dirimu sendiri!`);
     }
 
     try {
-      const response = await axios.get("https://api.waifu.pics/sfw/bite");
+      const response = await axios.get("https://api.waifu.pics/sfw/bite", { timeout: 10000 });
 
       const embed = new EmbedBuilder()
-        .setColor(config.colors?.primary || "#FFC0CB")
-        .setDescription(`${message.author.username} bite <@${target.id}>!`)
-        .setImage(response.data.url);
+        .setColor(config.colors?.error || "#ED4245")
+        .setDescription(`😬 **${message.author.username}** menggigit **${target.username}**!`)
+        .setImage(response.data.url)
+        .setFooter({ 
+          text: `Diminta oleh ${message.author.username}`,
+          iconURL: message.author.displayAvatarURL({ dynamic: true })
+        })
+        .setTimestamp();
 
       message.channel.send({ embeds: [embed] });
     } catch (error) {
       console.error("[bite] API error:", error.message);
-      message.reply(`${config.emojis?.cross || "❌"} **|** Gagal mengambil GIF dari API.`);
+      message.reply(`${config.emojis?.cross || "❌"} **|** Gagal mengambil GIF. Coba lagi nanti!`);
     }
   },
 };

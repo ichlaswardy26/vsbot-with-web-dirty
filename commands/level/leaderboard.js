@@ -8,12 +8,14 @@ const {
   ButtonStyle,
   ActionRowBuilder,
   MessageFlags,
+  EmbedBuilder,
 } = require("discord.js");
 const Activity = require("../../schemas/Activity");
+const config = require("../../config.js");
 
 module.exports = {
   name: "leaderboard",
-  aliases: ["lb", "top"],
+  aliases: ["lb", "top", "ranking"],
   description: "Menampilkan member teraktif bulan ini",
   async exec(client, message) {
 
@@ -30,8 +32,15 @@ module.exports = {
       .limit(10)
       .lean();
 
-    if (!topMembers.length)
-      return message.channel.send("⚠️ Belum ada data aktivitas bulan ini.");
+    if (!topMembers.length) {
+      const emptyEmbed = new EmbedBuilder()
+        .setTitle("📊 Leaderboard Kosong")
+        .setDescription("Belum ada data aktivitas bulan ini.")
+        .setColor(config.colors?.warning || "#FEE75C")
+        .setFooter({ text: "Kirim pesan untuk mulai mengumpulkan poin!" });
+        
+      return message.channel.send({ embeds: [emptyEmbed] });
+    }
 
     // --- Fetch semua user sekaligus ---
     const users = await Promise.all(
@@ -54,19 +63,19 @@ module.exports = {
           ? "🥈"
           : i === 2
           ? "🥉"
-          : `#${i + 1}`;
+          : `**#${i + 1}**`;
 
-      rankText += `${medal} **${name}** — ${xp} Points\n`;
+      rankText += `${medal} **${name}** — ${xp} Poin\n`;
     });
 
     const leaderboardText = new TextDisplayBuilder().setContent(
-      `🏆 **Top 10 Member Teraktif Bulan Ini**\n\n${rankText}`
+      `## 🏆 Top 10 Member Teraktif\n**Periode:** Bulan Ini\n\n${rankText}`
     );
 
     // --- Banner media gallery ---
     const banner = new MediaGalleryBuilder().addItems(
       new MediaGalleryItemBuilder().setURL(
-        "https://i.pinimg.com/originals/dc/3e/cd/dc3ecdab0fa15f3bd29d1e20718648e6.gif"
+        message.guild.iconURL({ dynamic: true }) || "https://i.pinimg.com/originals/dc/3e/cd/dc3ecdab0fa15f3bd29d1e20718648e6.gif"
       )
     );
 
@@ -76,11 +85,15 @@ module.exports = {
         .setLabel("Top Voice")
         .setStyle(ButtonStyle.Primary)
         .setCustomId(`leaderboard_voice_${message.author.id}`)
+        .setEmoji("🎤")
     );
 
     // --- Footer ---
     const footer = new TextDisplayBuilder().setContent(
-      `📅 Data diperbarui otomatis setiap kali member mengirim pesan.\n💡 Tekan tombol di atas untuk melihat top member voice.`
+      `### 📊 Informasi
+> 📅 Data diperbarui otomatis setiap kali member mengirim pesan.
+> 💡 Tekan tombol di atas untuk melihat top member voice.
+> 🏆 Poin dihitung berdasarkan jumlah karakter yang dikirim.`
     );
 
     // --- Gabungkan semua ke container ---

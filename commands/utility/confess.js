@@ -4,10 +4,11 @@ const {
   ButtonStyle,
   ActionRowBuilder
 } = require("discord.js");
+const config = require("../../config.js");
 
 module.exports = {
   name: "confess",
-  description: "Display confession panel",
+  description: "Tampilkan panel confession",
   category: "utility",
 
   async exec(client, message) {
@@ -19,14 +20,21 @@ module.exports = {
     }
     
     const embed = new EmbedBuilder()
-      .setTitle("Confessions Panel")
-      .setDescription("📝 Klik tombol dibawah untuk memulai confession.")
-      .setColor("White");
+      .setColor(config.colors?.primary || '#5865F2')
+      .setTitle(`${config.emojis?.ticket || '📝'} Panel Confession`)
+      .setDescription('Bagikan perasaan atau ceritamu secara anonim!\n\nKlik tombol di bawah untuk mengirim confession.')
+      .addFields(
+        { name: '🔒 Privasi', value: 'Identitasmu akan dirahasiakan', inline: true },
+        { name: '📜 Aturan', value: 'Jaga sopan santun', inline: true }
+      )
+      .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
+      .setFooter({ text: message.guild.name, iconURL: message.guild.iconURL() })
+      .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("submit_confession")
-        .setLabel("📝 Submit Confession")
+        .setLabel("📝 Kirim Confession")
         .setStyle(ButtonStyle.Primary)
     );
 

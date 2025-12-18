@@ -1,5 +1,6 @@
 require("dotenv").config();
 const configManager = require('./util/configManager');
+const configLoader = require('./util/configLoader');
 
 /**
  * Static Configuration
@@ -45,6 +46,10 @@ const staticConfig = {
     maxFiles: parseInt(process.env.MAX_LOG_FILES) || 5,
     maxSize: parseInt(process.env.MAX_LOG_SIZE) || 10485760,
   },
+  
+  // ==================== BOOST/DONATE ROLE IDS (for backward compatibility) ====================
+  BOOST_ROLE_ID: process.env.BOOST_ROLE_ID || null,
+  DONATE_ROLE_ID: process.env.DONATE_ROLE_ID || null,
 };
 
 /**
@@ -89,8 +94,8 @@ const defaultDynamicConfig = {
     info: '#5865F2',
   },
   language: {
-    default: 'en',
-    available: ['en'],
+    default: 'id',
+    available: ['id'],
   },
 };
 
@@ -168,22 +173,34 @@ async function getSection(section, guildId = null) {
   return config[section] || {};
 }
 
+/**
+ * Dynamic config getter - returns loaded config or defaults
+ * This allows synchronous access after config is loaded
+ */
+function getDynamicConfig() {
+  if (configLoader.isReady()) {
+    return configLoader.get();
+  }
+  return defaultDynamicConfig;
+}
+
 // Export for backward compatibility and new usage
+// Using getters to always return current loaded config
 module.exports = {
   // Static config (direct access for credentials)
   ...staticConfig,
   
-  // Default dynamic values for backward compatibility (sync access)
-  // These will be overridden when using getConfig() async
-  prefix: defaultDynamicConfig.prefix,
-  channels: defaultDynamicConfig.channels,
-  categories: defaultDynamicConfig.categories,
-  roles: defaultDynamicConfig.roles,
-  emojis: defaultDynamicConfig.emojis,
-  images: defaultDynamicConfig.images,
-  features: defaultDynamicConfig.features,
-  colors: defaultDynamicConfig.colors,
-  language: defaultDynamicConfig.language,
+  // Dynamic values using getters for live updates
+  get prefix() { return getDynamicConfig().prefix; },
+  get channels() { return getDynamicConfig().channels; },
+  get categories() { return getDynamicConfig().categories; },
+  get roles() { return getDynamicConfig().roles; },
+  get emojis() { return getDynamicConfig().emojis; },
+  get images() { return getDynamicConfig().images; },
+  get features() { return getDynamicConfig().features; },
+  get colors() { return getDynamicConfig().colors; },
+  get language() { return getDynamicConfig().language; },
+  get staffUsers() { return getDynamicConfig().staffUsers; },
   
   // Methods for dynamic config
   getConfig,
@@ -191,6 +208,28 @@ module.exports = {
   getSection,
   clearCache,
   configManager,
+  configLoader,
+  
+  // Initialize config from database (call at bot startup)
+  async initializeConfig(guildId) {
+    const targetGuildId = guildId || staticConfig.guildId;
+    if (targetGuildId) {
+      await configLoader.initialize(targetGuildId);
+    }
+    return getDynamicConfig();
+  },
+  
+  // Reload config (call when web dashboard updates config)
+  async reloadConfig() {
+    await configLoader.reload();
+    clearCache();
+    return getDynamicConfig();
+  },
+  
+  // Check if config is loaded
+  isConfigLoaded() {
+    return configLoader.isReady();
+  },
   
   // Default values (for reference)
   defaults: defaultDynamicConfig,

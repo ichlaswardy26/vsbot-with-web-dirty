@@ -49,26 +49,29 @@ module.exports = {
                     await this.handleTrends(message, args.slice(1), client);
                     break;
                 default: {
+                    const config = require('../../config');
                     const helpEmbed = new EmbedBuilder()
-                        .setColor('#0099ff')
-                        .setTitle('📊 Analytics Help')
-                        .setDescription('View comprehensive bot analytics and reports')
+                        .setColor(config.colors?.primary || '#5865F2')
+                        .setTitle('📊 Bantuan Analytics')
+                        .setDescription('Lihat analitik dan laporan bot secara komprehensif')
+                        .setThumbnail(message.guild.iconURL({ dynamic: true }))
                         .addFields(
-                            { name: 'Summary', value: '`analytics summary` - Analytics overview', inline: false },
-                            { name: 'Commands', value: '`analytics commands [period]` - Command usage analytics', inline: false },
-                            { name: 'Users', value: '`analytics users [period]` - User activity analytics', inline: false },
-                            { name: 'Permissions', value: '`analytics permissions` - Permission system analytics', inline: false },
-                            { name: 'Security', value: '`analytics security [period]` - Security events analysis', inline: false },
-                            { name: 'Performance', value: '`analytics performance [period]` - Performance metrics', inline: false },
-                            { name: 'Report', value: '`analytics report [format]` - Comprehensive reports', inline: false },
-                            { name: 'Realtime', value: '`analytics realtime` - Live statistics', inline: false },
-                            { name: 'Trends', value: '`analytics trends [period]` - Usage trends analysis', inline: false }
+                            { name: '📈 Ringkasan', value: '`analytics summary` - Ringkasan analitik', inline: false },
+                            { name: '⌨️ Command', value: '`analytics commands [periode]` - Analitik penggunaan command', inline: false },
+                            { name: '👥 Pengguna', value: '`analytics users [periode]` - Analitik aktivitas pengguna', inline: false },
+                            { name: '🔒 Permission', value: '`analytics permissions` - Analitik sistem permission', inline: false },
+                            { name: '🛡️ Keamanan', value: '`analytics security [periode]` - Analisis event keamanan', inline: false },
+                            { name: '⚡ Performa', value: '`analytics performance [periode]` - Metrik performa', inline: false },
+                            { name: '📋 Laporan', value: '`analytics report [format]` - Laporan komprehensif', inline: false },
+                            { name: '📡 Realtime', value: '`analytics realtime` - Statistik langsung', inline: false },
+                            { name: '📊 Tren', value: '`analytics trends [periode]` - Analisis tren penggunaan', inline: false }
                         )
                         .addFields({
-                            name: 'Period Options',
+                            name: '⏰ Opsi Periode',
                             value: '`1h`, `6h`, `24h`, `7d`, `30d` (default: 24h)',
                             inline: false
                         })
+                        .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
                         .setTimestamp();
                     
                     return message.reply({ embeds: [helpEmbed] });
@@ -82,42 +85,46 @@ module.exports = {
     },
 
     async handleSummary(message) {
+        const config = require('../../config');
         const summary = await analytics.getAnalyticsSummary(message.guild.id);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('📊 Analytics Summary')
-            .setDescription(`Analytics overview for ${message.guild.name}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle('📊 Ringkasan Analytics')
+            .setDescription(`Ringkasan analitik untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
-                { name: '📈 Commands (24h)', value: `${summary.commands.total24h} total\n${summary.commands.unique24h} unique`, inline: true },
-                { name: '👥 Active Users (24h)', value: `${summary.users.active24h} users\n${summary.users.new24h} new`, inline: true },
-                { name: '🔒 Security Events (24h)', value: `${summary.security.events24h} events\n${summary.security.alerts24h} alerts`, inline: true },
-                { name: '⚡ Performance (24h)', value: `${summary.performance.avgResponseTime}ms avg\n${summary.performance.errorRate}% errors`, inline: true },
-                { name: '🎯 Top Command', value: `${summary.commands.topCommand}\n${summary.commands.topCommandCount} uses`, inline: true },
-                { name: '🏆 Most Active User', value: `<@${summary.users.mostActive}>\n${summary.users.mostActiveCount} commands`, inline: true }
+                { name: '� Command (E24j)', value: `${summary.commands.total24h} total\n${summary.commands.unique24h} unik`, inline: true },
+                { name: '👥 Pengguna Aktif (24j)', value: `${summary.users.active24h} pengguna\n${summary.users.new24h} baru`, inline: true },
+                { name: '🔒 Event Keamanan (24j)', value: `${summary.security.events24h} event\n${summary.security.alerts24h} alert`, inline: true },
+                { name: '⚡ Performa (24j)', value: `${summary.performance.avgResponseTime}ms rata-rata\n${summary.performance.errorRate}% error`, inline: true },
+                { name: '🎯 Command Teratas', value: `${summary.commands.topCommand}\n${summary.commands.topCommandCount} penggunaan`, inline: true },
+                { name: '🏆 Pengguna Teraktif', value: `<@${summary.users.mostActive}>\n${summary.users.mostActiveCount} command`, inline: true }
             )
             .addFields(
-                { name: '📊 System Health', value: this.getHealthStatus(summary.performance), inline: false },
-                { name: '🔄 Uptime', value: this.formatUptime(summary.system.uptime), inline: true },
-                { name: '💾 Memory Usage', value: `${summary.system.memoryUsage}MB`, inline: true },
-                { name: '📡 Guilds', value: `${summary.system.guildCount} servers`, inline: true }
+                { name: '� MKesehatan Sistem', value: this.getHealthStatus(summary.performance), inline: false },
+                { name: '� Uptime', value: this.formatUptime(summary.system.uptime), inline: true },
+                { name: '💾 Penggunaan Memori', value: `${summary.system.memoryUsage}MB`, inline: true },
+                { name: '📡 Server', value: `${summary.system.guildCount} server`, inline: true }
             )
-            .setTimestamp()
-            .setFooter({ text: 'Use specific subcommands for detailed analytics' });
+            .setFooter({ text: 'Gunakan subcommand spesifik untuk analitik detail', iconURL: message.author.displayAvatarURL() })
+            .setTimestamp();
 
         message.reply({ embeds: [embed] });
     },
 
     async handleCommands(message, args) {
+        const config = require('../../config');
         const period = args[0] || '24h';
         const commandStats = await analytics.getCommandAnalytics(message.guild.id, period);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle(`📈 Command Analytics (${period})`)
-            .setDescription(`Command usage statistics for ${message.guild.name}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle(`📈 Analitik Command (${period})`)
+            .setDescription(`Statistik penggunaan command untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
-                { name: '📊 Overview', value: `**Total Commands:** ${commandStats.totalCommands}\n**Unique Commands:** ${commandStats.uniqueCommands}\n**Success Rate:** ${commandStats.successRate}%`, inline: false }
+                { name: '📊 Ringkasan', value: `**Total Command:** ${commandStats.totalCommands}\n**Command Unik:** ${commandStats.uniqueCommands}\n**Tingkat Sukses:** ${commandStats.successRate}%`, inline: false }
             )
             .setTimestamp();
 
@@ -125,9 +132,9 @@ module.exports = {
         if (commandStats.topCommands.length > 0) {
             const topCommandsText = commandStats.topCommands
                 .slice(0, 10)
-                .map((cmd, index) => `${index + 1}. \`${cmd.name}\` - ${cmd.count} uses (${cmd.percentage}%)`)
+                .map((cmd, index) => `${index + 1}. \`${cmd.name}\` - ${cmd.count} penggunaan (${cmd.percentage}%)`)
                 .join('\n');
-            embed.addFields({ name: '🏆 Top Commands', value: topCommandsText, inline: false });
+            embed.addFields({ name: '🏆 Command Teratas', value: topCommandsText, inline: false });
         }
 
         // Commands by category
@@ -137,7 +144,7 @@ module.exports = {
                 .slice(0, 8)
                 .map(([category, count]) => `**${category}:** ${count}`)
                 .join('\n');
-            embed.addFields({ name: '📁 By Category', value: categoryText, inline: true });
+            embed.addFields({ name: '📁 Per Kategori', value: categoryText, inline: true });
         }
 
         // Commands by hour (for 24h period)
@@ -147,31 +154,34 @@ module.exports = {
                 .slice(0, 12)
                 .map(([hour, count]) => `${hour}:00 - ${count}`)
                 .join('\n');
-            embed.addFields({ name: '⏰ Hourly Distribution', value: hourlyData || 'No data', inline: true });
+            embed.addFields({ name: '⏰ Distribusi Per Jam', value: hourlyData || 'Tidak ada data', inline: true });
         }
 
         // Error analysis
         if (commandStats.errors && commandStats.errors.length > 0) {
             const errorText = commandStats.errors
                 .slice(0, 5)
-                .map(error => `**${error.command}:** ${error.count} errors`)
+                .map(error => `**${error.command}:** ${error.count} error`)
                 .join('\n');
-            embed.addFields({ name: '❌ Most Errors', value: errorText, inline: false });
+            embed.addFields({ name: '❌ Error Terbanyak', value: errorText, inline: false });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handleUsers(message, args) {
+        const config = require('../../config');
         const period = args[0] || '24h';
         const userStats = await analytics.getUserAnalytics(message.guild.id, period);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle(`👥 User Analytics (${period})`)
-            .setDescription(`User activity statistics for ${message.guild.name}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle(`👥 Analitik Pengguna (${period})`)
+            .setDescription(`Statistik aktivitas pengguna untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .addFields(
-                { name: '📊 Overview', value: `**Active Users:** ${userStats.activeUsers}\n**New Users:** ${userStats.newUsers}\n**Returning Users:** ${userStats.returningUsers}`, inline: false }
+                { name: '📊 Ringkasan', value: `**Pengguna Aktif:** ${userStats.activeUsers}\n**Pengguna Baru:** ${userStats.newUsers}\n**Pengguna Kembali:** ${userStats.returningUsers}`, inline: false }
             )
             .setTimestamp();
 
@@ -179,16 +189,16 @@ module.exports = {
         if (userStats.mostActive.length > 0) {
             const activeUsersText = userStats.mostActive
                 .slice(0, 10)
-                .map((user, index) => `${index + 1}. <@${user.userId}> - ${user.commandCount} commands`)
+                .map((user, index) => `${index + 1}. <@${user.userId}> - ${user.commandCount} command`)
                 .join('\n');
-            embed.addFields({ name: '🏆 Most Active Users', value: activeUsersText, inline: false });
+            embed.addFields({ name: '🏆 Pengguna Teraktif', value: activeUsersText, inline: false });
         }
 
         // User engagement
         if (userStats.engagement) {
             embed.addFields({
-                name: '📈 Engagement Metrics',
-                value: `**Avg Commands/User:** ${userStats.engagement.avgCommandsPerUser}\n**Daily Active Rate:** ${userStats.engagement.dailyActiveRate}%\n**Retention Rate:** ${userStats.engagement.retentionRate}%`,
+                name: '📈 Metrik Engagement',
+                value: `**Rata-rata Command/Pengguna:** ${userStats.engagement.avgCommandsPerUser}\n**Tingkat Aktif Harian:** ${userStats.engagement.dailyActiveRate}%\n**Tingkat Retensi:** ${userStats.engagement.retentionRate}%`,
                 inline: true
             });
         }
@@ -198,45 +208,48 @@ module.exports = {
             const peakHours = Object.entries(userStats.activityByHour)
                 .sort(([,a], [,b]) => b - a)
                 .slice(0, 5)
-                .map(([hour, count]) => `${hour}:00 (${count} users)`)
+                .map(([hour, count]) => `${hour}:00 (${count} pengguna)`)
                 .join('\n');
-            embed.addFields({ name: '⏰ Peak Hours', value: peakHours || 'No data', inline: true });
+            embed.addFields({ name: '⏰ Jam Puncak', value: peakHours || 'Tidak ada data', inline: true });
         }
 
         // User behavior patterns
         if (userStats.patterns) {
             const patternsText = [
-                `**Power Users:** ${userStats.patterns.powerUsers} (>50 commands)`,
-                `**Regular Users:** ${userStats.patterns.regularUsers} (10-50 commands)`,
-                `**Casual Users:** ${userStats.patterns.casualUsers} (<10 commands)`
+                `**Power Users:** ${userStats.patterns.powerUsers} (>50 command)`,
+                `**Pengguna Reguler:** ${userStats.patterns.regularUsers} (10-50 command)`,
+                `**Pengguna Kasual:** ${userStats.patterns.casualUsers} (<10 command)`
             ].join('\n');
-            embed.addFields({ name: '🎯 User Patterns', value: patternsText, inline: false });
+            embed.addFields({ name: '🎯 Pola Pengguna', value: patternsText, inline: false });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handlePermissions(message) {
+        const config = require('../../config');
         const permStats = await analytics.getPermissionAnalytics(message.guild.id);
 
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('🔒 Permission System Analytics')
-            .setDescription(`Permission usage and security statistics for ${message.guild.name}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle('🔒 Analitik Sistem Permission')
+            .setDescription(`Statistik penggunaan permission dan keamanan untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // Permission system overview
         embed.addFields({
-            name: '📊 System Overview',
-            value: `**Total Permission Checks:** ${permStats.totalChecks}\n**Success Rate:** ${permStats.successRate}%\n**Denied Attempts:** ${permStats.deniedAttempts}`,
+            name: '📊 Ringkasan Sistem',
+            value: `**Total Pengecekan Permission:** ${permStats.totalChecks}\n**Tingkat Sukses:** ${permStats.successRate}%\n**Percobaan Ditolak:** ${permStats.deniedAttempts}`,
             inline: false
         });
 
         // Temporary permissions
         if (permStats.temporaryPermissions) {
             embed.addFields({
-                name: '⏰ Temporary Permissions',
-                value: `**Active Grants:** ${permStats.temporaryPermissions.activeGrants}\n**Total Granted:** ${permStats.temporaryPermissions.totalGrants}\n**Most Used:** ${permStats.temporaryPermissions.mostUsedPermission || 'None'}`,
+                name: '⏰ Permission Sementara',
+                value: `**Grant Aktif:** ${permStats.temporaryPermissions.activeGrants}\n**Total Diberikan:** ${permStats.temporaryPermissions.totalGrants}\n**Paling Sering:** ${permStats.temporaryPermissions.mostUsedPermission || 'Tidak ada'}`,
                 inline: true
             });
         }
@@ -244,8 +257,8 @@ module.exports = {
         // Permission inheritance
         if (permStats.permissionInheritance) {
             embed.addFields({
-                name: '🔗 Permission Inheritance',
-                value: `**Total Groups:** ${permStats.permissionInheritance.totalGroups}\n**Users with Groups:** ${permStats.permissionInheritance.usersWithGroups}\n**Most Used Group:** ${permStats.permissionInheritance.mostUsedGroup || 'None'}`,
+                name: '🔗 Inheritance Permission',
+                value: `**Total Grup:** ${permStats.permissionInheritance.totalGroups}\n**Pengguna dengan Grup:** ${permStats.permissionInheritance.usersWithGroups}\n**Grup Tersering:** ${permStats.permissionInheritance.mostUsedGroup || 'Tidak ada'}`,
                 inline: true
             });
         }
@@ -253,8 +266,8 @@ module.exports = {
         // Context permissions
         if (permStats.contextPermissions) {
             embed.addFields({
-                name: '📍 Context Permissions',
-                value: `**Total Contexts:** ${permStats.contextPermissions.totalContexts}\n**User Overrides:** ${permStats.contextPermissions.totalUserOverrides}\n**Role Permissions:** ${permStats.contextPermissions.totalRolePermissions}`,
+                name: '📍 Context Permission',
+                value: `**Total Context:** ${permStats.contextPermissions.totalContexts}\n**Override Pengguna:** ${permStats.contextPermissions.totalUserOverrides}\n**Permission Role:** ${permStats.contextPermissions.totalRolePermissions}`,
                 inline: true
             });
         }
@@ -266,7 +279,7 @@ module.exports = {
                 .slice(0, 8)
                 .map(([type, count]) => `**${type}:** ${count}`)
                 .join('\n');
-            embed.addFields({ name: '📈 Usage by Permission Type', value: usageText, inline: false });
+            embed.addFields({ name: '📈 Penggunaan per Tipe Permission', value: usageText, inline: false });
         }
 
         // Recent permission events
@@ -275,34 +288,37 @@ module.exports = {
                 .slice(0, 5)
                 .map(event => `**${event.type}** - <@${event.userId}> - <t:${Math.floor(event.timestamp / 1000)}:R>`)
                 .join('\n');
-            embed.addFields({ name: '🕒 Recent Events', value: eventsText, inline: false });
+            embed.addFields({ name: '🕒 Event Terbaru', value: eventsText, inline: false });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handleSecurity(message, args) {
+        const config = require('../../config');
         const period = args[0] || '24h';
         const securityStats = await analytics.getSecurityAnalytics(message.guild.id, period);
 
         const embed = new EmbedBuilder()
-            .setColor('#ff6b6b')
-            .setTitle(`🔒 Security Analytics (${period})`)
-            .setDescription(`Security events and threat analysis for ${message.guild.name}`)
+            .setColor(config.colors?.error || '#ED4245')
+            .setTitle(`🔒 Analitik Keamanan (${period})`)
+            .setDescription(`Event keamanan dan analisis ancaman untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // Security overview
         embed.addFields({
-            name: '🚨 Security Overview',
-            value: `**Total Events:** ${securityStats.totalEvents}\n**High Priority:** ${securityStats.highPriorityEvents}\n**Security Score:** ${securityStats.securityScore}/100`,
+            name: '🚨 Ringkasan Keamanan',
+            value: `**Total Event:** ${securityStats.totalEvents}\n**Prioritas Tinggi:** ${securityStats.highPriorityEvents}\n**Skor Keamanan:** ${securityStats.securityScore}/100`,
             inline: false
         });
 
         // Permission denials
         if (securityStats.permissionDenials) {
             embed.addFields({
-                name: '❌ Permission Denials',
-                value: `**Total Denials:** ${securityStats.permissionDenials.total}\n**Unique Users:** ${securityStats.permissionDenials.uniqueUsers}\n**Most Denied:** ${securityStats.permissionDenials.mostDenied || 'None'}`,
+                name: '❌ Penolakan Permission',
+                value: `**Total Penolakan:** ${securityStats.permissionDenials.total}\n**Pengguna Unik:** ${securityStats.permissionDenials.uniqueUsers}\n**Paling Sering Ditolak:** ${securityStats.permissionDenials.mostDenied || 'Tidak ada'}`,
                 inline: true
             });
         }
@@ -311,16 +327,16 @@ module.exports = {
         if (securityStats.suspiciousActivities && securityStats.suspiciousActivities.length > 0) {
             const suspiciousText = securityStats.suspiciousActivities
                 .slice(0, 5)
-                .map(activity => `**${activity.type}** - <@${activity.userId}> (${activity.count} times)`)
+                .map(activity => `**${activity.type}** - <@${activity.userId}> (${activity.count} kali)`)
                 .join('\n');
-            embed.addFields({ name: '⚠️ Suspicious Activities', value: suspiciousText, inline: true });
+            embed.addFields({ name: '⚠️ Aktivitas Mencurigakan', value: suspiciousText, inline: true });
         }
 
         // Rate limit violations
         if (securityStats.rateLimitViolations) {
             embed.addFields({
-                name: '🚫 Rate Limit Violations',
-                value: `**Total Violations:** ${securityStats.rateLimitViolations.total}\n**Unique Users:** ${securityStats.rateLimitViolations.uniqueUsers}\n**Most Violations:** <@${securityStats.rateLimitViolations.topViolator || 'None'}>`,
+                name: '🚫 Pelanggaran Rate Limit',
+                value: `**Total Pelanggaran:** ${securityStats.rateLimitViolations.total}\n**Pengguna Unik:** ${securityStats.rateLimitViolations.uniqueUsers}\n**Pelanggar Terbanyak:** <@${securityStats.rateLimitViolations.topViolator || 'Tidak ada'}>`,
                 inline: true
             });
         }
@@ -331,7 +347,7 @@ module.exports = {
                 .slice(0, 3)
                 .map((rec, index) => `${index + 1}. ${rec}`)
                 .join('\n');
-            embed.addFields({ name: '💡 Security Recommendations', value: recommendationsText, inline: false });
+            embed.addFields({ name: '💡 Rekomendasi Keamanan', value: recommendationsText, inline: false });
         }
 
         // Recent security events
@@ -340,34 +356,37 @@ module.exports = {
                 .slice(0, 5)
                 .map(event => `**${event.type}** - <@${event.userId}> - <t:${Math.floor(event.timestamp / 1000)}:R>`)
                 .join('\n');
-            embed.addFields({ name: '🕒 Recent Security Events', value: eventsText, inline: false });
+            embed.addFields({ name: '🕒 Event Keamanan Terbaru', value: eventsText, inline: false });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handlePerformance(message, args) {
+        const config = require('../../config');
         const period = args[0] || '24h';
         const perfStats = await analytics.getPerformanceAnalytics(period);
 
         const embed = new EmbedBuilder()
-            .setColor('#4ecdc4')
-            .setTitle(`⚡ Performance Analytics (${period})`)
-            .setDescription('Bot performance metrics and system health')
+            .setColor(config.colors?.info || '#5865F2')
+            .setTitle(`⚡ Analitik Performa (${period})`)
+            .setDescription('Metrik performa bot dan kesehatan sistem')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // Performance overview
         embed.addFields({
-            name: '📊 Performance Overview',
-            value: `**Avg Response Time:** ${perfStats.avgResponseTime}ms\n**Success Rate:** ${perfStats.successRate}%\n**Error Rate:** ${perfStats.errorRate}%`,
+            name: '📊 Ringkasan Performa',
+            value: `**Waktu Respons Rata-rata:** ${perfStats.avgResponseTime}ms\n**Tingkat Sukses:** ${perfStats.successRate}%\n**Tingkat Error:** ${perfStats.errorRate}%`,
             inline: false
         });
 
         // System metrics
         if (perfStats.systemMetrics) {
             embed.addFields({
-                name: '💻 System Metrics',
-                value: `**Memory Usage:** ${perfStats.systemMetrics.memoryUsage}MB\n**CPU Usage:** ${perfStats.systemMetrics.cpuUsage}%\n**Uptime:** ${this.formatUptime(perfStats.systemMetrics.uptime)}`,
+                name: '💻 Metrik Sistem',
+                value: `**Penggunaan Memori:** ${perfStats.systemMetrics.memoryUsage}MB\n**Penggunaan CPU:** ${perfStats.systemMetrics.cpuUsage}%\n**Uptime:** ${this.formatUptime(perfStats.systemMetrics.uptime)}`,
                 inline: true
             });
         }
@@ -376,16 +395,16 @@ module.exports = {
         if (perfStats.commandPerformance && perfStats.commandPerformance.length > 0) {
             const slowestCommands = perfStats.commandPerformance
                 .slice(0, 5)
-                .map(cmd => `**${cmd.name}:** ${cmd.avgTime}ms (${cmd.executions} runs)`)
+                .map(cmd => `**${cmd.name}:** ${cmd.avgTime}ms (${cmd.executions} eksekusi)`)
                 .join('\n');
-            embed.addFields({ name: '🐌 Slowest Commands', value: slowestCommands, inline: true });
+            embed.addFields({ name: '🐌 Command Terlambat', value: slowestCommands, inline: true });
         }
 
         // Database performance
         if (perfStats.databaseMetrics) {
             embed.addFields({
-                name: '🗄️ Database Performance',
-                value: `**Avg Query Time:** ${perfStats.databaseMetrics.avgQueryTime}ms\n**Total Queries:** ${perfStats.databaseMetrics.totalQueries}\n**Slow Queries:** ${perfStats.databaseMetrics.slowQueries}`,
+                name: '🗄️ Performa Database',
+                value: `**Waktu Query Rata-rata:** ${perfStats.databaseMetrics.avgQueryTime}ms\n**Total Query:** ${perfStats.databaseMetrics.totalQueries}\n**Query Lambat:** ${perfStats.databaseMetrics.slowQueries}`,
                 inline: true
             });
         }
@@ -393,11 +412,11 @@ module.exports = {
         // Performance trends
         if (perfStats.trends) {
             const trendsText = [
-                `**Response Time Trend:** ${perfStats.trends.responseTime > 0 ? '📈' : '📉'} ${Math.abs(perfStats.trends.responseTime)}%`,
-                `**Error Rate Trend:** ${perfStats.trends.errorRate > 0 ? '📈' : '📉'} ${Math.abs(perfStats.trends.errorRate)}%`,
-                `**Memory Usage Trend:** ${perfStats.trends.memoryUsage > 0 ? '📈' : '📉'} ${Math.abs(perfStats.trends.memoryUsage)}%`
+                `**Tren Waktu Respons:** ${perfStats.trends.responseTime > 0 ? '📈' : '📉'} ${Math.abs(perfStats.trends.responseTime)}%`,
+                `**Tren Tingkat Error:** ${perfStats.trends.errorRate > 0 ? '📈' : '📉'} ${Math.abs(perfStats.trends.errorRate)}%`,
+                `**Tren Penggunaan Memori:** ${perfStats.trends.memoryUsage > 0 ? '📈' : '📉'} ${Math.abs(perfStats.trends.memoryUsage)}%`
             ].join('\n');
-            embed.addFields({ name: '📈 Performance Trends', value: trendsText, inline: false });
+            embed.addFields({ name: '📈 Tren Performa', value: trendsText, inline: false });
         }
 
         // Performance alerts
@@ -406,13 +425,15 @@ module.exports = {
                 .slice(0, 3)
                 .map(alert => `⚠️ **${alert.type}:** ${alert.message}`)
                 .join('\n');
-            embed.addFields({ name: '🚨 Performance Alerts', value: alertsText, inline: false });
+            embed.addFields({ name: '🚨 Alert Performa', value: alertsText, inline: false });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     async handleReport(message, args) {
+        const config = require('../../config');
         const format = args[0] || 'embed';
         const report = await analytics.generateComprehensiveReport(message.guild.id);
 
@@ -420,18 +441,20 @@ module.exports = {
             // Generate JSON report as attachment
             const reportJson = JSON.stringify(report, null, 2);
             const attachment = new AttachmentBuilder(Buffer.from(reportJson), { 
-                name: `analytics-report-${message.guild.id}-${Date.now()}.json` 
+                name: `laporan-analytics-${message.guild.id}-${Date.now()}.json` 
             });
 
             const embed = new EmbedBuilder()
-                .setColor('#0099ff')
-                .setTitle('📊 Comprehensive Analytics Report')
-                .setDescription('Complete analytics report exported as JSON file')
+                .setColor(config.colors?.primary || '#5865F2')
+                .setTitle('📊 Laporan Analytics Komprehensif')
+                .setDescription('Laporan analytics lengkap diekspor sebagai file JSON')
+                .setThumbnail(message.guild.iconURL({ dynamic: true }))
                 .addFields(
-                    { name: 'Report Generated', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
-                    { name: 'Data Period', value: 'Last 30 days', inline: true },
-                    { name: 'File Format', value: 'JSON', inline: true }
+                    { name: 'Laporan Dibuat', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
+                    { name: 'Periode Data', value: '30 hari terakhir', inline: true },
+                    { name: 'Format File', value: 'JSON', inline: true }
                 )
+                .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
                 .setTimestamp();
 
             return message.reply({ embeds: [embed], files: [attachment] });
@@ -439,23 +462,24 @@ module.exports = {
 
         // Generate embed report
         const embed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('📊 Comprehensive Analytics Report')
-            .setDescription(`Complete analytics overview for ${message.guild.name}`)
+            .setColor(config.colors?.primary || '#5865F2')
+            .setTitle('📊 Laporan Analytics Komprehensif')
+            .setDescription(`Ringkasan analytics lengkap untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // Executive summary
         embed.addFields({
-            name: '📋 Executive Summary',
-            value: `**Total Commands:** ${report.summary.totalCommands}\n**Active Users:** ${report.summary.activeUsers}\n**System Health:** ${this.getHealthStatus(report.performance)}\n**Security Score:** ${report.security.securityScore}/100`,
+            name: '📋 Ringkasan Eksekutif',
+            value: `**Total Command:** ${report.summary.totalCommands}\n**Pengguna Aktif:** ${report.summary.activeUsers}\n**Kesehatan Sistem:** ${this.getHealthStatus(report.performance)}\n**Skor Keamanan:** ${report.security.securityScore}/100`,
             inline: false
         });
 
         // Key metrics
         embed.addFields(
-            { name: '📈 Commands (30d)', value: `${report.commands.total30d}\n${report.commands.growth30d > 0 ? '📈' : '📉'} ${Math.abs(report.commands.growth30d)}%`, inline: true },
-            { name: '👥 Users (30d)', value: `${report.users.active30d}\n${report.users.growth30d > 0 ? '📈' : '📉'} ${Math.abs(report.users.growth30d)}%`, inline: true },
-            { name: '⚡ Performance', value: `${report.performance.avgResponseTime}ms\n${report.performance.successRate}%`, inline: true }
+            { name: '📈 Command (30h)', value: `${report.commands.total30d}\n${report.commands.growth30d > 0 ? '📈' : '📉'} ${Math.abs(report.commands.growth30d)}%`, inline: true },
+            { name: '👥 Pengguna (30h)', value: `${report.users.active30d}\n${report.users.growth30d > 0 ? '📈' : '📉'} ${Math.abs(report.users.growth30d)}%`, inline: true },
+            { name: '⚡ Performa', value: `${report.performance.avgResponseTime}ms\n${report.performance.successRate}%`, inline: true }
         );
 
         // Top insights
@@ -464,7 +488,7 @@ module.exports = {
                 .slice(0, 5)
                 .map((insight, index) => `${index + 1}. ${insight}`)
                 .join('\n');
-            embed.addFields({ name: '💡 Key Insights', value: insightsText, inline: false });
+            embed.addFields({ name: '💡 Insight Utama', value: insightsText, inline: false });
         }
 
         // Recommendations
@@ -473,35 +497,37 @@ module.exports = {
                 .slice(0, 3)
                 .map((rec, index) => `${index + 1}. ${rec}`)
                 .join('\n');
-            embed.addFields({ name: '🎯 Recommendations', value: recommendationsText, inline: false });
+            embed.addFields({ name: '🎯 Rekomendasi', value: recommendationsText, inline: false });
         }
 
-        embed.setFooter({ text: 'Use "analytics report json" for detailed JSON export' });
+        embed.setFooter({ text: 'Gunakan "analytics report json" untuk ekspor JSON detail', iconURL: message.author.displayAvatarURL() });
 
         message.reply({ embeds: [embed] });
     },
 
     async handleRealtime(message) {
+        const config = require('../../config');
         const realtimeStats = await analytics.getRealtimeStatistics();
 
         const embed = new EmbedBuilder()
-            .setColor('#ff6b6b')
-            .setTitle('📡 Real-time Statistics')
-            .setDescription('Live bot statistics and current activity')
+            .setColor(config.colors?.error || '#ED4245')
+            .setTitle('📡 Statistik Real-time')
+            .setDescription('Statistik bot langsung dan aktivitas saat ini')
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // Current activity
         embed.addFields({
-            name: '🔴 Current Activity',
-            value: `**Commands/min:** ${realtimeStats.commandsPerMinute}\n**Active Users:** ${realtimeStats.activeUsers}\n**Memory Usage:** ${realtimeStats.memoryUsage}MB`,
+            name: '🔴 Aktivitas Saat Ini',
+            value: `**Command/menit:** ${realtimeStats.commandsPerMinute}\n**Pengguna Aktif:** ${realtimeStats.activeUsers}\n**Penggunaan Memori:** ${realtimeStats.memoryUsage}MB`,
             inline: false
         });
 
         // System status
         embed.addFields(
-            { name: '💻 System Status', value: `**CPU:** ${realtimeStats.cpuUsage}%\n**Memory:** ${realtimeStats.memoryPercentage}%\n**Uptime:** ${this.formatUptime(realtimeStats.uptime)}`, inline: true },
-            { name: '🌐 Network', value: `**Guilds:** ${realtimeStats.guildCount}\n**Users:** ${realtimeStats.userCount}\n**Channels:** ${realtimeStats.channelCount}`, inline: true },
-            { name: '📊 Performance', value: `**Avg Response:** ${realtimeStats.avgResponseTime}ms\n**Success Rate:** ${realtimeStats.successRate}%\n**Errors/min:** ${realtimeStats.errorsPerMinute}`, inline: true }
+            { name: '💻 Status Sistem', value: `**CPU:** ${realtimeStats.cpuUsage}%\n**Memori:** ${realtimeStats.memoryPercentage}%\n**Uptime:** ${this.formatUptime(realtimeStats.uptime)}`, inline: true },
+            { name: '🌐 Jaringan', value: `**Server:** ${realtimeStats.guildCount}\n**Pengguna:** ${realtimeStats.userCount}\n**Channel:** ${realtimeStats.channelCount}`, inline: true },
+            { name: '📊 Performa', value: `**Respons Rata-rata:** ${realtimeStats.avgResponseTime}ms\n**Tingkat Sukses:** ${realtimeStats.successRate}%\n**Error/menit:** ${realtimeStats.errorsPerMinute}`, inline: true }
         );
 
         // Recent activity
@@ -510,7 +536,7 @@ module.exports = {
                 .slice(0, 5)
                 .map(cmd => `**${cmd.name}** - <@${cmd.userId}> - <t:${Math.floor(cmd.timestamp / 1000)}:R>`)
                 .join('\n');
-            embed.addFields({ name: '🕒 Recent Commands', value: recentText, inline: false });
+            embed.addFields({ name: '🕒 Command Terbaru', value: recentText, inline: false });
         }
 
         // Active processes
@@ -519,28 +545,30 @@ module.exports = {
                 .slice(0, 5)
                 .map(process => `**${process.name}** - ${process.status} (${process.duration}ms)`)
                 .join('\n');
-            embed.addFields({ name: '⚙️ Active Processes', value: processesText, inline: false });
+            embed.addFields({ name: '⚙️ Proses Aktif', value: processesText, inline: false });
         }
 
-        embed.setFooter({ text: 'Statistics update every 30 seconds' });
+        embed.setFooter({ text: 'Statistik diperbarui setiap 30 detik', iconURL: message.author.displayAvatarURL() });
 
         message.reply({ embeds: [embed] });
     },
 
     async handleTrends(message, args) {
+        const config = require('../../config');
         const period = args[0] || '7d';
         const trends = await analytics.getTrendAnalysis(message.guild.id, period);
 
         const embed = new EmbedBuilder()
-            .setColor('#4ecdc4')
-            .setTitle(`📈 Trend Analysis (${period})`)
-            .setDescription(`Usage trends and patterns for ${message.guild.name}`)
+            .setColor(config.colors?.info || '#5865F2')
+            .setTitle(`📈 Analisis Tren (${period})`)
+            .setDescription(`Tren penggunaan dan pola untuk ${message.guild.name}`)
+            .setThumbnail(message.guild.iconURL({ dynamic: true }))
             .setTimestamp();
 
         // Overall trends
         embed.addFields({
-            name: '📊 Overall Trends',
-            value: `**Command Usage:** ${trends.commandUsage > 0 ? '📈' : '📉'} ${Math.abs(trends.commandUsage)}%\n**User Activity:** ${trends.userActivity > 0 ? '📈' : '📉'} ${Math.abs(trends.userActivity)}%\n**Error Rate:** ${trends.errorRate > 0 ? '📈' : '📉'} ${Math.abs(trends.errorRate)}%`,
+            name: '📊 Tren Keseluruhan',
+            value: `**Penggunaan Command:** ${trends.commandUsage > 0 ? '📈' : '📉'} ${Math.abs(trends.commandUsage)}%\n**Aktivitas Pengguna:** ${trends.userActivity > 0 ? '📈' : '📉'} ${Math.abs(trends.userActivity)}%\n**Tingkat Error:** ${trends.errorRate > 0 ? '📈' : '📉'} ${Math.abs(trends.errorRate)}%`,
             inline: false
         });
 
@@ -548,24 +576,24 @@ module.exports = {
         if (trends.topGrowingCommands && trends.topGrowingCommands.length > 0) {
             const growingText = trends.topGrowingCommands
                 .slice(0, 5)
-                .map(cmd => `**${cmd.name}:** +${cmd.growth}% (${cmd.currentUsage} uses)`)
+                .map(cmd => `**${cmd.name}:** +${cmd.growth}% (${cmd.currentUsage} penggunaan)`)
                 .join('\n');
-            embed.addFields({ name: '📈 Growing Commands', value: growingText, inline: true });
+            embed.addFields({ name: '📈 Command Meningkat', value: growingText, inline: true });
         }
 
         if (trends.decliningCommands && trends.decliningCommands.length > 0) {
             const decliningText = trends.decliningCommands
                 .slice(0, 5)
-                .map(cmd => `**${cmd.name}:** ${cmd.decline}% (${cmd.currentUsage} uses)`)
+                .map(cmd => `**${cmd.name}:** ${cmd.decline}% (${cmd.currentUsage} penggunaan)`)
                 .join('\n');
-            embed.addFields({ name: '📉 Declining Commands', value: decliningText, inline: true });
+            embed.addFields({ name: '📉 Command Menurun', value: decliningText, inline: true });
         }
 
         // User engagement trends
         if (trends.userEngagement) {
             embed.addFields({
-                name: '👥 User Engagement',
-                value: `**New Users:** ${trends.userEngagement.newUsers > 0 ? '📈' : '📉'} ${Math.abs(trends.userEngagement.newUsers)}%\n**Retention Rate:** ${trends.userEngagement.retention > 0 ? '📈' : '📉'} ${Math.abs(trends.userEngagement.retention)}%\n**Avg Session:** ${trends.userEngagement.avgSession > 0 ? '📈' : '📉'} ${Math.abs(trends.userEngagement.avgSession)}%`,
+                name: '👥 Engagement Pengguna',
+                value: `**Pengguna Baru:** ${trends.userEngagement.newUsers > 0 ? '📈' : '📉'} ${Math.abs(trends.userEngagement.newUsers)}%\n**Tingkat Retensi:** ${trends.userEngagement.retention > 0 ? '📈' : '📉'} ${Math.abs(trends.userEngagement.retention)}%\n**Sesi Rata-rata:** ${trends.userEngagement.avgSession > 0 ? '📈' : '📉'} ${Math.abs(trends.userEngagement.avgSession)}%`,
                 inline: false
             });
         }
@@ -573,46 +601,47 @@ module.exports = {
         // Peak usage patterns
         if (trends.peakPatterns) {
             const patternsText = [
-                `**Peak Day:** ${trends.peakPatterns.peakDay}`,
-                `**Peak Hour:** ${trends.peakPatterns.peakHour}:00`,
-                `**Busiest Period:** ${trends.peakPatterns.busiestPeriod}`
+                `**Hari Puncak:** ${trends.peakPatterns.peakDay}`,
+                `**Jam Puncak:** ${trends.peakPatterns.peakHour}:00`,
+                `**Periode Tersibuk:** ${trends.peakPatterns.busiestPeriod}`
             ].join('\n');
-            embed.addFields({ name: '⏰ Peak Patterns', value: patternsText, inline: true });
+            embed.addFields({ name: '⏰ Pola Puncak', value: patternsText, inline: true });
         }
 
         // Seasonal trends (for longer periods)
         if (period === '30d' && trends.seasonalTrends) {
             const seasonalText = [
-                `**Weekday vs Weekend:** ${trends.seasonalTrends.weekdayWeekend}`,
-                `**Morning vs Evening:** ${trends.seasonalTrends.morningEvening}`,
-                `**Growth Trajectory:** ${trends.seasonalTrends.trajectory}`
+                `**Hari Kerja vs Akhir Pekan:** ${trends.seasonalTrends.weekdayWeekend}`,
+                `**Pagi vs Malam:** ${trends.seasonalTrends.morningEvening}`,
+                `**Trajektori Pertumbuhan:** ${trends.seasonalTrends.trajectory}`
             ].join('\n');
-            embed.addFields({ name: '📅 Seasonal Trends', value: seasonalText, inline: true });
+            embed.addFields({ name: '📅 Tren Musiman', value: seasonalText, inline: true });
         }
 
         // Predictions
         if (trends.predictions) {
             const predictionsText = [
-                `**Next Week Usage:** ${trends.predictions.nextWeekUsage > 0 ? '📈' : '📉'} ${Math.abs(trends.predictions.nextWeekUsage)}%`,
-                `**Expected Peak:** ${trends.predictions.expectedPeak}`,
-                `**Growth Forecast:** ${trends.predictions.growthForecast}`
+                `**Penggunaan Minggu Depan:** ${trends.predictions.nextWeekUsage > 0 ? '📈' : '📉'} ${Math.abs(trends.predictions.nextWeekUsage)}%`,
+                `**Puncak Diharapkan:** ${trends.predictions.expectedPeak}`,
+                `**Perkiraan Pertumbuhan:** ${trends.predictions.growthForecast}`
             ].join('\n');
-            embed.addFields({ name: '🔮 Predictions', value: predictionsText, inline: false });
+            embed.addFields({ name: '🔮 Prediksi', value: predictionsText, inline: false });
         }
 
+        embed.setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() });
         message.reply({ embeds: [embed] });
     },
 
     // Helper methods
     getHealthStatus(performance) {
         if (performance.avgResponseTime < 100 && performance.errorRate < 1) {
-            return '🟢 Excellent';
+            return '🟢 Sangat Baik';
         } else if (performance.avgResponseTime < 200 && performance.errorRate < 3) {
-            return '🟡 Good';
+            return '🟡 Baik';
         } else if (performance.avgResponseTime < 500 && performance.errorRate < 5) {
-            return '🟠 Fair';
+            return '🟠 Cukup';
         } else {
-            return '🔴 Poor';
+            return '🔴 Buruk';
         }
     },
 

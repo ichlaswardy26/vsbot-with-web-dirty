@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require("discord.js");
 const Economy = require("../../schemas/UserBalance");
 const rolePermissions = require("../../util/rolePermissions");
 const config = require("../../config.js");
@@ -10,7 +11,6 @@ module.exports = {
   usage: "resetsouls [@user]",
   async exec(client, message) {
     try {
-      // Check permission using standardized system
       const permissionError = rolePermissions.checkPermission(message.member, 'economy');
       if (permissionError) {
         return message.reply(permissionError);
@@ -19,7 +19,6 @@ module.exports = {
       const targetUser = message.mentions.users.first();
 
       if (targetUser) {
-        // Reset saldo 1 user
         const result = await Economy.findOneAndUpdate(
           { userId: targetUser.id, guildId: message.guild.id },
           { cash: 0 },
@@ -27,18 +26,45 @@ module.exports = {
         );
 
         if (result) {
-          return message.reply(`${config.emojis?.check || "✅"} Saldo ${targetUser} telah direset ke **0 souls**.`);
+          const successEmbed = new EmbedBuilder()
+            .setColor(config.colors?.success || '#57F287')
+            .setTitle(`${config.emojis?.check || '✅'} Saldo Berhasil Direset`)
+            .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
+            .addFields(
+              { name: '👤 User', value: `${targetUser}`, inline: true },
+              { name: `${config.emojis?.souls || '💰'} Saldo Sekarang`, value: '0', inline: true }
+            )
+            .setFooter({ text: `Direset oleh ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+            .setTimestamp();
+          return message.reply({ embeds: [successEmbed] });
         } else {
-          return message.reply(`${config.emojis?.warning || "⚠️"} Tidak ditemukan data ekonomi untuk ${targetUser}.`);
+          const errorEmbed = new EmbedBuilder()
+            .setColor(config.colors?.error || '#ED4245')
+            .setTitle(`${config.emojis?.cross || '❌'} Data Tidak Ditemukan`)
+            .setDescription(`Tidak ditemukan data ekonomi untuk ${targetUser}.`)
+            .setTimestamp();
+          return message.reply({ embeds: [errorEmbed] });
         }
       } else {
-        // Reset seluruh server
         await Economy.updateMany({ guildId: message.guild.id }, { $set: { cash: 0 } });
-        return message.reply("💀 Semua saldo souls di server ini telah direset ke **0**.");
+        
+        const successEmbed = new EmbedBuilder()
+          .setColor(config.colors?.warning || '#FEE75C')
+          .setTitle(`💀 Reset Saldo Server`)
+          .setDescription('Semua saldo souls di server ini telah direset ke **0**.')
+          .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
+          .setFooter({ text: `Direset oleh ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
+          .setTimestamp();
+        return message.reply({ embeds: [successEmbed] });
       }
     } catch (error) {
       console.error("[resetsouls] Error:", error.message);
-      return message.reply(`${config.emojis?.warning || "⚠️"} Terjadi kesalahan saat mereset saldo!`);
+      const errorEmbed = new EmbedBuilder()
+        .setColor(config.colors?.error || '#ED4245')
+        .setTitle(`${config.emojis?.cross || '❌'} Terjadi Kesalahan`)
+        .setDescription('Gagal mereset saldo. Silakan coba lagi.')
+        .setTimestamp();
+      return message.reply({ embeds: [errorEmbed] });
     }
   },
 };

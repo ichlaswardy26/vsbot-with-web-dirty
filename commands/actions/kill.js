@@ -1,12 +1,45 @@
-const { createActionCommand } = require("../../util/actionCommandHelper");
+const { EmbedBuilder } = require("discord.js");
+const axios = require("axios");
+const config = require("../../config.js");
 
-// Using helper for cleaner, standardized action command
-module.exports = createActionCommand({
+module.exports = {
   name: "kill",
-  description: "Kill someone! (fun)",
-  action: "kill",
-  apiEndpoint: "kill",
-  requiresTarget: true,
-  allowSelf: false,
-  allowBot: false,
-});
+  aliases: ["bunuh"],
+  description: "Bunuh seseorang! (fun)",
+  category: "action",
+  usage: "kill @user",
+  async exec(client, message) {
+    const target = message.mentions.users.first();
+    
+    if (!target) {
+      return message.reply(`${config.emojis?.important || "❗"} **|** Mention seseorang yang ingin kamu bunuh!`);
+    }
+    
+    if (target.id === client.user.id) {
+      return message.reply(`${config.emojis?.important || "❗"} **|** Kamu tidak bisa membunuh bot! 🤖`);
+    }
+    
+    if (target.id === message.author.id) {
+      return message.reply(`${config.emojis?.important || "❗"} **|** Kamu tidak bisa membunuh dirimu sendiri!`);
+    }
+
+    try {
+      const response = await axios.get("https://api.waifu.pics/sfw/kill", { timeout: 10000 });
+
+      const embed = new EmbedBuilder()
+        .setColor(config.colors?.error || "#ED4245")
+        .setDescription(`💀 **${message.author.username}** membunuh **${target.username}**!`)
+        .setImage(response.data.url)
+        .setFooter({ 
+          text: `Diminta oleh ${message.author.username}`,
+          iconURL: message.author.displayAvatarURL({ dynamic: true })
+        })
+        .setTimestamp();
+
+      message.channel.send({ embeds: [embed] });
+    } catch (error) {
+      console.error("[kill] API error:", error.message);
+      message.reply(`${config.emojis?.cross || "❌"} **|** Gagal mengambil GIF. Coba lagi nanti!`);
+    }
+  },
+};

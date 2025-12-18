@@ -3,6 +3,10 @@ const config = require('../config');
 // Get level roles from config, filtering out null values
 function getLevelRoles() {
     const levelRoles = {};
+    // Check if config.roles and config.roles.level exist
+    if (!config.roles || !config.roles.level) {
+        return levelRoles;
+    }
     for (const [level, roleId] of Object.entries(config.roles.level)) {
         if (roleId) {
             levelRoles[level] = roleId;

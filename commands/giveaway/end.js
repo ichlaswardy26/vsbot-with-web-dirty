@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require("discord.js");
 const Giveaway = require("../../schemas/Giveaway");
 const { endGiveaway } = require("../../handlers/giveawayHandler");
 const rolePermissions = require("../../util/rolePermissions");
@@ -5,8 +6,8 @@ const config = require("../../config.js");
 
 module.exports = {
   name: "giveaway-end",
-  aliases: ["gend"],
-  description: "Akhiri giveaway sekarang.",
+  aliases: ["gend", "gw-end"],
+  description: "Akhiri giveaway sekarang",
   category: "giveaway",
   usage: "giveaway-end <messageId>",
   async exec(client, message, args) {
@@ -16,28 +17,44 @@ module.exports = {
       return message.reply(permissionError);
     }
 
-    const crossEmoji = config.emojis?.cross || "❌";
-    const warningEmoji = config.emojis?.warning || "⚠️";
-
     const messageId = args[0];
     if (!messageId) {
-      return message.reply(`${warningEmoji} **|** Berikan messageId giveaway.`);
+      const helpEmbed = new EmbedBuilder()
+        .setTitle("🛑 Akhiri Giveaway")
+        .setDescription("Gunakan command ini untuk mengakhiri giveaway lebih awal.")
+        .setColor(config.colors?.info || "#5865F2")
+        .addFields(
+          { name: "📝 Format", value: "`giveaway-end <messageId>`", inline: false },
+          { name: "💡 Cara Mendapatkan Message ID", value: "Klik kanan pada pesan giveaway → Copy Message ID", inline: false }
+        )
+        .setFooter({ text: "Pastikan Developer Mode aktif di Discord Settings" });
+        
+      return message.reply({ embeds: [helpEmbed] });
     }
 
     try {
       const g = await Giveaway.findOne({ messageId });
       if (!g) {
-        return message.reply(`${crossEmoji} **|** Giveaway tidak ditemukan.`);
+        return message.reply(`${config.emojis?.cross || "❌"} **|** Giveaway dengan ID tersebut tidak ditemukan.`);
       }
 
       if (g.ended) {
-        return message.reply(`${warningEmoji} **|** Giveaway sudah berakhir.`);
+        return message.reply(`${config.emojis?.warning || "⚠️"} **|** Giveaway ini sudah berakhir sebelumnya.`);
       }
 
       await endGiveaway(client, g);
+      
+      const successEmbed = new EmbedBuilder()
+        .setTitle("🛑 Giveaway Diakhiri")
+        .setDescription(`Giveaway **${g.prize}** telah diakhiri!`)
+        .setColor(config.colors?.success || "#57F287")
+        .setFooter({ text: `Diakhiri oleh ${message.author.username}` })
+        .setTimestamp();
+        
+      message.reply({ embeds: [successEmbed] });
     } catch (error) {
       console.error("[giveaway-end] Error:", error.message);
-      return message.reply(`${crossEmoji} **|** Terjadi kesalahan saat mengakhiri giveaway.`);
+      return message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat mengakhiri giveaway.`);
     }
   }
 };

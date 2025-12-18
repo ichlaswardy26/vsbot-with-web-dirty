@@ -3,7 +3,7 @@ const config = require('../../config.js');
 
 module.exports = {
   name: "debugconfess",
-  description: "Debug confession system configuration",
+  description: "Debug konfigurasi sistem confession",
   category: "admin",
   
   async exec(client, message) {
@@ -22,25 +22,27 @@ module.exports = {
     const logChannel = message.guild.channels.cache.get(logChannelId);
 
     const embed = new EmbedBuilder()
-      .setTitle("🔧 Confession System Debug")
-      .setColor(0x00ff00)
+      .setTitle("🔧 Debug Sistem Confession")
+      .setColor(config.colors?.primary || '#5865F2')
+      .setThumbnail(message.guild.iconURL({ dynamic: true }))
       .addFields(
         { 
-          name: "Confession Channel", 
-          value: confessionChannel ? `✅ Found: ${confessionChannel.name}` : "❌ Not found", 
+          name: "Channel Confession", 
+          value: confessionChannel ? `✅ Ditemukan: ${confessionChannel.name}` : "❌ Tidak ditemukan", 
           inline: true 
         },
         { 
-          name: "Log Channel", 
-          value: logChannel ? `✅ Found: ${logChannel.name}` : "❌ Not found", 
+          name: "Channel Log", 
+          value: logChannel ? `✅ Ditemukan: ${logChannel.name}` : "❌ Tidak ditemukan", 
           inline: true 
         },
         { 
-          name: "Channel IDs", 
-          value: `Confession: ${confessionChannelId}\nLog: ${logChannelId}`, 
+          name: "ID Channel", 
+          value: `Confession: ${confessionChannelId || 'Tidak diatur'}\nLog: ${logChannelId || 'Tidak diatur'}`, 
           inline: false 
         }
       )
+      .setFooter({ text: `Diminta oleh ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
       .setTimestamp();
 
     await message.reply({ embeds: [embed] });

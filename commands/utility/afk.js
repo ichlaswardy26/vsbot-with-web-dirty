@@ -1,13 +1,14 @@
 global.afkUsers = global.afkUsers || new Map();
 
 const { EmbedBuilder } = require('discord.js');
+const config = require('../../config.js');
 
 module.exports = {
   name: 'afk',
-  description: 'Set AFK status',
+  description: 'Atur status AFK',
   category: 'utility',
   args: false,
-  usage: '[reason]',
+  usage: '[alasan]',
   async exec(client, message, args) {
     const userId = message.author.id;
     const username = message.author.username;
@@ -17,13 +18,13 @@ module.exports = {
     if (global.afkUsers.has(userId)) {
       const currentAfk = global.afkUsers.get(userId);
       const embed = new EmbedBuilder()
-        .setColor('#FEE75C')
-        .setTitle('⚠️ Anda Sudah AFK')
-        .setDescription(`Anda sudah dalam status AFK sejak <t:${Math.floor(currentAfk.timestamp / 1000)}:R>`)
+        .setTitle("⚠️ Kamu Sudah AFK")
+        .setDescription(`Kamu sudah dalam status AFK sejak <t:${Math.floor(currentAfk.timestamp / 1000)}:R>`)
+        .setColor(config.colors?.warning || "#FEE75C")
         .addFields(
-          { name: '📝 Alasan', value: currentAfk.reason, inline: false }
+          { name: "📝 Alasan", value: currentAfk.reason, inline: false }
         )
-        .setFooter({ text: 'Kirim pesan apapun untuk membatalkan AFK' })
+        .setFooter({ text: "Kirim pesan apapun untuk membatalkan AFK" })
         .setTimestamp();
       
       return message.reply({ embeds: [embed] });
@@ -60,15 +61,16 @@ module.exports = {
     });
 
     const embed = new EmbedBuilder()
-      .setColor('#5865F2')
-      .setTitle('💤 Status AFK Diaktifkan')
+      .setTitle("💤 Status AFK Diaktifkan")
       .setDescription(`${message.author} sekarang sedang AFK`)
+      .setColor(config.colors?.primary || "#5865F2")
+      .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
       .addFields(
-        { name: '📝 Alasan', value: reason, inline: false },
-        { name: '⏰ Waktu', value: `<t:${Math.floor(afkStartTime / 1000)}:F>`, inline: false },
-        { name: '🏷️ Nickname', value: nicknameChanged ? '✅ Diubah ke [AFK]' : '❌ Tidak dapat diubah', inline: false }
+        { name: "📝 Alasan", value: reason, inline: false },
+        { name: "⏰ Waktu", value: `<t:${Math.floor(afkStartTime / 1000)}:F>`, inline: true },
+        { name: "🏷️ Nickname", value: nicknameChanged ? '✅ Diubah ke [AFK]' : '❌ Tidak dapat diubah', inline: true }
       )
-      .setFooter({ text: 'Kirim pesan apapun untuk membatalkan AFK' })
+      .setFooter({ text: "Kirim pesan apapun untuk membatalkan AFK" })
       .setTimestamp();
 
     message.reply({ embeds: [embed] });
