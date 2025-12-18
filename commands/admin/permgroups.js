@@ -9,7 +9,7 @@ module.exports = {
     usage: 'permgroups <list|create|delete|assign-user|remove-user|assign-role|remove-role|check-user|check-role|tree> [options]',
     category: 'admin',
     
-    async execute(message, args, client) {
+    async exec(client, message, args) {
         try {
             // Check admin permission
             const permissionError = rolePermissions.checkPermission(message.member, 'admin');

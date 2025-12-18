@@ -10,7 +10,7 @@ module.exports = {
     usage: 'analytics <summary|commands|users|permissions|security|performance|report|realtime|trends> [options]',
     category: 'admin',
     
-    async execute(message, args, client) {
+    async exec(client, message, args) {
         try {
             // Check admin permission
             const permissionError = rolePermissions.checkPermission(message.member, 'admin');

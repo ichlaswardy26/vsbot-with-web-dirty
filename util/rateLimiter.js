@@ -260,7 +260,7 @@ class RateLimiter {
         const rolePermissions = require('./rolePermissions');
         
         // Bot owners are exempt
-        if (config.ownerId?.includes(member.user.id)) return true;
+        if (config.ownerIds?.includes(member.user.id)) return true;
         
         // Admins are exempt from most rate limits
         if (rolePermissions.isAdmin(member)) return true;

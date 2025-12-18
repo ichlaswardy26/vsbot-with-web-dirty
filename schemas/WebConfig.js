@@ -7,6 +7,12 @@ const webConfigSchema = new mongoose.Schema({
     unique: true
   },
   
+  // ==================== BOT SETTINGS ====================
+  prefix: {
+    type: String,
+    default: '!'
+  },
+  
   // ==================== CHANNELS ====================
   channels: {
     // Welcome & Goodbye

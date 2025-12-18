@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const connectMongo = require('connect-mongo');
+const MongoStore = connectMongo.default || connectMongo;
 const passport = require('passport');
 const path = require('path');
 const mongoose = require('mongoose');
@@ -90,29 +91,45 @@ class WebServer {
     const config = require('../config');
     
     // Session configuration
+    // Detect if using HTTPS (production, Cloudflare Tunnel, or explicit setting)
+    const isProduction = config.nodeEnv === 'production';
+    const forceSecureCookies = process.env.FORCE_SECURE_COOKIES === 'true';
+    const callbackUrl = config.web?.discordCallbackUrl || '';
+    const isHttpsCallback = callbackUrl.startsWith('https://');
+    const isSecure = isProduction || forceSecureCookies || isHttpsCallback;
+    
     const sessionConfig = {
       secret: config.web?.sessionSecret || 'your-secret-key-change-this',
       resave: false,
       saveUninitialized: false,
       name: 'sessionId', // Custom session cookie name
       cookie: {
-        secure: config.nodeEnv === 'production',
+        secure: isSecure, // Secure if HTTPS (production, tunnel, or forced)
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: 'strict' // CSRF protection
+        sameSite: 'lax' // 'lax' for OAuth compatibility with tunnels
       }
     };
+    
+    console.log(`[Session] Cookie secure: ${isSecure}, sameSite: lax, env: ${config.nodeEnv}, httpsCallback: ${isHttpsCallback}`);
 
     // Only add MongoStore if MongoDB URI is provided and not in test environment
     if (config.mongoUri && config.nodeEnv !== 'test') {
       try {
+        // Use existing mongoose connection for MongoStore
         sessionConfig.store = MongoStore.create({
           mongoUrl: config.mongoUri,
-          touchAfter: 24 * 3600 // lazy session update
+          touchAfter: 24 * 3600, // lazy session update
+          collectionName: 'sessions',
+          ttl: 7 * 24 * 60 * 60, // 7 days in seconds
+          autoRemove: 'native'
         });
+        console.log('[Session] Using MongoDB session store');
       } catch (error) {
-        console.warn('Failed to create MongoStore, using memory store:', error.message);
+        console.warn('[Session] Failed to create MongoStore, using memory store:', error.message);
       }
+    } else {
+      console.warn('[Session] Using memory store (not recommended for production)');
     }
 
     // Store session middleware for WebSocket integration
@@ -356,11 +373,39 @@ class WebServer {
       
       // Share session middleware with Socket.IO
       if (this.websocketService && this.websocketService.io && this.sessionMiddleware) {
-        this.websocketService.io.engine.use(this.sessionMiddleware);
+        // Wrap session middleware for Socket.IO with proper error handling
+        const wrap = middleware => (req, res, next) => {
+          // Ensure req exists and has required properties for session middleware
+          if (!req || typeof req !== 'object') {
+            return next();
+          }
+          // Create a minimal response object if not provided
+          const mockRes = res && typeof res.setHeader === 'function' ? res : {
+            setHeader: () => {},
+            getHeader: () => null
+          };
+          try {
+            middleware(req, mockRes, next);
+          } catch (err) {
+            console.error('[WebSocket] Session middleware error:', err.message);
+            next();
+          }
+        };
+        this.websocketService.io.engine.use(wrap(this.sessionMiddleware));
       }
 
       // Make websocket service available to routes
       this.app.set('websocketService', this.websocketService);
+      
+      // Make Discord client available to routes
+      this.app.set('discordClient', this.client);
+      
+      // Initialize Discord API service with client
+      const { discordApiService } = require('./services/discordApi');
+      if (this.client) {
+        discordApiService.setClient(this.client);
+        console.log('[Discord API] Service initialized with client');
+      }
 
       this.server = this.httpServer.listen(this.port, () => {
         console.log(`Web dashboard running on port ${this.port}`);

@@ -7,14 +7,15 @@
 
 class MobileResponsive {
   constructor() {
-    this.isMobile = this.detectMobile();
-    this.isTouch = this.detectTouch();
+    // Define breakpoints first before using them
     this.breakpoints = {
       xs: 575.98,
       sm: 767.98,
       md: 991.98,
       lg: 1199.98
     };
+    this.isMobile = this.detectMobile();
+    this.isTouch = this.detectTouch();
     this.currentBreakpoint = this.getCurrentBreakpoint();
     this.collapsibleSections = new Map();
     this.loadStartTime = performance.now();

@@ -40,6 +40,45 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
 });
 
 /**
+ * GET /api/config/:guildId/progress
+ * Get configuration progress for dashboard overview
+ * Requirements: Task 18 - Configuration progress indicators
+ * NOTE: This route MUST be defined before /:guildId/:section to avoid being caught by it
+ */
+router.get('/:guildId/progress', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
+  try {
+    const { guildId } = req.params;
+    const config = await configManager.getConfig(guildId);
+    
+    // Calculate progress for each section
+    const progress = {
+      channels: calculateSectionProgress(config.channels, [
+        'welcome', 'log', 'levelUp', 'confession', 'ticketCategory', 
+        'voiceCreate', 'giveaway', 'snipe', 'wordChain'
+      ]),
+      roles: calculateSectionProgress(config.roles, [
+        'admin', 'moderator', 'muted', 'levelRoles'
+      ]),
+      features: calculateFeaturesProgress(config.features),
+      appearance: calculateSectionProgress(config.appearance, [
+        'embedColor', 'successColor', 'errorColor', 'warningColor'
+      ])
+    };
+    
+    res.json({
+      success: true,
+      data: progress
+    });
+  } catch (error) {
+    console.error('Error getting config progress:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get configuration progress'
+    });
+  }
+});
+
+/**
  * GET /api/config/:guildId/:section
  * Get specific configuration section
  * Performance: Uses section-specific caching
@@ -465,44 +504,6 @@ router.post('/:guildId/restore', validateGuildId, verifyAuth, verifyGuildAccess,
     res.status(400).json({
       success: false,
       error: error.message || 'Failed to restore from backup'
-    });
-  }
-});
-
-/**
- * GET /api/config/:guildId/progress
- * Get configuration progress for dashboard overview
- * Requirements: Task 18 - Configuration progress indicators
- */
-router.get('/:guildId/progress', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
-  try {
-    const { guildId } = req.params;
-    const config = await configManager.getConfig(guildId);
-    
-    // Calculate progress for each section
-    const progress = {
-      channels: calculateSectionProgress(config.channels, [
-        'welcome', 'log', 'levelUp', 'confession', 'ticketCategory', 
-        'voiceCreate', 'giveaway', 'snipe', 'wordChain'
-      ]),
-      roles: calculateSectionProgress(config.roles, [
-        'admin', 'moderator', 'muted', 'levelRoles'
-      ]),
-      features: calculateFeaturesProgress(config.features),
-      appearance: calculateSectionProgress(config.appearance, [
-        'embedColor', 'successColor', 'errorColor', 'warningColor'
-      ])
-    };
-    
-    res.json({
-      success: true,
-      data: progress
-    });
-  } catch (error) {
-    console.error('Error getting config progress:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get configuration progress'
     });
   }
 });

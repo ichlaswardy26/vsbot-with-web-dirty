@@ -90,6 +90,101 @@ router.get('/user', (req, res) => {
 });
 
 /**
+ * GET /auth/guilds
+ * Get guilds where user has admin permissions
+ */
+router.get('/guilds', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Not authenticated'
+    });
+  }
+
+  const allGuilds = req.user.guilds || [];
+  
+  // Debug: log all guilds and their permissions
+  console.log(`[Auth] User ${req.user.username} has ${allGuilds.length} guilds`);
+  
+  // Filter guilds where user has Administrator permission (0x8) or is owner
+  // Discord sends permissions as string for large numbers, so we need to handle both
+  const adminGuilds = allGuilds.filter(guild => {
+    // Owner always has access
+    if (guild.owner) {
+      console.log(`[Auth] Guild ${guild.name} (${guild.id}): owner=true`);
+      return true;
+    }
+    
+    // Convert permissions to BigInt for accurate bitwise operations
+    const permissions = BigInt(guild.permissions || 0);
+    const ADMINISTRATOR = BigInt(0x8);
+    const hasAdmin = (permissions & ADMINISTRATOR) === ADMINISTRATOR;
+    
+    console.log(`[Auth] Guild ${guild.name} (${guild.id}): permissions=${guild.permissions}, hasAdmin=${hasAdmin}`);
+    
+    return hasAdmin;
+  }).map(guild => ({
+    id: guild.id,
+    name: guild.name,
+    icon: guild.icon,
+    owner: guild.owner
+  }));
+
+  console.log(`[Auth] Found ${adminGuilds.length} admin guilds for user ${req.user.username}`);
+
+  res.json({
+    success: true,
+    data: adminGuilds
+  });
+});
+
+/**
+ * GET /auth/bot-guilds
+ * Get guilds where the bot is installed
+ */
+router.get('/bot-guilds', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Not authenticated'
+    });
+  }
+
+  try {
+    // Get bot client from app
+    const client = req.app.get('discordClient');
+    
+    if (!client || !client.guilds) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    
+    // Get all guilds where bot is installed
+    const botGuilds = client.guilds.cache.map(guild => ({
+      id: guild.id,
+      name: guild.name,
+      icon: guild.icon,
+      memberCount: guild.memberCount
+    }));
+    
+    console.log(`[Auth] Bot is in ${botGuilds.length} guilds`);
+    
+    res.json({
+      success: true,
+      data: botGuilds
+    });
+  } catch (error) {
+    console.error('[Auth] Error getting bot guilds:', error);
+    res.json({
+      success: true,
+      data: []
+    });
+  }
+});
+
+/**
  * POST /auth/refresh
  * Refresh user session and guild data
  */

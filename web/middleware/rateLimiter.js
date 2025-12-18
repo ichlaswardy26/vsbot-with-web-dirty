@@ -133,33 +133,36 @@ class RateLimiter {
 // Create singleton instance
 const rateLimiter = new RateLimiter();
 
+// Check if in development mode
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 // Predefined limiters for different endpoints
 const limiters = {
   // General API rate limit
   api: rateLimiter.createLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 100,
+    maxRequests: isDevelopment ? 500 : 100,
     message: 'Too many API requests'
   }),
 
-  // Authentication rate limit (stricter)
+  // Authentication rate limit (more lenient in dev)
   auth: rateLimiter.createLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 10,
+    maxRequests: isDevelopment ? 100 : 10,
     message: 'Too many authentication attempts'
   }),
 
   // Configuration updates (moderate)
   config: rateLimiter.createLimiter({
     windowMs: 5 * 60 * 1000, // 5 minutes
-    maxRequests: 20,
+    maxRequests: isDevelopment ? 200 : 20,
     message: 'Too many configuration updates'
   }),
 
   // File operations (stricter)
   files: rateLimiter.createLimiter({
     windowMs: 10 * 60 * 1000, // 10 minutes
-    maxRequests: 5,
+    maxRequests: isDevelopment ? 50 : 5,
     message: 'Too many file operations'
   })
 };

@@ -10,7 +10,7 @@ module.exports = {
     usage: 'contextperms <set|get|remove|user-override|role-perms|check|list|template> [options]',
     category: 'admin',
     
-    async execute(message, args, client) {
+    async exec(client, message, args) {
         try {
             // Check admin permission
             const permissionError = rolePermissions.checkPermission(message.member, 'admin');

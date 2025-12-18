@@ -103,7 +103,7 @@ class DiscordApiService {
   constructor(client = null) {
     this.client = client;
     this.rateLimiter = new DiscordApiRateLimiter();
-    this.apiConnected = true;
+    this.apiConnected = false;
   }
 
   /**
@@ -112,6 +112,7 @@ class DiscordApiService {
    */
   setClient(client) {
     this.client = client;
+    this.apiConnected = client && client.isReady();
   }
 
   /**
@@ -119,7 +120,9 @@ class DiscordApiService {
    * @returns {boolean} Connection status
    */
   isConnected() {
-    return this.apiConnected && this.client && this.client.isReady();
+    // Update connection status
+    this.apiConnected = this.client && this.client.isReady && this.client.isReady();
+    return this.apiConnected;
   }
 
   /**

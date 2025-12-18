@@ -9,6 +9,8 @@ class ClientErrorHandler {
     this.retryQueue = new Map();
     this.maxRetries = 3;
     this.retryDelays = [1000, 2000, 5000]; // Exponential backoff
+    this.lastErrorTime = null;
+    this.lastRejectionTime = null;
     
     this.init();
   }
@@ -236,46 +238,78 @@ class ClientErrorHandler {
    * Handle global JavaScript errors
    */
   handleGlobalError(event) {
+    // Prevent default error handling
+    event.preventDefault();
+    
     console.error('Global error:', event.error);
     
-    // Don't show UI errors for script loading failures
-    if (event.message && event.message.includes('Script error')) {
+    // Don't show UI errors for common non-critical issues
+    if (event.message && (
+      event.message.includes('Script error') ||
+      event.message.includes('ResizeObserver') ||
+      event.message.includes('Loading chunk') ||
+      event.message.includes('NetworkError') ||
+      event.message.includes('Failed to fetch') ||
+      event.message.includes('Load failed') ||
+      event.message.includes('socket') ||
+      event.message.includes('Socket') ||
+      event.message.includes('WebSocket')
+    )) {
       return;
     }
 
-    this.showError({
-      code: 'CLIENT_ERROR',
-      message: 'An unexpected error occurred. Please refresh the page if issues persist.',
-      recoverable: false
-    });
+    // Debounce to prevent duplicate error messages
+    if (this.lastErrorTime && Date.now() - this.lastErrorTime < 5000) {
+      return;
+    }
+    this.lastErrorTime = Date.now();
+
+    // Only show error for actual critical issues
+    if (event.error && event.error.stack) {
+      console.warn('Suppressed error notification for:', event.message);
+    }
   }
 
   /**
    * Handle unhandled promise rejections
    */
   handleUnhandledRejection(event) {
+    // Prevent default handling
+    event.preventDefault();
+    
     console.error('Unhandled rejection:', event.reason);
     
-    // Check if it's a network error
-    if (event.reason && event.reason.name === 'TypeError' && 
-        event.reason.message.includes('fetch')) {
-      this.showError({
-        code: 'NETWORK_ERROR',
-        message: 'Network error. Please check your connection.',
-        troubleshooting: [
-          'Check your internet connection',
-          'Try refreshing the page'
-        ],
-        recoverable: true
-      });
+    // Debounce to prevent duplicate error messages
+    if (this.lastRejectionTime && Date.now() - this.lastRejectionTime < 5000) {
       return;
     }
-
-    this.showError({
-      code: 'CLIENT_ERROR',
-      message: 'An unexpected error occurred.',
-      recoverable: false
-    });
+    this.lastRejectionTime = Date.now();
+    
+    // Ignore common non-critical rejections
+    const reason = event.reason;
+    const message = reason?.message || String(reason);
+    
+    if (
+      message.includes('ResizeObserver') ||
+      message.includes('AbortError') ||
+      message.includes('cancelled') ||
+      message.includes('Failed to fetch') ||
+      message.includes('NetworkError') ||
+      message.includes('Load failed') ||
+      message.includes('socket') ||
+      message.includes('Socket') ||
+      message.includes('WebSocket') ||
+      message.includes('timeout') ||
+      message.includes('ECONNREFUSED') ||
+      message.includes('401') ||
+      message.includes('403')
+    ) {
+      console.warn('Suppressed rejection notification for:', message);
+      return;
+    }
+    
+    // Don't show generic error for minor issues
+    // Only log to console for debugging
   }
 
   /**

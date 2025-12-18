@@ -29,15 +29,37 @@ class WebSocketService {
   initialize(httpServer) {
     const config = require('../../config');
     
+    // Get allowed origins, including tunnel URLs
+    const allowedOrigins = config.web?.allowedOrigins || ['http://localhost:3001'];
+    
+    // Add callback URL origin if it's HTTPS (likely a tunnel)
+    const callbackUrl = config.web?.discordCallbackUrl || '';
+    if (callbackUrl.startsWith('https://')) {
+      try {
+        const tunnelOrigin = new URL(callbackUrl).origin;
+        if (!allowedOrigins.includes(tunnelOrigin)) {
+          allowedOrigins.push(tunnelOrigin);
+        }
+      } catch (e) {
+        // Ignore URL parsing errors
+      }
+    }
+    
     this.io = new Server(httpServer, {
       cors: {
-        origin: config.web?.allowedOrigins || ['http://localhost:3001'],
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true
       },
+      // Settings optimized for tunnels/proxies
       pingTimeout: 60000,
-      pingInterval: 25000
+      pingInterval: 25000,
+      transports: ['polling', 'websocket'], // Start with polling for better tunnel compatibility
+      allowUpgrades: true,
+      perMessageDeflate: false // Disable compression for better tunnel compatibility
     });
+
+    console.log('[WebSocket] Allowed origins:', allowedOrigins);
 
     this.setupMiddleware();
     this.setupEventHandlers();
@@ -52,20 +74,32 @@ class WebSocketService {
    */
   setupMiddleware() {
     this.io.use((socket, next) => {
-      const session = socket.request.session;
-      
-      // Allow connection but mark as unauthenticated if no session
-      if (!session || !session.passport || !session.passport.user) {
+      try {
+        const session = socket.request?.session;
+        const passport = session?.passport;
+        const user = passport?.user;
+        
+        // Allow connection but mark as unauthenticated if no session
+        if (!user) {
+          socket.authenticated = false;
+          socket.userId = null;
+          socket.username = 'Anonymous';
+          console.log(`[WebSocket] Unauthenticated connection from ${socket.id}`);
+        } else {
+          socket.authenticated = true;
+          socket.userId = user.id || user;
+          socket.username = user.username || 'User';
+          console.log(`[WebSocket] Authenticated connection from ${socket.username} (${socket.id})`);
+        }
+        
+        next();
+      } catch (error) {
+        console.error('[WebSocket] Middleware error:', error);
         socket.authenticated = false;
         socket.userId = null;
         socket.username = 'Anonymous';
-      } else {
-        socket.authenticated = true;
-        socket.userId = session.passport.user.id;
-        socket.username = session.passport.user.username || 'User';
+        next();
       }
-      
-      next();
     });
   }
 

@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require("discord.js");
+const config = require("../../config");
 
 module.exports = async (client, interaction) => {
   try {
@@ -7,7 +8,7 @@ module.exports = async (client, interaction) => {
     
     if (!embedState) {
       return interaction.reply({ 
-        content: "config.emojis.important **|** Sesi embed tidak ditemukan. Silakan mulai ulang proses pembuatan dengan `<prefix>createembed`.", 
+        content: `${config.emojis.important} **|** Sesi embed tidak ditemukan. Silakan mulai ulang proses pembuatan dengan \`<prefix>createembed\`.`, 
         ephemeral: true 
       });
     }
@@ -20,7 +21,7 @@ module.exports = async (client, interaction) => {
         
         if (!channel || !channel.isTextBased()) {
           return interaction.reply({ 
-            content: "config.emojis.important **|** Channel tidak valid.", 
+            content: `${config.emojis.important} **|** Channel tidak valid.`, 
             ephemeral: true 
           });
         }
@@ -50,14 +51,14 @@ module.exports = async (client, interaction) => {
         // Clean up state
         client.embedBuilders.delete(userId);
         return interaction.reply({ 
-          content: `config.emojis.seraphyx **|** Embed berhasil dikirim ke channel <#${selectedChannelId}>!`, 
+          content: `${config.emojis.seraphyx} **|** Embed berhasil dikirim ke channel <#${selectedChannelId}>!`, 
           ephemeral: true 
         });
         
       } catch (error) {
         console.error("Error sending embed:", error);
         return interaction.reply({ 
-          content: "config.emojis.important **|** Gagal mengirimkan embed. Silakan coba lagi!.", 
+          content: `${config.emojis.important} **|** Gagal mengirimkan embed. Silakan coba lagi!.`, 
           ephemeral: true 
         });
       }
@@ -83,7 +84,7 @@ module.exports = async (client, interaction) => {
         case "ce_cancel_embed": {
           // Handle cancellation
           const cancelEmbed = new EmbedBuilder()
-            .setTitle("config.emojis.important **|** Embed Cancelled")
+            .setTitle(`${config.emojis.important} **|** Embed Cancelled`)
             .setDescription("Proses pembuatan embed telah dibatalkan.")
             .setColor("#FF0000");
           
@@ -99,7 +100,7 @@ module.exports = async (client, interaction) => {
           
           client.embedBuilders.delete(userId);
           return interaction.reply({ 
-            content: "config.emojis.seraphyx **|** Pembuatan  embed diberhentikan.", 
+            content: `${config.emojis.seraphyx} **|** Pembuatan  embed diberhentikan.`, 
             ephemeral: true 
           });
         }
@@ -127,7 +128,7 @@ module.exports = async (client, interaction) => {
           break;
         default:
           return interaction.reply({ 
-            content: "config.emojis.important **|** Unknown action.", 
+            content: `${config.emojis.important} **|** Unknown action.`, 
             ephemeral: true 
           });
       }
@@ -164,14 +165,14 @@ module.exports = async (client, interaction) => {
           // Update the embed based on which button was clicked
           if (interaction.customId === "ce_set_title") {
             if (m.content.length > 256) {
-              errorMessage = "config.emojis.important **|** Title harus 256 karakter atau kurang.";
+              errorMessage = `${config.emojis.important} **|** Title harus 256 karakter atau kurang.`;
               updateSuccess = false;
             } else {
               embedState.embed.setTitle(m.content);
             }
           } else if (interaction.customId === "ce_set_desc") {
             if (m.content.length > 4096) {
-              errorMessage = "config.emojis.important **|** Deskripsi harus 4096 karakter atau kurang.";
+              errorMessage = `${config.emojis.important} **|** Deskripsi harus 4096 karakter atau kurang.`;
               updateSuccess = false;
             } else {
               embedState.embed.setDescription(m.content);
@@ -183,14 +184,14 @@ module.exports = async (client, interaction) => {
               if (attachment.contentType && attachment.contentType.startsWith('image/')) {
                 embedState.embed.setImage(attachment.url);
               } else {
-                errorMessage = "config.emojis.important **|** Upload image file yang valid.";
+                errorMessage = `${config.emojis.important} **|** Upload image file yang valid.`;
                 updateSuccess = false;
               }
             } else {
               // Fall back to URL validation
               const urlPattern = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
               if (!urlPattern.test(m.content)) {
-                errorMessage = "config.emojis.important **|** Masukan link url image yang valid (jpg, jpeg, png, gif, webp) atau upload image file.";
+                errorMessage = `${config.emojis.important} **|** Masukan link url image yang valid (jpg, jpeg, png, gif, webp) atau upload image file.`;
                 updateSuccess = false;
               } else {
                 embedState.embed.setImage(m.content);
@@ -202,7 +203,7 @@ module.exports = async (client, interaction) => {
               if (attachment.contentType && attachment.contentType.startsWith('image/')) {
                 embedState.embed.setThumbnail(attachment.url);
               } else {
-                errorMessage = "config.emojis.important **|** Upload image file yang valid.";
+                errorMessage = `${config.emojis.important} **|** Upload image file yang valid.`;
                 updateSuccess = false;
               }
             } else if (m.content.toLowerCase() === "default") {
@@ -210,16 +211,16 @@ module.exports = async (client, interaction) => {
               if (guildIcon) {
                 embedState.embed.setThumbnail(guildIcon);
               } else {
-                errorMessage = "config.emojis.important **|** Server belum mempunyai icon.";
+                errorMessage = `${config.emojis.important} **|** Server belum mempunyai icon.`;
                 updateSuccess = false;
               }
             } else {
-              errorMessage = "config.emojis.important **|** Upload image file atau ketik `default` untuk menggunakan server icon.";
+              errorMessage = `${config.emojis.important} **|** Upload image file atau ketik \`default\` untuk menggunakan server icon.`;
               updateSuccess = false;
             }
           } else if (interaction.customId === "ce_set_footer") {
             if (m.content.length > 2048) {
-              errorMessage = "config.emojis.important Footer harus 2048 karakter atau kurang.";
+              errorMessage = `${config.emojis.important} Footer harus 2048 karakter atau kurang.`;
               updateSuccess = false;
             } else {
               embedState.embed.setFooter({ text: m.content });
@@ -228,7 +229,7 @@ module.exports = async (client, interaction) => {
             // Validate hex code format
             const hexPattern = /^#[0-9A-Fa-f]{6}$/;
             if (!hexPattern.test(m.content.trim())) {
-              errorMessage = "config.emojis.important **|** Format warna tidak valid. Gunakan 6-digit hex code: `#FF5733`.";
+              errorMessage = `${config.emojis.important} **|** Format warna tidak valid. Gunakan 6-digit hex code: \`#FF5733\`.`;
               updateSuccess = false;
             } else {
               embedState.embed.setColor(m.content.trim());
@@ -264,7 +265,7 @@ module.exports = async (client, interaction) => {
             // Update control panel with error message instead of ephemeral
             const errorEmbed = new EmbedBuilder()
               .setTitle("🎨 Embed Control Panel")
-              .setDescription(`${baseDescription}\n\n**ERROR:**\nconfig.emojis.important **|** Error saat update preview. Silakan coba lagi!.`)
+              .setDescription(`${baseDescription}\n\n**ERROR:**\n${config.emojis.important} **|** Error saat update preview. Silakan coba lagi!.`)
               .setColor("#FF0000");
             
             await controlMsg.edit({ embeds: [errorEmbed] });
@@ -274,7 +275,7 @@ module.exports = async (client, interaction) => {
           // Update control panel with error message instead of ephemeral
           const errorEmbed = new EmbedBuilder()
             .setTitle("🎨 Embed Control Panel")
-            .setDescription(`${baseDescription}\n\n**ERROR:**\nconfig.emojis.important **|** Error saat memasukan inputmu.`)
+            .setDescription(`${baseDescription}\n\n**ERROR:**\n${config.emojis.important} **|** Error saat memasukan inputmu.`)
             .setColor("#FF0000");
           
           await controlMsg.edit({ embeds: [errorEmbed] }).catch(() => {});
@@ -299,7 +300,7 @@ module.exports = async (client, interaction) => {
     
     if (!interaction.replied && !interaction.deferred) {
       return interaction.reply({ 
-        content: "config.emojis.important **|** Terjadi error!.", 
+        content: `${config.emojis.important} **|** Terjadi error!.`, 
         ephemeral: true 
       });
     }

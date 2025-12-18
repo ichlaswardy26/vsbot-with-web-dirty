@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 const wordChainManager = require("../util/wordChainManager");
-// const config = require("../config");
+const config = require("../config");
 
 async function handleWordChainMessage(client, message) {
   // Skip if message is undefined or from a bot
@@ -199,7 +199,7 @@ async function sendNewGameplayEmbed(channel, game, newWord) {
   let playerScoreText = "";
   game.players.forEach((player) => {
     const isCurrentTurn = player.userId === currentPlayer?.userId;
-    const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
+    const turnIndicator = isCurrentTurn ? config.emojis.dot : config.emojis.blank;
     if (player.isLobbyMaster) {
       playerScoreText += `${turnIndicator} @${player.username} 👑 [${player.points}] 🔥${player.points}\n`;
     } else {

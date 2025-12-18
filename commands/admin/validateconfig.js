@@ -101,7 +101,7 @@ module.exports = {
             // Add configuration status
             const configStatus = [];
             configStatus.push(`📊 **Validation Time:** <t:${Math.floor(results.timestamp.getTime() / 1000)}:R>`);
-            configStatus.push(`🔧 **Bot Version:** ${require('../../../package.json').version}`);
+            configStatus.push(`🔧 **Bot Version:** ${require('../../package.json').version}`);
             configStatus.push(`📈 **Guild Members:** ${message.guild.memberCount}`);
             
             embed.addFields({

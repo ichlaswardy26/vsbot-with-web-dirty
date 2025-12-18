@@ -16,68 +16,97 @@ module.exports = {
 
     const sep = new SeparatorBuilder();
 
-    const media = new MediaGalleryBuilder().addItems(
-      new MediaGalleryItemBuilder().setURL(config.images.rinfo)
-    );
+    // Only add media gallery if rinfo image is configured
+    const rinfoImage = config.images?.rinfo;
+    const media = rinfoImage ? new MediaGalleryBuilder().addItems(
+      new MediaGalleryItemBuilder().setURL(rinfoImage)
+    ) : null;
+
+    // Helper function to safely get role mention
+    const getRole = (roleKey, fallback) => {
+      const roleId = config.roles?.[roleKey];
+      return roleId ? `<@&${roleId}>` : fallback;
+    };
+
+    const communityEmoji = config.emojis?.foryouCommunity || '📋';
 
     const text1 = new TextDisplayBuilder()
       .setContent(`## ROLES INFO 
 
-**${config.emojis.foryouCommunity} Staff** 
-* ${config.roles.owner ? `<@&${config.roles.owner}>` : '@Owner'} : Pendiri utama yang **mendirikan server/komunitas** dan menetapkan visi.
-* ${config.roles.coOwner ? `<@&${config.roles.coOwner}>` : '@Co-Owner'} : Pendiri pendamping yang **membantu Founder** menjalankan komunitas sejak awal.
-* ${config.roles.engineer ? `<@&${config.roles.engineer}>` : '@Engineer'} : Pengurus utama yang **mengelola sistem, teknis, dan operasional** server.
-* ${config.roles.moderator ? `<@&${config.roles.moderator}>` : '@Moderator'} :  Penjaga yang **mengawasi anggota, chat, dan menegakkan aturan**.
-* ${config.roles.admin ? `<@&${config.roles.admin}>` : '@Admin'} : Tim inti yang **menjalankan tugas operasional** harian server secara keseluruhan.
-* ${config.roles.helper ? `<@&${config.roles.helper}>` : '@Helper'} : Anggota yang **memberikan bantuan dan menjawab pertanyaan** anggota lain.
-* ${config.roles.eventOrganizer ? `<@&${config.roles.eventOrganizer}>` : '@Event Organizer'} : Tim yang **merencanakan dan melaksanakan acara** atau event di server.
-* ${config.roles.partnerManager ? `<@&${config.roles.partnerManager}>` : '@Partner Manager'} : Pihak yang **membangun citra positif** dan mengurus komunikasi eksternal.
-* ${config.roles.helper ? `<@&${config.roles.helper}>` : '@Helper'} : Relawan yang **membantu tugas ringan** dan menyambut anggota baru.
-* ${config.roles.designer ? `<@&${config.roles.designer}>` : '@Designer'} : Anggota yang **membuat semua aset visual/grafis** (logo, *banner*, dll.) server.
-* ${config.roles.contentCreator ? `<@&${config.roles.contentCreator}>` : '@Content Creator'} : Tim yang **membuat dan mengelola konten** promosi (video, unggahan) server.`)
+**${communityEmoji} Staff** 
+* ${getRole('owner', '@Owner')} : Pendiri utama yang **mendirikan server/komunitas** dan menetapkan visi.
+* ${getRole('coOwner', '@Co-Owner')} : Pendiri pendamping yang **membantu Founder** menjalankan komunitas sejak awal.
+* ${getRole('engineer', '@Engineer')} : Pengurus utama yang **mengelola sistem, teknis, dan operasional** server.
+* ${getRole('moderator', '@Moderator')} :  Penjaga yang **mengawasi anggota, chat, dan menegakkan aturan**.
+* ${getRole('admin', '@Admin')} : Tim inti yang **menjalankan tugas operasional** harian server secara keseluruhan.
+* ${getRole('helper', '@Helper')} : Anggota yang **memberikan bantuan dan menjawab pertanyaan** anggota lain.
+* ${getRole('eventOrganizer', '@Event Organizer')} : Tim yang **merencanakan dan melaksanakan acara** atau event di server.
+* ${getRole('partnerManager', '@Partner Manager')} : Pihak yang **membangun citra positif** dan mengurus komunikasi eksternal.
+* ${getRole('helper', '@Helper')} : Relawan yang **membantu tugas ringan** dan menyambut anggota baru.
+* ${getRole('designer', '@Designer')} : Anggota yang **membuat semua aset visual/grafis** (logo, *banner*, dll.) server.
+* ${getRole('contentCreator', '@Content Creator')} : Tim yang **membuat dan mengelola konten** promosi (video, unggahan) server.`)
+
+    const getChannel = (channelKey, fallback) => {
+      const channelId = config.channels?.[channelKey];
+      return channelId ? `<#${channelId}>` : fallback;
+    };
 
     const text2 = new TextDisplayBuilder()
-      .setContent(`**${config.emojis.foryouCommunity} Support**
-* ${config.roles.supportTier1 ? `<@&${config.roles.supportTier1}>` : '@Support Tier 1'}  : Orang yang mendonate server dengan minimal 2m cowoncy/10.000/bulan
-* ${config.roles.supportTier2 ? `<@&${config.roles.supportTier2}>` : '@Support Tier 2'} : Orang yang mendonate server dengan minimal 3m cowoncy/20.000/bulan
-* ${config.roles.supportTier3 ? `<@&${config.roles.supportTier3}>` : '@Support Tier 3'} : Orang yang mendonate server dengan minimal 6m cowoncy/30.000/bulan
-* ${config.roles.supportTier4 ? `<@&${config.roles.supportTier4}>` : '@Support Tier 4'}  : Orang yang mendonate server dengan minimal 8m cowoncy/40.000/bulan
-* ${config.roles.boost ? `<@&${config.roles.boost}>` : '@Boost'} : Orang yang mem boost server
-Selengkapnya bisa cek ${config.channels.premiumBenefit ? `<#${config.channels.premiumBenefit}>` : 'premium benefit channel'}`)
+      .setContent(`**${communityEmoji} Support**
+* ${getRole('supportTier1', '@Support Tier 1')}  : Orang yang mendonate server dengan minimal 2m cowoncy/10.000/bulan
+* ${getRole('supportTier2', '@Support Tier 2')} : Orang yang mendonate server dengan minimal 3m cowoncy/20.000/bulan
+* ${getRole('supportTier3', '@Support Tier 3')} : Orang yang mendonate server dengan minimal 6m cowoncy/30.000/bulan
+* ${getRole('supportTier4', '@Support Tier 4')}  : Orang yang mendonate server dengan minimal 8m cowoncy/40.000/bulan
+* ${getRole('boost', '@Boost')} : Orang yang mem boost server
+Selengkapnya bisa cek ${getChannel('premiumBenefit', 'premium benefit channel')}`)
+
+    // Helper function to safely get level role
+    const getLevelRole = (level) => {
+      const levelRoles = config.roles?.level;
+      if (!levelRoles) return `@Level ${level}`;
+      const roleId = levelRoles[level];
+      return roleId ? `<@&${roleId}>` : `@Level ${level}`;
+    };
 
     const text3 = new TextDisplayBuilder()
-      .setContent(`**${config.emojis.foryouCommunity} Level**
-* ${config.roles.level[1] ? `<@&${config.roles.level[1]}>` : '@Level 1'} : Chat/voice dan mendapatkan exp,jadilah level 1
-* ${config.roles.level[2] ? `<@&${config.roles.level[2]}>` : '@Level 2'} :  Chat/voice dan mendapatkan exp,jadilah level 2
-* ${config.roles.level[7] ? `<@&${config.roles.level[7]}>` : '@Level 7'} :  Chat/voice dan mendapatkan exp,jadilah level 7
-* ${config.roles.level[20] ? `<@&${config.roles.level[20]}>` : '@Level 20'} :  Chat/voice dan mendapatkan exp,jadilah level 20
-* ${config.roles.level[30] ? `<@&${config.roles.level[30]}>` : '@Level 30'} :  Chat/voice dan mendapatkan exp,jadilah level 30
-* ${config.roles.level[40] ? `<@&${config.roles.level[40]}>` : '@Level 40'} :  Chat/voice dan mendapatkan exp,jadilah level 40
-* ${config.roles.level[50] ? `<@&${config.roles.level[50]}>` : '@Level 50'} :  Chat/voice dan mendapatkan exp,jadilah level 50
-* ${config.roles.level[60] ? `<@&${config.roles.level[60]}>` : '@Level 60'} : Chat/voice dan mendapatkan exp,jadilah level 60
-* ${config.roles.level[70] ? `<@&${config.roles.level[70]}>` : '@Level 70'} :  Chat/voice dan mendapatkan exp,jadilah level 70
-* ${config.roles.level[80] ? `<@&${config.roles.level[80]}>` : '@Level 80'} :  Chat/voice dan mendapatkan exp,jadilah level 80
-* ${config.roles.level[90] ? `<@&${config.roles.level[90]}>` : '@Level 90'} :  Chat/voice dan mendapatkan exp,jadilah level 90
-* ${config.roles.level[100] ? `<@&${config.roles.level[100]}>` : '@Level 100'} : Chat/voice dan mendapatkan exp,jadilah level 100`)
+      .setContent(`**${config.emojis?.foryouCommunity || '📋'} Level**
+* ${getLevelRole(1)} : Chat/voice dan mendapatkan exp,jadilah level 1
+* ${getLevelRole(2)} :  Chat/voice dan mendapatkan exp,jadilah level 2
+* ${getLevelRole(7)} :  Chat/voice dan mendapatkan exp,jadilah level 7
+* ${getLevelRole(20)} :  Chat/voice dan mendapatkan exp,jadilah level 20
+* ${getLevelRole(30)} :  Chat/voice dan mendapatkan exp,jadilah level 30
+* ${getLevelRole(40)} :  Chat/voice dan mendapatkan exp,jadilah level 40
+* ${getLevelRole(50)} :  Chat/voice dan mendapatkan exp,jadilah level 50
+* ${getLevelRole(60)} : Chat/voice dan mendapatkan exp,jadilah level 60
+* ${getLevelRole(70)} :  Chat/voice dan mendapatkan exp,jadilah level 70
+* ${getLevelRole(80)} :  Chat/voice dan mendapatkan exp,jadilah level 80
+* ${getLevelRole(90)} :  Chat/voice dan mendapatkan exp,jadilah level 90
+* ${getLevelRole(100)} : Chat/voice dan mendapatkan exp,jadilah level 100`)
 
     const text4 = new TextDisplayBuilder()
-      .setContent(`**${config.emojis.foryouCommunity} Special**
-* ${config.roles.editor ? `<@&${config.roles.editor}>` : '@Editor'}  : Orang yang biasa mengedit,dan mengajari ngedit
-* ${config.roles.special ? `<@&${config.roles.special}>` : '@Special'} : Orang special ${config.roles.owner ? `<@&${config.roles.owner}>` : '@Owner'} 
-* ${config.roles.streamer ? `<@&${config.roles.streamer}>` : '@Streamer'}  : Orang yang biasa suka stream dan sudah terkonfirmasi
-* ${config.roles.videoCreator ? `<@&${config.roles.videoCreator}>` : '@Video Creator'}  : Orang yang suka upp vidio
-* ${config.roles.bigGiveawayWinner ? `<@&${config.roles.bigGiveawayWinner}>` : '@Big Giveaway Winner'} : Pemenang giveaway besar,seperti event,dan giveaway lainnya
-* ${config.roles.smallGiveawayWinner ? `<@&${config.roles.smallGiveawayWinner}>` : '@Small Giveaway Winner'}  : pemenang giveaway kecil kecilan
-* ${config.roles.bioLink ? `<@&${config.roles.bioLink}>` : '@Bio Link'} : Orang yang menaruh link server di bionya,dan sudah konfirmasi
-* ${config.roles.socialFollower ? `<@&${config.roles.socialFollower}>` : '@Social Follower'} : Yang sudah follow ig/akun tiktok foryou community
-* ${config.roles.activeMember ? `<@&${config.roles.activeMember}>` : '@Active Member'}  : Orang ter active,mau di voice,maupun di chat`)
+      .setContent(`**${communityEmoji} Special**
+* ${getRole('editor', '@Editor')}  : Orang yang biasa mengedit,dan mengajari ngedit
+* ${getRole('special', '@Special')} : Orang special ${getRole('owner', '@Owner')} 
+* ${getRole('streamer', '@Streamer')}  : Orang yang biasa suka stream dan sudah terkonfirmasi
+* ${getRole('videoCreator', '@Video Creator')}  : Orang yang suka upp vidio
+* ${getRole('bigGiveawayWinner', '@Big Giveaway Winner')} : Pemenang giveaway besar,seperti event,dan giveaway lainnya
+* ${getRole('smallGiveawayWinner', '@Small Giveaway Winner')}  : pemenang giveaway kecil kecilan
+* ${getRole('bioLink', '@Bio Link')} : Orang yang menaruh link server di bionya,dan sudah konfirmasi
+* ${getRole('socialFollower', '@Social Follower')} : Yang sudah follow ig/akun tiktok foryou community
+* ${getRole('activeMember', '@Active Member')}  : Orang ter active,mau di voice,maupun di chat`)
 
     const container1 = new ContainerBuilder()
-      .setAccentColor(0xffffff)
-      .addMediaGalleryComponents(media)
+      .setAccentColor(0xffffff);
+    
+    // Only add media gallery if image is configured
+    if (media) {
+      container1.addMediaGalleryComponents(media);
+    }
+    
+    container1
       .addSeparatorComponents(sep)
       .addTextDisplayComponents(text1)
-      .addSeparatorComponents(sep)
+      .addSeparatorComponents(sep);
 
     const container2 = new ContainerBuilder()
       .setAccentColor(0xffffff)

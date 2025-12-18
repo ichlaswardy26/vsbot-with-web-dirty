@@ -207,7 +207,7 @@ const initialize = async () => {
   await client.login(config.token);
   
   // Start web dashboard after bot is ready
-  client.once('clientReady', async () => {
+  client.once('ready', async () => {
     console.log('\n╔════════════════════════════════════════╗');
     console.log('║        🤖 BOT IS NOW ONLINE! 🚀       ║');
     console.log('╠════════════════════════════════════════╣');

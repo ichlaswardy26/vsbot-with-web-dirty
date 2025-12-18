@@ -97,6 +97,47 @@ class ConfigManager {
       }
       this.showNotification('All remote changes accepted', 'success');
     });
+
+    // Handle view differences (conflict:merge)
+    this.notificationSystem.on('conflict:merge', async ({ section, changes }) => {
+      await this.showConfigDiff(section, changes);
+    });
+  }
+
+  /**
+   * Show configuration diff viewer
+   * Requirements: 9.4
+   */
+  async showConfigDiff(section, remoteChanges = null) {
+    try {
+      // Get current local config from cache or form
+      const localConfig = this.getCached(section) || await this.getConfigSection(section, false);
+      
+      // Get latest remote config
+      const remoteConfig = await this.getConfigSection(section, true);
+      
+      if (window.diffViewer) {
+        window.diffViewer.show(
+          localConfig,
+          remoteConfig,
+          section,
+          async (newConfig) => {
+            // Apply the remote changes
+            this.setCache(section, newConfig);
+            this.notifyListeners(`config:${section}:updated`, newConfig);
+            this.showNotification(`${this.formatSectionName(section)} updated with remote changes`, 'success');
+            
+            // Trigger UI refresh
+            window.dispatchEvent(new CustomEvent('configReload', { detail: { section } }));
+          }
+        );
+      } else {
+        this.showNotification('Diff viewer not available', 'error');
+      }
+    } catch (error) {
+      console.error('Error showing config diff:', error);
+      this.showNotification('Failed to load configuration diff', 'error');
+    }
   }
 
   // ==================== API METHODS ====================
@@ -115,7 +156,22 @@ class ConfigManager {
     }
     
     try {
-      const response = await fetch(`${this.baseUrl}/${this.guildId}`);
+      const response = await fetch(`${this.baseUrl}/${this.guildId}`, {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Redirect to login
+          window.location.href = '/auth/discord';
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const result = await response.json();
       
       if (result.success) {
@@ -123,13 +179,40 @@ class ConfigManager {
         this.notifyListeners('config:loaded', result.data);
         return result.data;
       } else {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Failed to load configuration');
       }
     } catch (error) {
       console.error('Error getting config:', error);
       this.notifyListeners('config:error', error);
-      throw error;
+      // Return empty config instead of throwing
+      return this.getDefaultConfig();
     }
+  }
+  
+  /**
+   * Get default configuration for fallback
+   */
+  getDefaultConfig() {
+    return {
+      channels: {},
+      roles: {},
+      features: {
+        leveling: { enabled: true },
+        economy: { enabled: true },
+        ticket: { enabled: true },
+        games: { enabled: true },
+        welcome: { enabled: true }
+      },
+      colors: {
+        primary: '#7289da',
+        success: '#43b581',
+        error: '#f04747',
+        warning: '#faa61a',
+        info: '#7289da'
+      },
+      emojis: {},
+      language: { default: 'en', available: ['en'] }
+    };
   }
 
   /**
@@ -146,7 +229,21 @@ class ConfigManager {
     }
     
     try {
-      const response = await fetch(`${this.baseUrl}/${this.guildId}/${section}`);
+      const response = await fetch(`${this.baseUrl}/${this.guildId}/${section}`, {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = '/auth/discord';
+          return null;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const result = await response.json();
       
       if (result.success) {
@@ -251,6 +348,56 @@ class ConfigManager {
     }
   }
   
+  /**
+   * Preview changes before saving
+   * Shows diff between current and new configuration
+   * @param {string} section - Configuration section
+   * @param {object} newData - New configuration data
+   * @param {function} onConfirm - Callback when user confirms changes
+   */
+  previewChanges(section, newData, onConfirm) {
+    const currentData = this.getCached(section) || {};
+    
+    if (window.diffViewer) {
+      window.diffViewer.show(
+        currentData,
+        newData,
+        section,
+        async () => {
+          if (onConfirm && typeof onConfirm === 'function') {
+            await onConfirm();
+          }
+        }
+      );
+    } else {
+      // Fallback: just save without preview
+      if (onConfirm) onConfirm();
+    }
+  }
+
+  /**
+   * Update config section with optional preview
+   * @param {string} section - Configuration section
+   * @param {object} data - New configuration data
+   * @param {boolean} showPreview - Whether to show preview before saving
+   */
+  async updateConfigSectionWithPreview(section, data, showPreview = false) {
+    if (showPreview) {
+      return new Promise((resolve, reject) => {
+        this.previewChanges(section, data, async () => {
+          try {
+            const result = await this.updateConfigSection(section, data);
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    } else {
+      return this.updateConfigSection(section, data);
+    }
+  }
+
   /**
    * Format section name for display
    */
@@ -1432,9 +1579,6 @@ class ConfigManager {
     }, interval);
   }
 }
-
-// Export for use in other scripts
-window.ConfigManager = ConfigManager;
 
 // Export for use in other scripts
 window.ConfigManager = ConfigManager;

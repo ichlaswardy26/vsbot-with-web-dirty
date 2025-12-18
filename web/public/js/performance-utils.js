@@ -370,8 +370,9 @@ class PerformanceUtils {
       loadComplete: timing.loadEventEnd - timing.navigationStart
     };
     
-    // Log metrics in development
-    if (process.env.NODE_ENV !== 'production') {
+    // Log metrics in development (check if not production via window location)
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isDev) {
       console.log('Performance Metrics:', metrics);
     }
     

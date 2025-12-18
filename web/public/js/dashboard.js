@@ -34,6 +34,18 @@ class Dashboard {
         window.performanceUtils.mark('dashboard-init-start');
       }
       
+      // Fetch guild ID if not set
+      if (!this.guildId) {
+        await this.fetchAndSetGuildId();
+      }
+      
+      // If still no guild ID, show error
+      if (!this.guildId) {
+        console.error('No guild ID available');
+        this.showNoGuildError();
+        return;
+      }
+      
       // Setup navigation
       this.setupNavigation();
       
@@ -79,6 +91,29 @@ class Dashboard {
     } catch (error) {
       console.error('Error initializing dashboard:', error);
       this.configManager.showNotification('Failed to initialize dashboard', 'error');
+    }
+  }
+  
+  /**
+   * Show error when no guild is available
+   */
+  showNoGuildError() {
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.innerHTML = `
+        <div class="container mt-5">
+          <div class="alert alert-warning">
+            <h4><i class="fas fa-exclamation-triangle me-2"></i>No Server Access</h4>
+            <p>You don't have administrator permissions on any server where this bot is installed.</p>
+            <p>Please make sure:</p>
+            <ul>
+              <li>The bot is added to your server</li>
+              <li>You have Administrator permissions on that server</li>
+            </ul>
+            <a href="/auth/discord" class="btn btn-primary">Re-authenticate with Discord</a>
+          </div>
+        </div>
+      `;
     }
   }
   
@@ -292,11 +327,125 @@ class Dashboard {
 
   /**
    * Get default guild ID (first available guild)
+   * Will be set asynchronously from user's guilds
    */
   getDefaultGuildId() {
-    // This would typically come from the user's session/guilds
-    // For now, return a placeholder that will be replaced by actual guild selection
-    return window.GUILD_ID || '123456789012345678';
+    // Return null initially, will be fetched from API
+    return window.GUILD_ID || null;
+  }
+  
+  /**
+   * Fetch user's admin guilds and set the appropriate one
+   * Prioritizes guilds where the bot is installed
+   */
+  async fetchAndSetGuildId() {
+    if (this.guildId) return this.guildId;
+    
+    try {
+      // Get user's admin guilds
+      const response = await fetch('/auth/guilds');
+      const data = await response.json();
+      
+      if (!data.success || !data.data || data.data.length === 0) {
+        console.warn('No admin guilds found for user');
+        this.configManager.showNotification('No servers found where you have admin permissions', 'warning');
+        return null;
+      }
+      
+      const adminGuilds = data.data;
+      
+      // Try to get guilds where bot is installed
+      try {
+        const botGuildsResponse = await fetch('/auth/bot-guilds');
+        const botGuildsData = await botGuildsResponse.json();
+        
+        if (botGuildsData.success && botGuildsData.data && botGuildsData.data.length > 0) {
+          const botGuildIds = botGuildsData.data.map(g => g.id);
+          
+          // Find guilds where user has admin AND bot is installed
+          const matchingGuilds = adminGuilds.filter(g => botGuildIds.includes(g.id));
+          
+          if (matchingGuilds.length > 0) {
+            // Use the first matching guild
+            this.guildId = matchingGuilds[0].id;
+            this.availableGuilds = matchingGuilds;
+            console.log('Guild ID set to (bot installed):', this.guildId, matchingGuilds[0].name);
+          } else {
+            // No matching guilds - show warning
+            console.warn('Bot is not installed in any of your admin guilds');
+            this.configManager.showNotification('Bot is not installed in any server where you have admin permissions', 'warning');
+            // Still set first admin guild for display purposes
+            this.guildId = adminGuilds[0].id;
+            this.availableGuilds = adminGuilds;
+          }
+        } else {
+          // Fallback to first admin guild
+          this.guildId = adminGuilds[0].id;
+          this.availableGuilds = adminGuilds;
+        }
+      } catch (botGuildsError) {
+        console.warn('Could not fetch bot guilds:', botGuildsError);
+        // Fallback to first admin guild
+        this.guildId = adminGuilds[0].id;
+        this.availableGuilds = adminGuilds;
+      }
+      
+      this.configManager.guildId = this.guildId;
+      window.GUILD_ID = this.guildId;
+      console.log('Guild ID set to:', this.guildId);
+      
+      // Update guild selector if exists
+      this.updateGuildSelector();
+      
+      return this.guildId;
+    } catch (error) {
+      console.error('Error fetching guilds:', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Update guild selector dropdown
+   */
+  updateGuildSelector() {
+    const selector = document.getElementById('guild-selector');
+    if (!selector || !this.availableGuilds) return;
+    
+    selector.innerHTML = this.availableGuilds.map(guild => `
+      <option value="${guild.id}" ${guild.id === this.guildId ? 'selected' : ''}>
+        ${guild.name}
+      </option>
+    `).join('');
+    
+    // Remove existing listener to prevent duplicates
+    const newSelector = selector.cloneNode(true);
+    selector.parentNode.replaceChild(newSelector, selector);
+    
+    newSelector.addEventListener('change', async (e) => {
+      const newGuildId = e.target.value;
+      if (newGuildId !== this.guildId) {
+        const oldGuildId = this.guildId;
+        this.guildId = newGuildId;
+        this.configManager.guildId = newGuildId;
+        this.configManager.cache.clear(); // Clear cache for new guild
+        window.GUILD_ID = newGuildId;
+        
+        // Update WebSocket connection to new guild
+        if (window.wsClient && window.wsClient.isConnected()) {
+          window.wsClient.leaveGuild(); // Leaves current guild
+          window.wsClient.joinGuild(newGuildId);
+        }
+        
+        // Reload current section
+        this.channelsConfig = null;
+        this.rolesConfig = null;
+        this.featuresConfig = null;
+        this.appearanceConfig = null;
+        
+        await this.initializeSection(this.currentSection);
+        this.configManager.showNotification('Switched to ' + this.availableGuilds.find(g => g.id === newGuildId)?.name, 'info');
+      }
+    });
   }
 
   /**
@@ -570,7 +719,7 @@ class Dashboard {
         await this.initializeAppearanceSection();
         break;
       case 'language':
-        // TODO: Initialize language section
+        await this.initializeLanguageSection();
         break;
       default:
         // No special initialization needed
@@ -745,6 +894,65 @@ class Dashboard {
       if (statusText) {
         statusText.textContent = connected ? 'Appearance Settings Loaded' : 'Failed to Load Appearance';
       }
+    }
+  }
+
+  /**
+   * Initialize language configuration section
+   */
+  async initializeLanguageSection() {
+    const form = document.getElementById('language-config-form');
+    if (!form) return;
+    
+    try {
+      // Load current language config
+      const config = await this.configManager.getConfigSection('language');
+      
+      // Set default language
+      const defaultLang = document.getElementById('default-language');
+      if (defaultLang && config.default) {
+        defaultLang.value = config.default;
+      }
+      
+      // Set available languages
+      if (config.available && Array.isArray(config.available)) {
+        config.available.forEach(lang => {
+          const checkbox = document.getElementById(`lang-${lang}`);
+          if (checkbox) checkbox.checked = true;
+        });
+      }
+      
+      // Setup form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await this.saveLanguageConfig();
+      });
+    } catch (error) {
+      console.error('Error initializing language section:', error);
+    }
+  }
+  
+  /**
+   * Save language configuration
+   */
+  async saveLanguageConfig() {
+    try {
+      const defaultLang = document.getElementById('default-language')?.value || 'en';
+      const available = ['en']; // English always available
+      
+      if (document.getElementById('lang-id')?.checked) {
+        available.push('id');
+      }
+      
+      await this.configManager.updateConfigSection('language', {
+        default: defaultLang,
+        available: available
+      });
+      
+      this.configManager.showNotification('Language settings saved successfully', 'success');
+    } catch (error) {
+      console.error('Error saving language config:', error);
+      this.configManager.showNotification('Failed to save language settings', 'error');
     }
   }
 

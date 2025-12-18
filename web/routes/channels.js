@@ -125,14 +125,15 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
     // Get channels from Discord API
     const channels = await discordApiService.getGuildChannels(guildId);
     
+    // Check if API is connected
+    const apiConnected = discordApiService.isConnected();
+    console.log(`[Channels API] Guild ${guildId}: apiConnected=${apiConnected}, channels=${channels?.length || 0}`);
+    
     if (!channels || channels.length === 0) {
       return res.json({
         success: true,
-        data: {
-          channels: [],
-          categories: [],
-          apiConnected: discordApiService.isConnected()
-        }
+        data: [],
+        apiConnected: apiConnected
       });
     }
     
@@ -156,16 +157,11 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
     const uncategorized = textChannels.filter(c => !c.parentId)
       .sort((a, b) => a.position - b.position);
     
+    // Return all channels as flat array (channels-config.js expects this format)
     res.json({
       success: true,
-      data: {
-        channels: textChannels.sort((a, b) => a.position - b.position),
-        voiceChannels: voiceChannels.sort((a, b) => a.position - b.position),
-        categories: categoryChannels.sort((a, b) => a.position - b.position),
-        channelsByCategory,
-        uncategorized,
-        apiConnected: true
-      }
+      data: channels,
+      apiConnected: true
     });
   } catch (error) {
     console.error('Error getting guild channels:', error);

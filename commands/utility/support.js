@@ -82,7 +82,7 @@ ${config.emojis.darkWyvern}   Valkyrie  : IDR 100.000 / 30M ${config.emojis.owoC
 - Mendapatkan Custom Role selama 2 bulan
 - Durasi 4 bulan
 - Unlock VIP Voice
-- Role Given : <@&${config.roles.abyssalBlade}> 
+- Role Given : <@&${config.roles.valkyrie}> 
 
 - Any Question?
 - Jika ada yang mau ditanyakan atau mau tahu info lebih lanjut, bisa langsung hubungi Admin yaa`);

@@ -172,11 +172,11 @@ function securityHeaders(options = {}) {
     if (enableCSP) {
       const cspDirectives = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
-        "img-src 'self' data: https://cdn.discordapp.com https://i.imgur.com",
-        "connect-src 'self' ws: wss:",
-        "font-src 'self' https://cdn.jsdelivr.net",
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.socket.io https://cdnjs.cloudflare.com",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
+        "img-src 'self' data: https: blob:",
+        "connect-src 'self' ws: wss: https://cdn.jsdelivr.net",
+        "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com data:",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'"

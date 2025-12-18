@@ -105,12 +105,6 @@ async function quickSetup() {
       'Owner ID'
     );
     
-    // Optional channels
-    console.log('\n📢 Channel & Role Setup (opsional - tekan Enter untuk skip):');
-    const welcomeChannel = await askOptional('🎉 Welcome Channel ID: ');
-    const ticketLogChannel = await askOptional('🎫 Ticket Log Channel ID: ');
-    const staffRole = await askOptional('👮 Staff Role ID: ');
-
     // Web Dashboard setup
     console.log('\n🌐 Web Dashboard Setup (opsional - tekan Enter untuk skip):');
     console.log('💡 Dapatkan Client Secret dari Discord Developer Portal > OAuth2\n');
@@ -131,42 +125,54 @@ async function quickSetup() {
     // Generate random session secret
     const sessionSecret = require('crypto').randomBytes(32).toString('hex');
 
-    // Create .env content
+    // Create .env content (matching .env.example format)
     const envContent = `# ==================== CORE CREDENTIALS (REQUIRED) ====================
+# These are sensitive credentials that MUST be in .env file
+# Never share these values or commit them to version control
+
 TOKEN=${token}
 CLIENT_ID=${clientId}
 GUILD_ID=${guildId}
 MONGO_URI=${mongoUri}
 
 # ==================== OWNER & ADMIN (REQUIRED) ====================
+# Comma-separated list of owner user IDs (these users have full bot access)
 OWNER_IDS=${ownerId}
 
-# ==================== CHANNELS ====================
-${welcomeChannel ? `WELCOME_CHANNEL_ID=${welcomeChannel}` : '# WELCOME_CHANNEL_ID='}
-${ticketLogChannel ? `TICKET_LOG_CHANNEL_ID=${ticketLogChannel}` : '# TICKET_LOG_CHANNEL_ID='}
-
-# ==================== ROLES ====================
-${staffRole ? `STAFF_ROLE_ID=${staffRole}` : '# STAFF_ROLE_ID='}
-
 # ==================== WEB DASHBOARD ====================
+# Session secret for web dashboard (generate a random string)
 SESSION_SECRET=${sessionSecret}
 WEB_PORT=${webPort}
 ALLOWED_ORIGINS=${allowedOrigins}
-${clientSecret ? `DISCORD_CLIENT_SECRET=${clientSecret}` : '# DISCORD_CLIENT_SECRET=your_discord_client_secret_here'}
+
+# Discord OAuth2 (for web dashboard login)
+${clientSecret ? `DISCORD_CLIENT_SECRET=${clientSecret}` : 'DISCORD_CLIENT_SECRET=your_discord_client_secret_here'}
 DISCORD_CALLBACK_URL=${callbackUrl}
 
 # ==================== WEBHOOK SERVER ====================
+# Tako donation webhook
 WEBHOOK_PORT=${webhookPort}
-${webhookToken ? `WEBHOOK_TOKEN=${webhookToken}` : '# WEBHOOK_TOKEN=your_tako_webhook_token_here'}
+${webhookToken ? `WEBHOOK_TOKEN=${webhookToken}` : 'WEBHOOK_TOKEN=your_tako_webhook_token_here'}
 
 # ==================== API KEYS (OPTIONAL) ====================
-${removeBgApiKey ? `REMOVE_BG_API_KEY=${removeBgApiKey}` : '# REMOVE_BG_API_KEY='}
+# Remove.bg API Key for background removal feature
+${removeBgApiKey ? `REMOVE_BG_API_KEY=${removeBgApiKey}` : 'REMOVE_BG_API_KEY='}
 
 # ==================== ENVIRONMENT ====================
-NODE_ENV=production
+NODE_ENV=development
 LOG_LEVEL=INFO
 MAX_LOG_FILES=5
 MAX_LOG_SIZE=10485760
+
+# ==================== NOTES ====================
+# All other configuration (channels, roles, emojis, features, colors, images)
+# can be managed through the web dashboard at /dashboard
+# 
+# The web dashboard stores configuration in MongoDB (WebConfig collection)
+# and provides a user-friendly interface for managing bot settings.
+#
+# For initial setup without web dashboard, you can use the /config command
+# or manually insert configuration into the WebConfig collection.
 `;
 
     // Check if .env already exists

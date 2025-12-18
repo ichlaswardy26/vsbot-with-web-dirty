@@ -86,15 +86,32 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
   try {
     const { guildId } = req.params;
     
+    // Check if Discord API is connected
+    const isConnected = discordApiService.isConnected();
+    
     // Get roles from Discord API
-    const roles = await discordApiService.getGuildRoles(guildId);
+    let roles = [];
+    let botHighestRole = null;
+    
+    if (isConnected) {
+      try {
+        roles = await discordApiService.getGuildRoles(guildId);
+        const botPerms = await discordApiService.getBotPermissions(guildId);
+        botHighestRole = botPerms.highestRole;
+      } catch (apiError) {
+        console.warn('Could not fetch roles from Discord API:', apiError.message);
+      }
+    }
     
     if (!roles || roles.length === 0) {
       return res.json({
         success: true,
         data: {
           roles: [],
-          apiConnected: discordApiService.isConnected()
+          botHighestRole: null,
+          apiConnected: isConnected,
+          categories: ROLE_CATEGORIES,
+          displayNames: ROLE_DISPLAY_NAMES
         }
       });
     }
@@ -103,11 +120,19 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
     const botPermissions = await discordApiService.getBotPermissions(guildId);
     const botHighestPosition = botPermissions.highestRole ? botPermissions.highestRole.position : 0;
     
+    console.log(`[Roles API] Bot highest role position: ${botHighestPosition}, role: ${botPermissions.highestRole?.name || 'none'}`);
+    
     // Mark roles that can be managed by the bot
-    const rolesWithManageability = roles.map(role => ({
-      ...role,
-      canManage: role.position < botHighestPosition && !role.managed
-    }));
+    const rolesWithManageability = roles.map(role => {
+      const canManage = role.position < botHighestPosition && !role.managed;
+      return {
+        ...role,
+        canManage
+      };
+    });
+    
+    const manageableCount = rolesWithManageability.filter(r => r.canManage).length;
+    console.log(`[Roles API] Total roles: ${roles.length}, Manageable: ${manageableCount}`);
     
     res.json({
       success: true,

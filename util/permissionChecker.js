@@ -13,7 +13,7 @@ class PermissionChecker {
      * @returns {boolean}
      */
     isOwner(userId) {
-        return config.ownerId.includes(userId);
+        return config.ownerIds?.includes(userId) || false;
     }
 
     /**

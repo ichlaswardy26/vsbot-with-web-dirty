@@ -12,9 +12,14 @@ module.exports = {
   description: "Display server information menu",
   category: "utility",
   async exec(client, message) {
+    // Check if books image URL is configured
+    const booksImageUrl = config.images?.books;
+    if (!booksImageUrl) {
+      return message.reply('❌ **|** Gambar books belum dikonfigurasi. Silakan set `images.books` di config.');
+    }
      
     const media = new MediaGalleryBuilder().addItems(
-      new MediaGalleryItemBuilder().setURL(config.images.books)
+      new MediaGalleryItemBuilder().setURL(booksImageUrl)
     );
 
     const container = new ContainerBuilder()

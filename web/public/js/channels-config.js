@@ -26,14 +26,25 @@ class ChannelsConfig {
    */
   async initialize() {
     try {
-      // Load guild channels from Discord API
-      await this.loadGuildChannels();
-      
-      // Load channel category definitions
+      // Load channel category definitions first (doesn't require API)
       await this.loadChannelCategories();
       
+      // Try to load guild channels from Discord API
+      try {
+        await this.loadGuildChannels();
+      } catch (channelError) {
+        console.warn('Could not load guild channels from Discord API:', channelError);
+        this.apiConnected = false;
+        // Continue with empty channels - user can still configure manually
+      }
+      
       // Load current configuration
-      await this.loadCurrentConfig();
+      try {
+        await this.loadCurrentConfig();
+      } catch (configError) {
+        console.warn('Could not load current config:', configError);
+        this.currentConfig = {};
+      }
       
       // Render the interface
       this.render();
@@ -44,9 +55,33 @@ class ChannelsConfig {
       return true;
     } catch (error) {
       console.error('Error initializing channels config:', error);
-      this.configManager.showNotification('Failed to initialize channels configuration', 'error');
+      // Still render a basic interface even on error
+      this.renderErrorState(error.message);
       return false;
     }
+  }
+  
+  /**
+   * Render error state when initialization fails
+   */
+  renderErrorState(errorMessage) {
+    const container = document.getElementById('channels-config-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+      <div class="alert alert-warning">
+        <h5><i class="fas fa-exclamation-triangle me-2"></i>Channel Configuration Unavailable</h5>
+        <p class="mb-2">Could not load channel configuration. This may be because:</p>
+        <ul class="mb-3">
+          <li>The bot is not connected to Discord</li>
+          <li>The bot doesn't have access to this server</li>
+          <li>There's a network connectivity issue</li>
+        </ul>
+        <button class="btn btn-primary btn-sm" onclick="window.location.reload()">
+          <i class="fas fa-sync me-1"></i>Retry
+        </button>
+      </div>
+    `;
   }
 
   /**

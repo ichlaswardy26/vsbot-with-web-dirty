@@ -35,11 +35,16 @@ class FeaturesConfig {
    */
   async initialize() {
     try {
-      // Load feature definitions
+      // Load feature definitions (local, no API needed)
       await this.loadFeatureDefinitions();
       
       // Load current configuration
-      await this.loadCurrentConfig();
+      try {
+        await this.loadCurrentConfig();
+      } catch (configError) {
+        console.warn('Could not load current config, using defaults:', configError);
+        this.currentConfig = this.getDefaultConfig();
+      }
       
       // Render the interface
       this.render();
@@ -51,10 +56,30 @@ class FeaturesConfig {
       return true;
     } catch (error) {
       console.error('Error initializing features config:', error);
-      this.configManager.showNotification('Failed to initialize features configuration', 'error');
+      // Still render with defaults
+      this.currentConfig = this.getDefaultConfig();
+      this.render();
+      this.setupEventListeners();
       this.apiConnected = false;
       return false;
     }
+  }
+  
+  /**
+   * Get default feature configuration
+   */
+  getDefaultConfig() {
+    return {
+      leveling: { enabled: true, xpCooldown: 60000, xpMin: 15, xpMax: 25, voiceXpPerMinute: 10 },
+      economy: { enabled: true, dailyReward: 100, collectCooldown: 3600000 },
+      ticket: { enabled: true, prefix: 'ticket', maxTicketsPerUser: 3 },
+      games: { enabled: true, rewardMultiplier: 1 },
+      welcome: { enabled: true, message: 'Welcome {user} to {server}!', dmEnabled: false },
+      confession: { enabled: true, cooldown: 300000, anonymous: true },
+      wordChain: { enabled: false, timeout: 30000, reward: 10 },
+      giveaway: { enabled: true, emoji: '🎉', winnerCount: 1 },
+      customRole: { enabled: false, price: 1000, maxRoles: 1 }
+    };
   }
 
   /**

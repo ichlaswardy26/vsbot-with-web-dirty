@@ -3,6 +3,33 @@ const DiscordStrategy = require('discord-strategy');
 const UserSession = require('../../schemas/UserSession');
 
 /**
+ * Fetch user's guilds from Discord API
+ * @param {string} accessToken - Discord OAuth2 access token
+ * @returns {Promise<Array>} Array of guild objects
+ */
+async function fetchUserGuilds(accessToken) {
+  try {
+    const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error('[Auth] Failed to fetch guilds:', response.status, response.statusText);
+      return [];
+    }
+
+    const guilds = await response.json();
+    console.log(`[Auth] Fetched ${guilds.length} guilds from Discord API`);
+    return guilds;
+  } catch (error) {
+    console.error('[Auth] Error fetching guilds:', error);
+    return [];
+  }
+}
+
+/**
  * Configure Discord OAuth2 strategy
  */
 function configurePassport() {
@@ -15,13 +42,18 @@ function configurePassport() {
     scope: ['identify', 'guilds']
   }, async (accessToken, refreshToken, profile, done) => {
     try {
+      // Fetch user's guilds from Discord API (not included in profile by default)
+      const guilds = await fetchUserGuilds(accessToken);
+      
+      console.log(`[Auth] User ${profile.username} authenticated with ${guilds.length} guilds`);
+      
       // Create or update user session
       const sessionData = {
         userId: profile.id,
         username: profile.username,
         discriminator: profile.discriminator,
         avatar: profile.avatar,
-        guilds: profile.guilds || [],
+        guilds: guilds,
         accessToken: accessToken,
         refreshToken: refreshToken,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
@@ -92,10 +124,19 @@ function verifyGuildAccess(req, res, next) {
   }
 
   // Check if user has access to this guild
-  const hasAccess = req.user.guilds.some(guild => 
-    guild.id === guildId && 
-    (guild.permissions & 0x8) === 0x8 // Administrator permission
-  );
+  // Discord sends permissions as string for large numbers, so we use BigInt
+  const hasAccess = req.user.guilds.some(guild => {
+    if (guild.id !== guildId) return false;
+    
+    // Owner always has access
+    if (guild.owner) return true;
+    
+    // Convert permissions to BigInt for accurate bitwise operations
+    const permissions = BigInt(guild.permissions || 0);
+    const ADMINISTRATOR = BigInt(0x8);
+    
+    return (permissions & ADMINISTRATOR) === ADMINISTRATOR;
+  });
 
   if (!hasAccess) {
     return res.status(403).json({

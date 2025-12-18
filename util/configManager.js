@@ -106,6 +106,7 @@ class ConfigManager {
   getDefaultConfig(guildId) {
     return {
       guildId,
+      prefix: '!',
       channels: {},
       categories: {},
       roles: {},

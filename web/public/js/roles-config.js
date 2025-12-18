@@ -26,14 +26,25 @@ class RolesConfig {
    */
   async initialize() {
     try {
-      // Load guild roles from Discord API
-      await this.loadGuildRoles();
-      
-      // Load role category definitions
+      // Load role category definitions first (doesn't require API)
       await this.loadRoleCategories();
       
+      // Try to load guild roles from Discord API
+      try {
+        await this.loadGuildRoles();
+      } catch (roleError) {
+        console.warn('Could not load guild roles from Discord API:', roleError);
+        this.apiConnected = false;
+        // Continue with empty roles - user can still see configuration
+      }
+      
       // Load current configuration
-      await this.loadCurrentConfig();
+      try {
+        await this.loadCurrentConfig();
+      } catch (configError) {
+        console.warn('Could not load current config:', configError);
+        this.currentConfig = {};
+      }
       
       // Render the interface
       this.render();
@@ -41,15 +52,45 @@ class RolesConfig {
       // Setup event listeners
       this.setupEventListeners();
       
-      // Initial conflict detection
-      await this.detectConflicts();
+      // Initial conflict detection (only if API connected)
+      if (this.apiConnected) {
+        try {
+          await this.detectConflicts();
+        } catch (conflictError) {
+          console.warn('Could not detect conflicts:', conflictError);
+        }
+      }
       
       return true;
     } catch (error) {
       console.error('Error initializing roles config:', error);
-      this.configManager.showNotification('Failed to initialize roles configuration', 'error');
+      // Still render a basic interface even on error
+      this.renderErrorState(error.message);
       return false;
     }
+  }
+  
+  /**
+   * Render error state when initialization fails
+   */
+  renderErrorState(errorMessage) {
+    const container = document.getElementById('roles-config-container');
+    if (!container) return;
+    
+    container.innerHTML = `
+      <div class="alert alert-warning">
+        <h5><i class="fas fa-exclamation-triangle me-2"></i>Role Configuration Unavailable</h5>
+        <p class="mb-2">Could not load role configuration. This may be because:</p>
+        <ul class="mb-3">
+          <li>The bot is not connected to Discord</li>
+          <li>The bot doesn't have access to this server</li>
+          <li>There's a network connectivity issue</li>
+        </ul>
+        <button class="btn btn-primary btn-sm" onclick="window.location.reload()">
+          <i class="fas fa-sync me-1"></i>Retry
+        </button>
+      </div>
+    `;
   }
 
   /**

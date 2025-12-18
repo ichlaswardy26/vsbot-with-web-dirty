@@ -9,7 +9,7 @@ module.exports = {
     usage: 'temppermissions <grant|revoke|extend|list|check> [options]',
     category: 'admin',
     
-    async execute(message, args, client) {
+    async exec(client, message, args) {
         try {
             // Check admin permission
             const permissionError = rolePermissions.checkPermission(message.member, 'admin');

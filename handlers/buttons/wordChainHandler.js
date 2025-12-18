@@ -1,6 +1,6 @@
 const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
 const wordChainManager = require("../../util/wordChainManager");
-// const config = require("../../config");
+const config = require("../../config");
 
 async function handleWordChainInteraction(client, interaction) {
   const channelId = interaction.channel.id;
@@ -183,7 +183,7 @@ async function handleStartGame(interaction, channelId) {
   let playerScoreText = "";
   game.players.forEach((player) => {
     const isCurrentTurn = player.userId === currentPlayer?.userId;
-    const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
+    const turnIndicator = isCurrentTurn ? config.emojis.dot : config.emojis.blank;
     if (player.isLobbyMaster) {
       playerScoreText += `${turnIndicator} @${player.username} 👑 [${player.points}] 🔥${player.points}\n`;
     } else {
@@ -285,7 +285,7 @@ async function handleStartGame(interaction, channelId) {
           let newPlayerScoreText = "";
           newGame.players.forEach((player) => {
             const isCurrentTurn = player.userId === newCurrentPlayer?.userId;
-            const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
+            const turnIndicator = isCurrentTurn ? config.emojis.dot : config.emojis.blank;
             if (player.isLobbyMaster) {
               newPlayerScoreText += `${turnIndicator} @${player.username} 👑 [${player.points}] 🔥${player.points}\n`;
             } else {
@@ -380,7 +380,7 @@ async function handleRoll(interaction, channelId, userId) {
   let playerScoreText = "";
   game.players.forEach((player) => {
     const isCurrentTurn = player.userId === currentPlayer?.userId;
-    const turnIndicator = isCurrentTurn ? "config.emojis.dot" : "config.emojis.blank";
+    const turnIndicator = isCurrentTurn ? config.emojis.dot : config.emojis.blank;
     if (player.isLobbyMaster) {
       playerScoreText += `${turnIndicator} @${player.username} 👑 [${player.points}] 🔥${player.points}\n`;
     } else {

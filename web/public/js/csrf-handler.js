@@ -22,6 +22,13 @@ class CSRFHandler {
     // Get token from cookie on load
     this.token = this.getTokenFromCookie();
     
+    // If no token exists, fetch one immediately
+    if (!this.token) {
+      this.refreshToken().catch(err => {
+        console.warn('Initial CSRF token fetch failed:', err.message);
+      });
+    }
+    
     // Set up automatic token refresh
     this.setupAutoRefresh();
     
@@ -130,12 +137,36 @@ class CSRFHandler {
         options.credentials = options.credentials || 'include';
       }
       
-      return originalFetch.call(this, url, options).then(response => {
+      return originalFetch.call(this, url, options).then(async response => {
         // Update token from response header if present
         const newToken = response.headers.get(self.headerName);
         if (newToken) {
           self.token = newToken;
         }
+        
+        // Handle CSRF errors with automatic retry
+        if (response.status === 403) {
+          const clonedResponse = response.clone();
+          try {
+            const data = await clonedResponse.json();
+            if (data.code === 'CSRF_TOKEN_MISSING' || data.code === 'CSRF_TOKEN_INVALID') {
+              // Refresh token and retry once
+              await self.refreshToken();
+              const retryToken = self.getToken();
+              if (retryToken) {
+                if (options.headers instanceof Headers) {
+                  options.headers.set(self.headerName, retryToken);
+                } else {
+                  options.headers[self.headerName] = retryToken;
+                }
+                return originalFetch.call(this, url, options);
+              }
+            }
+          } catch (e) {
+            // Not a JSON response or not a CSRF error, return original
+          }
+        }
+        
         return response;
       });
     };

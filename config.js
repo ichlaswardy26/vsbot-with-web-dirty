@@ -52,6 +52,7 @@ const staticConfig = {
  * These are fallback values when database config is not available
  */
 const defaultDynamicConfig = {
+  prefix: process.env.PREFIX || '!',
   channels: {},
   categories: {},
   roles: {},
@@ -174,6 +175,7 @@ module.exports = {
   
   // Default dynamic values for backward compatibility (sync access)
   // These will be overridden when using getConfig() async
+  prefix: defaultDynamicConfig.prefix,
   channels: defaultDynamicConfig.channels,
   categories: defaultDynamicConfig.categories,
   roles: defaultDynamicConfig.roles,

@@ -13,15 +13,31 @@ class WebSocketClient {
     this.guildId = null;
     this.currentSection = null;
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
+    this.maxReconnectAttempts = 10;
     this.reconnectDelay = 1000;
     this.listeners = new Map();
     this.configVersion = 0;
     this.pendingChanges = [];
+    this.initAttempts = 0;
+    this.maxInitAttempts = 5;
     
-    // Auto-initialize if Socket.IO is available
+    // Auto-initialize with retry
+    this.tryInitialize();
+  }
+  
+  /**
+   * Try to initialize with retry logic
+   */
+  tryInitialize() {
     if (typeof io !== 'undefined') {
       this.initialize();
+    } else if (this.initAttempts < this.maxInitAttempts) {
+      this.initAttempts++;
+      console.log(`Socket.IO not loaded yet, retrying... (${this.initAttempts}/${this.maxInitAttempts})`);
+      setTimeout(() => this.tryInitialize(), 500);
+    } else {
+      console.warn('Socket.IO failed to load after multiple attempts. Real-time updates disabled.');
+      this.updateConnectionStatus('failed', 'Socket.IO library not loaded');
     }
   }
 
@@ -34,19 +50,26 @@ class WebSocketClient {
     }
 
     try {
+      // Get current origin for connection
+      const protocol = window.location.protocol;
+      const host = window.location.host;
+      
       this.socket = io({
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'], // Start with polling for better compatibility
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: this.reconnectDelay,
-        reconnectionDelayMax: 5000,
-        timeout: 20000
+        reconnectionDelayMax: 10000,
+        timeout: 30000,
+        forceNew: false,
+        autoConnect: true
       });
 
       this.setupEventHandlers();
       console.log('WebSocket client initialized');
     } catch (error) {
       console.error('Failed to initialize WebSocket client:', error);
+      this.updateConnectionStatus('failed', error.message);
     }
   }
 
