@@ -1,13 +1,15 @@
-
 const Leveling = require('../../schemas/Leveling');
 const { getXpRequirement } = require('../../util/levelUtils');
 const { getLevelUpReward, addSouls } = require('../../util/economyUtils');
 const { updateLevelRole } = require('../../util/roleUtils');
 const rolePermissions = require('../../util/rolePermissions');
+const config = require('../../config.js');
 
 module.exports = {
     name: 'addxp',
     description: 'Add XP to a user (Admin only)',
+    category: 'admin',
+    usage: 'addxp @user <jumlah>',
     async exec(client, message, args) {
         try {
             // Check permission using standardized system
@@ -20,7 +22,7 @@ module.exports = {
             const amount = parseInt(args[1]);
 
             if (!targetUser || isNaN(amount)) {
-                return message.reply('❌ **|** Format: ..addxp @user <jumlah>');
+                return message.reply(`${config.emojis?.cross || "❌"} **|** Format: ..addxp @user <jumlah>`);
             }
 
             let userData = await Leveling.findOne({
@@ -59,10 +61,10 @@ module.exports = {
                 }
             }
 
-            message.channel.send(`✅ ${targetUser} **|** Ditambahkan ${amount} XP! (Level: ${userData.level}, XP: ${userData.xp}/${getXpRequirement(userData.level)})`);
+            message.channel.send(`${config.emojis?.check || "✅"} ${targetUser} **|** Ditambahkan ${amount} XP! (Level: ${userData.level}, XP: ${userData.xp}/${getXpRequirement(userData.level)})`);
         } catch (error) {
-            console.error('Error in addxp command:', error);
-            message.reply('❌ **|** Terjadi kesalahan saat menambahkan XP!');
+            console.error('[addxp] Error:', error.message);
+            message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat menambahkan XP!`);
         }
     }
 };

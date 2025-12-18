@@ -1,279 +1,218 @@
 # 🚀 Deployment Guide
 
-Panduan lengkap untuk deploy Discord Bot ke VPS menggunakan Docker Compose dengan auto-restart ketika file .env berubah.
+Panduan deployment Discord Bot ke berbagai platform.
 
-## 📋 Prerequisites
+## Quick Start
 
-- VPS dengan Ubuntu 20.04+ atau Debian 11+
-- Minimal 1GB RAM dan 10GB storage
-- Akses SSH ke VPS
-- Domain (optional, untuk SSL)
-
-## 🛠️ Setup VPS
-
-### 1. Setup Otomatis
+### Local Development
 ```bash
-# Download dan jalankan setup script
-curl -fsSL https://raw.githubusercontent.com/your-repo/villain-seraphyx-bot/main/scripts/setup-vps.sh | bash
+# Install dependencies
+npm install
 
-# Atau manual:
-wget https://raw.githubusercontent.com/your-repo/villain-seraphyx-bot/main/scripts/setup-vps.sh
-chmod +x setup-vps.sh
-./setup-vps.sh
+# Copy environment file
+cp .env.example .env
+
+# Edit .env with your credentials
+nano .env
+
+# Start bot
+npm start
 ```
 
-### 2. Setup Manual
+### Docker (Recommended)
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
+# Development
+./deploy.sh dev
 
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# Logout dan login kembali
+# Production
+./deploy.sh prod
 ```
 
-## 📦 Deployment
+## Deployment Options
 
-### 1. Clone Repository
-```bash
-cd ~
-git clone https://github.com/your-username/villain-seraphyx-bot.git discord-bot
-cd discord-bot
-```
+### 1. Docker (Recommended)
 
-### 2. Konfigurasi Environment
+**Requirements:**
+- Docker & Docker Compose
+
+**Deploy:**
 ```bash
-# Copy dan edit .env file
+# Clone repository
+git clone <repo-url>
+cd villain-seraphyx-bot
+
+# Setup environment
 cp .env.example .env
 nano .env
 
-# Isi semua environment variables yang diperlukan
+# Deploy
+./deploy.sh prod
 ```
 
-### 3. Deploy Bot
+**Commands:**
 ```bash
-# Untuk production
-./deploy.sh production
+# View logs
+docker compose -f docker-compose.prod.yml logs -f discord-bot
 
-# Untuk development
-docker-compose -f docker-compose.dev.yml up -d
+# Restart
+docker compose -f docker-compose.prod.yml restart
+
+# Stop
+docker compose -f docker-compose.prod.yml down
+
+# With monitoring (Portainer)
+docker compose -f docker-compose.prod.yml --profile monitoring up -d
 ```
 
-## 🔄 Auto-Restart ketika .env Berubah
+### 2. VPS (Ubuntu/Debian)
 
-Bot akan otomatis restart ketika file .env berubah menggunakan beberapa metode:
-
-### 1. Watchtower (Recommended)
-- Menggunakan container `watchtower` yang memantau perubahan
-- Auto-restart setiap 30 detik jika ada perubahan
-- Sudah dikonfigurasi di `docker-compose.yml`
-
-### 2. File Watcher (Alternative)
+**Setup VPS:**
 ```bash
-# Jalankan env watcher secara terpisah
-node env-watcher.js
+# Run setup script
+chmod +x scripts/setup-vps.sh
+./scripts/setup-vps.sh
 
-# Atau menggunakan docker-compose.dev.yml yang sudah include watcher
-docker-compose -f docker-compose.dev.yml up -d
+# Logout and login again for Docker permissions
 ```
 
-### 3. Manual Restart
-```bash
-# Restart container setelah mengubah .env
-docker-compose restart discord-bot
-
-# Atau rebuild jika ada perubahan besar
-docker-compose down
-docker-compose up -d --build
-```
-
-## 📊 Monitoring & Management
-
-### 1. Melihat Logs
-```bash
-# Real-time logs
-docker-compose logs -f discord-bot
-
-# Logs dengan timestamp
-docker-compose logs -f --timestamps discord-bot
-
-# Logs terakhir 100 baris
-docker-compose logs --tail=100 discord-bot
-```
-
-### 2. Status Container
-```bash
-# Status semua container
-docker-compose ps
-
-# Status detail
-docker stats
-
-# Health check
-docker-compose exec discord-bot node -e "console.log('Bot is running')"
-```
-
-### 3. Portainer (Web UI)
-- Akses: `http://your-vps-ip:9000`
-- Username/Password: Setup saat pertama kali akses
-- Manage containers, images, volumes, networks
-
-### 4. Monitoring Script
-```bash
-# Jalankan monitoring manual
-~/discord-bot/monitor.sh
-
-# Lihat log monitoring
-tail -f ~/discord-bot/logs/monitor.log
-```
-
-## 🔧 Maintenance
-
-### 1. Update Bot
+**Deploy:**
 ```bash
 cd ~/discord-bot
-git pull origin main
-./deploy.sh
+git clone <repo-url> .
+cp .env.example .env
+nano .env
+./deploy.sh prod
 ```
 
-### 2. Backup
+### 3. Railway/Render
+
+1. Connect GitHub repository
+2. Set environment variables from `.env.example`
+3. Deploy automatically
+
+### 4. Heroku
+
 ```bash
-# Backup otomatis
+# Login
+heroku login
+
+# Create app
+heroku create villain-seraphyx-bot
+
+# Set environment variables
+heroku config:set TOKEN=your_token
+heroku config:set MONGO_URI=your_mongo_uri
+# ... set other variables
+
+# Deploy
+git push heroku main
+```
+
+### 5. PM2 (Without Docker)
+
+```bash
+# Install PM2
+npm install -g pm2
+
+# Start bot
+pm2 start index.js --name villain-seraphyx-bot
+
+# Auto-start on reboot
+pm2 startup
+pm2 save
+
+# Commands
+pm2 logs villain-seraphyx-bot
+pm2 restart villain-seraphyx-bot
+pm2 stop villain-seraphyx-bot
+```
+
+## Environment Variables
+
+Required variables in `.env`:
+
+```env
+# Required
+TOKEN=your_discord_bot_token
+CLIENT_ID=your_bot_client_id
+GUILD_ID=your_guild_id
+MONGO_URI=mongodb+srv://...
+OWNER_IDS=your_user_id
+
+# Optional - Web Dashboard
+WEB_DASHBOARD_ENABLED=true
+WEB_PORT=3001
+SESSION_SECRET=random_string
+
+# Optional - Webhook
+WEBHOOK_PORT=3000
+WEBHOOK_TOKEN=your_tako_token
+```
+
+## Ports
+
+| Port | Service | Description |
+|------|---------|-------------|
+| 3000 | Webhook | Tako donation webhook |
+| 3001 | Dashboard | Web configuration dashboard |
+| 9000 | Portainer | Container management (optional) |
+
+## Backup & Restore
+
+```bash
+# Backup
 ./scripts/backup.sh
 
-# Backup dengan nama custom
-./scripts/backup.sh "backup_before_update"
-
-# Lihat semua backup
-ls -la backups/
+# Restore
+./scripts/restore.sh backup_name
 ```
 
-### 3. Restore
+## Monitoring
+
+**Docker logs:**
 ```bash
-# Lihat available backups
-./scripts/restore.sh
-
-# Restore backup tertentu
-./scripts/restore.sh backup_20231211_143022
+docker compose logs -f discord-bot
 ```
 
-### 4. Clean Up
+**Health check:**
 ```bash
-# Clean unused Docker resources
-docker system prune -f
-
-# Clean old images
-docker image prune -f
-
-# Clean old logs
-find logs/ -name "*.log" -mtime +7 -delete
+curl http://localhost:3000/health
 ```
 
-## 🚨 Troubleshooting
+**Portainer (optional):**
+```bash
+# Enable monitoring profile
+docker compose -f docker-compose.prod.yml --profile monitoring up -d
 
-### Bot tidak start
+# Access at http://your-ip:9000
+```
+
+## Troubleshooting
+
+**Bot not starting:**
 ```bash
 # Check logs
-docker-compose logs discord-bot
+docker compose logs discord-bot
 
-# Check .env file
+# Verify .env
 cat .env | grep -v "^#" | grep -v "^$"
 
-# Restart container
-docker-compose restart discord-bot
+# Rebuild
+docker compose build --no-cache
 ```
 
-### Auto-restart tidak bekerja
-```bash
-# Check watchtower logs
-docker-compose logs watchtower
+**Database connection error:**
+- Verify MONGO_URI format
+- Check network connectivity
+- Whitelist IP in MongoDB Atlas
 
-# Manual restart watchtower
-docker-compose restart watchtower
+**Permission errors:**
+- Verify bot has required Discord permissions
+- Check role hierarchy
 
-# Check file permissions
-ls -la .env
-```
+## Security
 
-### Memory/CPU tinggi
-```bash
-# Check resource usage
-docker stats
-
-# Restart bot
-docker-compose restart discord-bot
-
-# Check system resources
-htop
-df -h
-```
-
-### Container crash loop
-```bash
-# Check logs untuk error
-docker-compose logs --tail=50 discord-bot
-
-# Check health status
-docker-compose ps
-
-# Rebuild container
-docker-compose down
-docker-compose up -d --build
-```
-
-## 📁 File Structure
-
-```
-discord-bot/
-├── docker-compose.yml          # Production compose
-├── docker-compose.dev.yml      # Development compose
-├── docker-compose.prod.yml     # Production dengan monitoring
-├── Dockerfile                  # Bot container image
-├── .dockerignore              # Docker ignore file
-├── deploy.sh                  # Deployment script
-├── env-watcher.js             # File watcher untuk .env
-├── scripts/
-│   ├── setup-vps.sh          # VPS setup script
-│   ├── backup.sh             # Backup script
-│   └── restore.sh            # Restore script
-├── logs/                     # Log files
-├── backups/                  # Backup files
-└── .env                      # Environment variables
-```
-
-## 🔐 Security Best Practices
-
-1. **Environment Variables**
-   - Jangan commit file `.env` ke git
-   - Gunakan strong passwords untuk database
-   - Rotate tokens secara berkala
-
-2. **VPS Security**
-   - Setup firewall (UFW)
-   - Disable root login
-   - Use SSH keys instead of passwords
-   - Keep system updated
-
-3. **Docker Security**
-   - Run containers as non-root user
-   - Use official base images
-   - Regularly update images
-   - Limit container resources
-
-## 📞 Support
-
-Jika mengalami masalah:
-
-1. Check logs: `docker-compose logs -f discord-bot`
-2. Check status: `docker-compose ps`
-3. Restart: `docker-compose restart discord-bot`
-4. Rebuild: `docker-compose up -d --build`
-
-Untuk bantuan lebih lanjut, buat issue di repository GitHub.
+- Never commit `.env` file
+- Use strong SESSION_SECRET
+- Rotate tokens periodically
+- Keep dependencies updated

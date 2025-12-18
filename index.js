@@ -9,18 +9,15 @@ const ConfessionState = require("./schemas/ConfessionState");
 const express = require("express");
 const crypto = require("crypto");
 
-const app = express();
-const mongoUri = config.mongoUri;
-const webhookToken = process.env.WEBHOOK_TOKEN || "lo1j7xgrossc6io5q90dh9d3";
-
+// Discord Client Setup
 const client = new Client({
-    intents: Object.values(constants.IntentsFlags).filter((v) => typeof v === "number"),
-    allowedMentions: { parse: ["users", "roles"], repliedUser: false },
-    ws: {
-        properties: {
-            browser: "Discord iOS"
-        }
+  intents: Object.values(constants.IntentsFlags).filter((v) => typeof v === "number"),
+  allowedMentions: { parse: ["users", "roles"], repliedUser: false },
+  ws: {
+    properties: {
+      browser: "Discord iOS"
     }
+  }
 });
 
 // Initialize global variables
@@ -29,91 +26,188 @@ global.activeVoiceUsers = global.activeVoiceUsers || new Map();
 global.voiceXpInterval = null;
 global.voiceDurationInterval = null;
 
-
-const connectDB = async () => {
-    try {
-        await mongoose.connect(mongoUri, {
-            maxPoolSize: 10,
-            minPoolSize: 2,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        });
-        console.log('\n╔════════════════════════════════════════╗');
-        console.log('║   🗄️  DATABASE CONNECTION SUCCESS     ║');
-        console.log('╠════════════════════════════════════════╣');
-        console.log('║  Status    : ✅ Connected              ║');
-        console.log('║  Database  : MongoDB Atlas             ║');
-        console.log('╚════════════════════════════════════════╝\n');
-    } catch (error) {
-        console.log('\n╔════════════════════════════════════════╗');
-        console.log('║   ❌ DATABASE CONNECTION FAILED        ║');
-        console.log('╚════════════════════════════════════════╝\n');
-        console.error("Error details:", error);
-        process.exit(1);
-    }
-};
-
-// Handle MongoDB connection errors
-mongoose.connection.on('error', err => {
-    console.log('\n╔════════════════════════════════════════╗');
-    console.log('║   ⚠️  DATABASE CONNECTION ERROR       ║');
-    console.log('╚════════════════════════════════════════╝');
-    console.error(err);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.log('\n╔════════════════════════════════════════╗');
-    console.log('║   ⚠️  DATABASE DISCONNECTED           ║');
-    console.log('║   Attempting to reconnect...           ║');
-    console.log('╚════════════════════════════════════════╝\n');
-});
-
+// Initialize collections
 client.commands = new Collection();
 client.config = config;
 client.lastConfessionMessage = new Map();
 client.embedBuilders = new Map();
 client.games = new Collection();
-
-connectDB();
-
-// Load command and event handlers
-const handlerFiles = readdirSync("./handlers/").filter(file => file.endsWith('.js'));
-for (const file of handlerFiles) {
-    const handler = require(`./handlers/${file}`);
-    if (typeof handler === 'function') {
-        handler(client);
-    }
-}
-
-const loadConfessionStates = async () => {
-    const states = await ConfessionState.find({});
-    states.forEach((s) => {
-        client.lastConfessionMessage.set(s.guildId, s.lastMessageId);
-    });
-    console.log('╔════════════════════════════════════════╗');
-    console.log('║   💬 CONFESSION STATES LOADED         ║');
-    console.log('╠════════════════════════════════════════╣');
-    console.log(`║  Loaded States : ${String(states.length).padEnd(20)}║`);
-    console.log('╚════════════════════════════════════════╝\n');
-};
-
-loadConfessionStates();
-
 client.snipes = new Map();
 
-client.on("messageDelete", (message) => {
-    if (!message.guild || message.author?.bot) return;
+// Web Server instance
+let webServer = null;
 
-    client.snipes.set(message.channel.id, {
-        content: message.content,
-        author: message.author,
-        time: message.createdAt,
-        image: message.attachments.first()?.proxyURL || null,
+/**
+ * Connect to MongoDB
+ */
+const connectDB = async () => {
+  try {
+    await mongoose.connect(config.mongoUri, {
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║   🗄️  DATABASE CONNECTION SUCCESS     ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log('║  Status    : ✅ Connected              ║');
+    console.log('║  Database  : MongoDB Atlas             ║');
+    console.log('╚════════════════════════════════════════╝\n');
+  } catch (error) {
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║   ❌ DATABASE CONNECTION FAILED        ║');
+    console.log('╚════════════════════════════════════════╝\n');
+    console.error("Error details:", error);
+    process.exit(1);
+  }
+};
+
+// Handle MongoDB connection events
+mongoose.connection.on('error', err => {
+  console.error('[MongoDB] Connection error:', err);
 });
 
-// Bot ready event
-client.on('clientReady', () => {
+mongoose.connection.on('disconnected', () => {
+  console.warn('[MongoDB] Disconnected. Attempting to reconnect...');
+});
+
+/**
+ * Load confession states from database
+ */
+const loadConfessionStates = async () => {
+  try {
+    const states = await ConfessionState.find({});
+    states.forEach((s) => {
+      client.lastConfessionMessage.set(s.guildId, s.lastMessageId);
+    });
+    console.log(`[Confession] Loaded ${states.length} confession states`);
+  } catch (error) {
+    console.error('[Confession] Failed to load states:', error);
+  }
+};
+
+/**
+ * Start Tako Donation Webhook Server
+ */
+const startWebhookServer = () => {
+  const webhookApp = express();
+  webhookApp.use(express.json());
+
+  const webhookPort = config.webhook?.port || 3000;
+  const webhookToken = config.webhook?.token;
+
+  if (!webhookToken) {
+    console.warn('[Webhook] WEBHOOK_TOKEN not configured, Tako webhook disabled');
+    return null;
+  }
+
+  webhookApp.post('/tako', async (req, res) => {
+    const takoSignature = req.headers['x-tako-signature'];
+    if (!takoSignature) {
+      return res.status(400).send('Missing signature header');
+    }
+
+    const computedSignature = crypto
+      .createHmac('sha256', webhookToken)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    const isValidSignature = crypto.timingSafeEqual(
+      Buffer.from(computedSignature),
+      Buffer.from(takoSignature)
+    );
+
+    if (!isValidSignature) {
+      return res.status(400).send('Invalid signature');
+    }
+
+    const data = req.body;
+    console.log(`[Tako] Donation received from ${data.gifterName || 'Anonymous'} - Amount: ${data.amount || 'N/A'}`);
+
+    try {
+      // Get donation channel from dynamic config
+      const fullConfig = await config.getConfig();
+      const donationChannelId = fullConfig.channels?.donation;
+      
+      if (!donationChannelId) {
+        console.warn('[Tako] Donation channel not configured');
+        return res.status(200).send('OK');
+      }
+
+      const channel = await client.channels.fetch(donationChannelId);
+      if (!channel?.isTextBased()) {
+        console.warn('[Tako] Donation channel is not text-based');
+        return res.status(200).send('OK');
+      }
+
+      const embed = new EmbedBuilder()
+        .setColor(fullConfig.colors?.success || '#00FF00')
+        .setTitle(`${fullConfig.emojis?.donation || '💰'} Terima Kasih atas Donasinya!`)
+        .setDescription(`Terima kasih **${data.gifterName || 'Anonymous'}** atas donasi sebesar **${data.amount || 'N/A'}** dengan pesan:\n\`\`\`${data.message || 'Tidak ada pesan'}\`\`\``)
+        .setTimestamp()
+        .setFooter({ text: '© 2025 Villain Seraphyx.' });
+
+      await channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error('[Tako] Error sending donation message:', err.message);
+    }
+
+    return res.status(200).send('OK');
+  });
+
+  webhookApp.get('/health', (req, res) => {
+    res.json({ status: 'ok', service: 'tako-webhook' });
+  });
+
+  const server = webhookApp.listen(webhookPort, () => {
+    console.log(`[Webhook] Tako webhook server running on port ${webhookPort}`);
+  });
+
+  return server;
+};
+
+/**
+ * Start Web Dashboard
+ */
+const startWebDashboard = async () => {
+  try {
+    const WebServer = require('./web/server');
+    webServer = new WebServer(client);
+    await webServer.start();
+    console.log(`[Dashboard] Web dashboard running on port ${config.web?.port || 3001}`);
+  } catch (error) {
+    console.error('[Dashboard] Failed to start web dashboard:', error);
+  }
+};
+
+/**
+ * Initialize bot
+ */
+const initialize = async () => {
+  // Connect to database first
+  await connectDB();
+  
+  // Load handlers
+  const handlerFiles = readdirSync("./handlers/").filter(file => file.endsWith('.js'));
+  for (const file of handlerFiles) {
+    const handler = require(`./handlers/${file}`);
+    if (typeof handler === 'function') {
+      handler(client);
+    }
+  }
+  
+  // Load confession states
+  await loadConfessionStates();
+  
+  // Start webhook server
+  const webhookServer = startWebhookServer();
+  
+  // Login to Discord
+  await client.login(config.token);
+  
+  // Start web dashboard after bot is ready
+  client.once('clientReady', async () => {
     console.log('\n╔════════════════════════════════════════╗');
     console.log('║        🤖 BOT IS NOW ONLINE! 🚀       ║');
     console.log('╠════════════════════════════════════════╣');
@@ -124,120 +218,62 @@ client.on('clientReady', () => {
     console.log('╠════════════════════════════════════════╣');
     console.log('║  Status    : ✅ All Systems Ready      ║');
     console.log('╚════════════════════════════════════════╝\n');
+    
+    // Start web dashboard
+    await startWebDashboard();
+  });
+  
+  // Store webhook server reference for cleanup
+  client.webhookServer = webhookServer;
+};
+
+// Message delete handler for snipe command
+client.on("messageDelete", (message) => {
+  if (!message.guild || message.author?.bot) return;
+
+  client.snipes.set(message.channel.id, {
+    content: message.content,
+    author: message.author,
+    time: message.createdAt,
+    image: message.attachments.first()?.proxyURL || null,
+  });
 });
 
+/**
+ * Graceful shutdown handler
+ */
+const gracefulShutdown = async (signal) => {
+  console.log(`\n[Shutdown] Received ${signal}, shutting down gracefully...`);
+  
+  // Clear intervals
+  if (global.voiceXpInterval) clearInterval(global.voiceXpInterval);
+  if (global.voiceDurationInterval) clearInterval(global.voiceDurationInterval);
+  
+  // Stop web dashboard
+  if (webServer) {
+    await webServer.stop();
+  }
+  
+  // Stop webhook server
+  if (client.webhookServer) {
+    client.webhookServer.close();
+  }
+  
+  // Close MongoDB connection
+  await mongoose.connection.close();
+  
+  // Destroy Discord client
+  client.destroy();
+  
+  console.log('[Shutdown] Complete');
+  process.exit(0);
+};
 
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('\n╔════════════════════════════════════════╗');
-    console.log('║      🛑 SHUTTING DOWN GRACEFULLY      ║');
-    console.log('╠════════════════════════════════════════╣');
-    console.log('║  Clearing intervals...                 ║');
-    
-    // Clear intervals
-    if (global.voiceXpInterval) clearInterval(global.voiceXpInterval);
-    if (global.voiceDurationInterval) clearInterval(global.voiceDurationInterval);
-    
-    console.log('║  Closing database connection...        ║');
-    // Close MongoDB connection
-    await mongoose.connection.close();
-    
-    console.log('║  Destroying Discord client...          ║');
-    // Destroy Discord client
-    client.destroy();
-    
-    console.log('╠════════════════════════════════════════╣');
-    console.log('║  ✅ Shutdown Complete                  ║');
-    console.log('╚════════════════════════════════════════╝\n');
-    
-    process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-    console.log('\n╔════════════════════════════════════════╗');
-    console.log('║      🛑 SHUTTING DOWN GRACEFULLY      ║');
-    console.log('╠════════════════════════════════════════╣');
-    console.log('║  Clearing intervals...                 ║');
-    
-    // Clear intervals
-    if (global.voiceXpInterval) clearInterval(global.voiceXpInterval);
-    if (global.voiceDurationInterval) clearInterval(global.voiceDurationInterval);
-    
-    console.log('║  Closing database connection...        ║');
-    // Close MongoDB connection
-    await mongoose.connection.close();
-    
-    console.log('║  Destroying Discord client...          ║');
-    // Destroy Discord client
-    client.destroy();
-    
-    console.log('╠════════════════════════════════════════╣');
-    console.log('║  ✅ Shutdown Complete                  ║');
-    console.log('╚════════════════════════════════════════╝\n');
-    
-    process.exit(0);
-});
-
-client.login(config.token);
-// Tako Donation Webhook Server
-app.use(express.json());
-
-app.post('/tako', (req, res) => {
-    const takoSignatureFromHeader = req.headers['x-tako-signature'];
-    if (!takoSignatureFromHeader) {
-        return res.status(400).send('Missing signature header');
-    }
-
-    const computedSignature = crypto
-        .createHmac('sha256', webhookToken)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
-
-    const isValidSignature = crypto.timingSafeEqual(
-        Buffer.from(computedSignature),
-        Buffer.from(takoSignatureFromHeader)
-    );
-
-    if (isValidSignature) {
-        const data = req.body;
-        console.log(`\n💰 Donation received from ${data.gifterName || 'Anonymous'} - Amount: ${data.amount || 'N/A'}`);
-
-        const donationChannelId = config.channels.donation;
-        if (!donationChannelId) {
-            console.error('Donation channel ID not configured in .env');
-            return res.status(500).send('Donation channel not configured');
-        }
-
-        client.channels.fetch(donationChannelId)
-            .then(channel => {
-                if (!channel?.isTextBased()) return;
-                
-                const embed = new EmbedBuilder()
-                    .setColor('#00FF00')
-                    .setTitle('💰 Terima Kasih atas Donasinya!')
-                    .setDescription(`Terima kasih **${data.gifterName || 'Anonymous'}** atas donasi sebesar **${data.amount || 'N/A'}** dengan pesan:\n\`\`\`${data.message || 'Tidak ada pesan'}\`\`\``)
-                    .setTimestamp()
-                    .setFooter({ text: '© 2025 Villain Seraphyx.' });
-
-                channel.send({ embeds: [embed] });
-            })
-            .catch(err => {
-                console.error('❌ Webhook error:', err.message);
-            });
-
-        return res.status(200).send('OK');
-    } else {
-        return res.status(400).send('Invalid signature');
-    }
-});
-
-app.listen(3000, () => {
-    console.log('\n╔════════════════════════════════════════╗');
-    console.log('║     💰 TAKO WEBHOOK SERVER STARTED    ║');
-    console.log('╠════════════════════════════════════════╣');
-    console.log('║  Port      : 3000                      ║');
-    console.log('║  Endpoint  : /tako                     ║');
-    console.log('║  Status    : ✅ Listening              ║');
-    console.log('╚════════════════════════════════════════╝\n');
+// Start the bot
+initialize().catch(error => {
+  console.error('[Fatal] Failed to initialize bot:', error);
+  process.exit(1);
 });

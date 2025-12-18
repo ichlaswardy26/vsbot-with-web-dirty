@@ -37,7 +37,8 @@ class WebServer {
     this.server = null;
     this.httpServer = null;
     this.websocketService = null;
-    this.port = process.env.WEB_PORT || 3000;
+    const config = require('../config');
+    this.port = config.web?.port || 3001;
     this.sessionMiddleware = null;
     
     this.setupMiddleware();
@@ -85,14 +86,17 @@ class WebServer {
     this.app.use('/js', express.static(path.join(__dirname, 'public/js')));
     this.app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 
+    // Get config
+    const config = require('../config');
+    
     // Session configuration
     const sessionConfig = {
-      secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
+      secret: config.web?.sessionSecret || 'your-secret-key-change-this',
       resave: false,
       saveUninitialized: false,
       name: 'sessionId', // Custom session cookie name
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: config.nodeEnv === 'production',
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         sameSite: 'strict' // CSRF protection
@@ -100,10 +104,10 @@ class WebServer {
     };
 
     // Only add MongoStore if MongoDB URI is provided and not in test environment
-    if (process.env.MONGODB_URI && process.env.NODE_ENV !== 'test') {
+    if (config.mongoUri && config.nodeEnv !== 'test') {
       try {
         sessionConfig.store = MongoStore.create({
-          mongoUrl: process.env.MONGODB_URI,
+          mongoUrl: config.mongoUri,
           touchAfter: 24 * 3600 // lazy session update
         });
       } catch (error) {
@@ -128,7 +132,8 @@ class WebServer {
 
     // CORS configuration
     this.app.use((req, res, next) => {
-      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+      const config = require('../config');
+      const allowedOrigins = config.web?.allowedOrigins || ['http://localhost:3001'];
       const origin = req.headers.origin;
       
       if (allowedOrigins.includes(origin)) {
@@ -335,9 +340,11 @@ class WebServer {
 
   async start() {
     try {
+      const config = require('../config');
+      
       // Ensure MongoDB connection
       if (mongoose.connection.readyState !== 1) {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(config.mongoUri);
         console.log('Connected to MongoDB for web server');
       }
 

@@ -4,6 +4,7 @@ const Leveling = require('../../schemas/Leveling');
 const Boost = require('../../schemas/Boost');
 const { getXpRequirement } = require('../../util/levelUtils');
 const { getUserRank } = require('../../util/leaderboardUtils');
+const config = require('../../config.js');
 
 function getTierName(level) {
   if (level >= 50) return 'Seraphyx';
@@ -28,6 +29,8 @@ module.exports = {
   name: "rank",
   aliases: ["profile", "level", "tier"],
   description: "Menampilkan profil XP dan level user dengan desain canvas modern dan tier role.",
+  category: "level",
+  usage: "rank [@user]",
   async exec(client, message) {
     try {
       const target = message.mentions.users.first() || message.author;
@@ -191,8 +194,8 @@ module.exports = {
       const attachment = new AttachmentBuilder(canvas.toBuffer(), { name: 'rank.png' });
       message.reply({ files: [attachment] });
     } catch (error) {
-      console.error('Error in rank command:', error);
-      message.reply('❌ Terjadi kesalahan saat membuat profil level.');
+      console.error('[rank] Error:', error.message);
+      message.reply(`${config.emojis?.cross || "❌"} **|** Terjadi kesalahan saat membuat profil level.`);
     }
   }
 };

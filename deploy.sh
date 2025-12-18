@@ -1,79 +1,74 @@
 #!/bin/bash
 
-# Script untuk deployment ke VPS
-# Usage: ./deploy.sh [environment]
+# Villain Seraphyx Bot - Deployment Script
+# Usage: ./deploy.sh [dev|prod]
 
 set -e
 
-# Colors untuk output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Environment (default: production)
-ENV=${1:-production}
+ENV=${1:-prod}
 
-echo -e "${BLUE}🚀 Starting deployment for environment: ${ENV}${NC}"
+echo -e "${BLUE}🚀 Deploying Villain Seraphyx Bot [${ENV}]${NC}"
 
-# Check if .env file exists
+# Validate environment
+if [[ ! "$ENV" =~ ^(dev|prod)$ ]]; then
+    echo -e "${RED}❌ Invalid environment. Use: ./deploy.sh [dev|prod]${NC}"
+    exit 1
+fi
+
+# Check .env file
 if [ ! -f ".env" ]; then
-    echo -e "${RED}❌ Error: .env file not found!${NC}"
-    echo -e "${YELLOW}💡 Please copy .env.example to .env and configure it${NC}"
+    echo -e "${RED}❌ .env file not found!${NC}"
+    echo -e "${YELLOW}Run: cp .env.example .env${NC}"
     exit 1
 fi
 
-# Check if Docker is running
+# Check Docker
 if ! docker info > /dev/null 2>&1; then
-    echo -e "${RED}❌ Error: Docker is not running!${NC}"
+    echo -e "${RED}❌ Docker is not running!${NC}"
     exit 1
 fi
 
-# Check if Docker Compose is available
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null 2>&1; then
-    echo -e "${RED}❌ Error: Docker Compose is not installed!${NC}"
-    exit 1
+# Docker compose command
+DC="docker compose"
+if ! $DC version > /dev/null 2>&1; then
+    DC="docker-compose"
 fi
 
-# Function to use docker-compose or docker compose
-docker_compose_cmd() {
-    if command -v docker-compose &> /dev/null; then
-        docker-compose "$@"
-    else
-        docker compose "$@"
-    fi
-}
+# Set compose file
+if [ "$ENV" = "dev" ]; then
+    COMPOSE_FILE="docker-compose.dev.yml"
+else
+    COMPOSE_FILE="docker-compose.prod.yml"
+fi
 
-echo -e "${YELLOW}📦 Building Docker image...${NC}"
-docker_compose_cmd build --no-cache
+echo -e "${YELLOW}📦 Building...${NC}"
+$DC -f $COMPOSE_FILE build
 
 echo -e "${YELLOW}🛑 Stopping existing containers...${NC}"
-docker_compose_cmd down
+$DC -f $COMPOSE_FILE down 2>/dev/null || true
 
-echo -e "${YELLOW}🧹 Cleaning up unused Docker resources...${NC}"
-docker system prune -f
+echo -e "${YELLOW}🚀 Starting...${NC}"
+$DC -f $COMPOSE_FILE up -d
 
-echo -e "${YELLOW}🚀 Starting containers...${NC}"
-docker_compose_cmd up -d
+sleep 3
 
-echo -e "${YELLOW}📊 Checking container status...${NC}"
-sleep 5
-docker_compose_cmd ps
-
-# Check if bot container is running
-if docker_compose_cmd ps | grep -q "villain-seraphyx-bot.*Up"; then
-    echo -e "${GREEN}✅ Bot container is running successfully!${NC}"
+# Check status
+if $DC -f $COMPOSE_FILE ps | grep -q "Up"; then
+    echo -e "${GREEN}✅ Bot is running!${NC}"
+    echo ""
+    echo -e "${BLUE}Commands:${NC}"
+    echo -e "  Logs:    ${YELLOW}$DC -f $COMPOSE_FILE logs -f discord-bot${NC}"
+    echo -e "  Stop:    ${YELLOW}$DC -f $COMPOSE_FILE down${NC}"
+    echo -e "  Restart: ${YELLOW}$DC -f $COMPOSE_FILE restart${NC}"
 else
-    echo -e "${RED}❌ Bot container failed to start!${NC}"
-    echo -e "${YELLOW}📋 Container logs:${NC}"
-    docker_compose_cmd logs discord-bot
+    echo -e "${RED}❌ Failed to start!${NC}"
+    $DC -f $COMPOSE_FILE logs discord-bot
     exit 1
 fi
-
-echo -e "${GREEN}🎉 Deployment completed successfully!${NC}"
-echo -e "${BLUE}📋 Useful commands:${NC}"
-echo -e "  View logs: ${YELLOW}docker-compose logs -f discord-bot${NC}"
-echo -e "  Restart bot: ${YELLOW}docker-compose restart discord-bot${NC}"
-echo -e "  Stop all: ${YELLOW}docker-compose down${NC}"
-echo -e "  Update and restart: ${YELLOW}./deploy.sh${NC}"

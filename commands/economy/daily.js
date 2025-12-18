@@ -4,6 +4,8 @@ const config = require("../../config.js");
 module.exports = {
   name: "daily",
   description: "Klaim hadiah souls harian kamu",
+  category: "economy",
+  usage: "daily",
   async exec(client, message) {
     try {
       const userId = message.author.id;
@@ -28,9 +30,9 @@ module.exports = {
         );
       }
 
-      // Tentukan jumlah hadiah
-      const minReward = 1;
-      const maxReward = 1000;
+      // Tentukan jumlah hadiah dari config atau default
+      const minReward = config.features?.economy?.dailyMin || 1;
+      const maxReward = config.features?.economy?.dailyMax || 1000;
       const reward = Math.floor(Math.random() * (maxReward - minReward + 1)) + minReward;
 
       // Tambahkan souls ke saldo user
@@ -38,10 +40,11 @@ module.exports = {
       economy.lastDaily = now;
       await economy.save();
 
-      message.reply(`💀 **|** Kamu mendapatkan **${formatNumber(reward)} souls** sebagai hadiah harian!\n${config.emojis.blank} **|** Sekarang kamu memiliki **${formatNumber(economy.cash)} souls**.`);
+      const blankEmoji = config.emojis?.blank || "⠀";
+      message.reply(`💀 **|** Kamu mendapatkan **${formatNumber(reward)} souls** sebagai hadiah harian!\n${blankEmoji} **|** Sekarang kamu memiliki **${formatNumber(economy.cash)} souls**.`);
     } catch (error) {
-      console.error("Error in daily command:", error);
-      message.reply("⚠️ Terjadi kesalahan saat mengklaim hadiah harian!");
+      console.error("[daily] Error:", error.message);
+      message.reply(`${config.emojis?.warning || "⚠️"} Terjadi kesalahan saat mengklaim hadiah harian!`);
     }
   },
 };

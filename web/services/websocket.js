@@ -27,9 +27,11 @@ class WebSocketService {
    * Initialize Socket.IO server
    */
   initialize(httpServer) {
+    const config = require('../../config');
+    
     this.io = new Server(httpServer, {
       cors: {
-        origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+        origin: config.web?.allowedOrigins || ['http://localhost:3001'],
         methods: ['GET', 'POST'],
         credentials: true
       },

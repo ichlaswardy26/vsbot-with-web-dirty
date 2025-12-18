@@ -2,13 +2,14 @@ const { EmbedBuilder } = require("discord.js");
 const { getOrCreateEconomy, formatNumber } = require("../../util/economyUtils");
 const config = require('../../config.js');
 
-// Role dan reward - using config
+// Role dan reward - using config (with fallback for undefined)
+const levelRoles = config.roles?.level || {};
 const LEVEL_ROLES = {
-  10: config.roles.level[10],
-  20: config.roles.level[20],
-  30: config.roles.level[30],
-  40: config.roles.level[40],
-  50: config.roles.level[50],
+  10: levelRoles[10] || null,
+  20: levelRoles[20] || null,
+  30: levelRoles[30] || null,
+  40: levelRoles[40] || null,
+  50: levelRoles[50] || null,
 };
 
 const ROLE_REWARDS = {
@@ -56,7 +57,7 @@ module.exports = {
       let totalReward = 0;
 
       for (const [level, roleId] of Object.entries(LEVEL_ROLES)) {
-        if (member.roles.cache.has(roleId)) {
+        if (roleId && member.roles.cache.has(roleId)) {
           ownedRoles.push(level);
           totalReward += ROLE_REWARDS[level] || 0;
         }

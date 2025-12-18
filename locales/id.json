@@ -1,0 +1,220 @@
+{
+  "meta": {
+    "name": "Bahasa Indonesia",
+    "nativeName": "Bahasa Indonesia",
+    "flag": "🇮🇩",
+    "code": "id"
+  },
+  "common": {
+    "loading": "⏳ **|** Memproses...",
+    "success": "✅ **|** Berhasil!",
+    "error": "❌ **|** Terjadi kesalahan.",
+    "invalid_input": "❌ **|** Input tidak valid.",
+    "no_permission": "❌ **|** Kamu tidak memiliki izin untuk melakukan ini.",
+    "feature_disabled": "❌ **|** Fitur ini sedang dinonaktifkan.",
+    "maintenance": "🔧 **|** Bot sedang dalam maintenance. Coba lagi nanti.",
+    "yes": "Ya",
+    "no": "Tidak",
+    "cancel": "Batal",
+    "confirm": "Konfirmasi",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "previous": "Sebelumnya",
+    "page": "Halaman {current} dari {total}"
+  },
+  "permission": {
+    "denied": {
+      "admin": "❌ **|** Kamu memerlukan permission **Administrator** atau role **Admin** untuk menggunakan command ini.",
+      "staff": "❌ **|** Kamu memerlukan role **Staff** atau lebih tinggi untuk menggunakan command ini.",
+      "moderator": "❌ **|** Kamu memerlukan role **Moderator** atau permission moderation untuk menggunakan command ini.",
+      "economy": "❌ **|** Kamu memerlukan permission **Manage Guild** atau role **Admin** untuk menggunakan command ini.",
+      "giveaway": "❌ **|** Kamu memerlukan role **Staff** atau permission **Manage Messages** untuk menggunakan command ini.",
+      "ticket": "❌ **|** Kamu memerlukan role **Staff** atau **Support Team** untuk menggunakan command ini.",
+      "shop": "❌ **|** Kamu memerlukan role **Admin** untuk menggunakan command ini.",
+      "customRole": "❌ **|** Kamu memerlukan role **Boost** atau **Donate** untuk menggunakan command ini.",
+      "owner": "❌ **|** Hanya owner bot yang dapat menggunakan command ini."
+    }
+  },
+  "command": {
+    "success": "✅ **|** Command berhasil dijalankan.",
+    "error": "❌ **|** Terjadi error saat menjalankan command.",
+    "invalid": "❌ **|** Command tidak valid.",
+    "not_found": "❌ **|** Command `{command}` tidak ditemukan.",
+    "cooldown": "⏰ **|** Kamu harus menunggu **{time}** sebelum menggunakan command ini lagi.",
+    "ratelimit": "🚫 **|** Kamu telah mencapai batas penggunaan command. Coba lagi dalam **{time}**.",
+    "disabled": "❌ **|** Command ini sedang dinonaktifkan.",
+    "guild_only": "❌ **|** Command ini hanya dapat digunakan di server."
+  },
+  "user": {
+    "not_found": "❌ **|** User tidak ditemukan.",
+    "not_in_guild": "❌ **|** User tidak ada di server ini.",
+    "invalid": "❌ **|** User ID tidak valid.",
+    "self_action": "❌ **|** Kamu tidak dapat melakukan aksi ini pada dirimu sendiri.",
+    "bot_action": "❌ **|** Kamu tidak dapat melakukan aksi ini pada bot.",
+    "higher_role": "❌ **|** Kamu tidak dapat melakukan aksi ini pada user dengan role lebih tinggi."
+  },
+  "role": {
+    "not_found": "❌ **|** Role tidak ditemukan.",
+    "invalid": "❌ **|** Role ID tidak valid.",
+    "hierarchy": "❌ **|** Bot tidak dapat mengelola role ini karena hierarchy.",
+    "managed": "❌ **|** Role ini dikelola oleh integrasi dan tidak dapat dimodifikasi."
+  },
+  "channel": {
+    "not_found": "❌ **|** Channel tidak ditemukan.",
+    "invalid": "❌ **|** Channel ID tidak valid.",
+    "no_permission": "❌ **|** Bot tidak memiliki permission di channel ini.",
+    "wrong_type": "❌ **|** Tipe channel tidak sesuai."
+  },
+  "leveling": {
+    "level_up": "🎉 **|** Selamat {user}! Kamu naik ke level **{level}**!",
+    "xp_gained": "✨ **|** +{xp} XP",
+    "rank_title": "📊 Rank Card",
+    "rank_level": "Level {level}",
+    "rank_xp": "{current}/{required} XP",
+    "rank_position": "Peringkat #{position}",
+    "leaderboard_title": "🏆 Leaderboard - {guild}",
+    "leaderboard_empty": "Belum ada data leaderboard.",
+    "boost_active": "🚀 **|** XP Boost aktif! Multiplier: **{multiplier}x**",
+    "boost_expired": "⏰ **|** XP Boost telah berakhir.",
+    "tier_reached": "🎭 **|** Kamu telah mencapai tier **{tier}**!",
+    "voice_xp": "🎤 **|** +{xp} XP dari voice activity"
+  },
+  "economy": {
+    "balance": "💰 **|** Balance: **{amount}** souls",
+    "balance_other": "💰 **|** Balance {user}: **{amount}** souls",
+    "daily_claimed": "✅ **|** Kamu mendapatkan **{amount}** souls! Klaim lagi besok.",
+    "daily_cooldown": "⏰ **|** Kamu sudah klaim daily hari ini. Klaim lagi dalam **{time}**.",
+    "collect_claimed": "✅ **|** Kamu mengumpulkan **{amount}** souls!",
+    "collect_cooldown": "⏰ **|** Kamu baru saja collect. Coba lagi dalam **{time}**.",
+    "insufficient_funds": "❌ **|** Souls tidak cukup. Kamu butuh **{required}** souls.",
+    "transfer_success": "✅ **|** Berhasil transfer **{amount}** souls ke {user}.",
+    "transfer_self": "❌ **|** Kamu tidak dapat transfer ke dirimu sendiri.",
+    "souls_added": "✅ **|** **{amount}** souls ditambahkan ke {user}.",
+    "souls_removed": "✅ **|** **{amount}** souls dihapus dari {user}.",
+    "souls_reset": "✅ **|** Souls {user} telah direset."
+  },
+  "shop": {
+    "title": "🛒 Shop",
+    "empty": "Shop kosong. Tidak ada item yang tersedia.",
+    "item_bought": "✅ **|** Kamu membeli **{item}** seharga **{price}** souls!",
+    "item_not_found": "❌ **|** Item tidak ditemukan.",
+    "already_owned": "❌ **|** Kamu sudah memiliki item ini.",
+    "item_added": "✅ **|** Item **{item}** ditambahkan ke shop.",
+    "item_removed": "✅ **|** Item **{item}** dihapus dari shop.",
+    "purchase_pending": "⏳ **|** Pembelian sedang diproses...",
+    "purchase_complete": "✅ **|** Pembelian selesai! Hubungi staff untuk klaim.",
+    "exclusive_title": "⭐ Exclusive Items",
+    "exclusive_empty": "Tidak ada exclusive item yang tersedia."
+  },
+  "ticket": {
+    "created": "🎫 **|** Ticket dibuat! Silakan jelaskan masalahmu di {channel}.",
+    "closed": "🔒 **|** Ticket ditutup oleh {user}.",
+    "already_open": "❌ **|** Kamu sudah memiliki ticket yang terbuka.",
+    "not_ticket": "❌ **|** Channel ini bukan ticket channel.",
+    "transcript_saved": "📝 **|** Transcript ticket telah disimpan.",
+    "claim_success": "✅ **|** Ticket diklaim oleh {user}.",
+    "add_user": "✅ **|** {user} ditambahkan ke ticket.",
+    "remove_user": "✅ **|** {user} dihapus dari ticket."
+  },
+  "giveaway": {
+    "started": "🎉 **GIVEAWAY** 🎉",
+    "ended": "🎉 **GIVEAWAY ENDED** 🎉",
+    "winner": "🏆 Pemenang: {winners}",
+    "no_winner": "Tidak ada pemenang yang valid.",
+    "rerolled": "🔄 **|** Giveaway di-reroll! Pemenang baru: {winner}",
+    "ended_early": "⏰ **|** Giveaway diakhiri lebih awal oleh {user}.",
+    "not_found": "❌ **|** Giveaway tidak ditemukan.",
+    "already_ended": "❌ **|** Giveaway sudah berakhir.",
+    "time_remaining": "⏰ Berakhir: {time}",
+    "entries": "📥 Entries: {count}",
+    "hosted_by": "Hosted by: {user}"
+  },
+  "moderation": {
+    "warn_success": "⚠️ **|** {user} telah diperingatkan. Alasan: {reason}",
+    "warn_dm": "⚠️ **|** Kamu mendapat peringatan di **{guild}**. Alasan: {reason}",
+    "warn_count": "📋 **|** {user} memiliki **{count}** peringatan.",
+    "ban_success": "🔨 **|** {user} telah dibanned. Alasan: {reason}",
+    "kick_success": "👢 **|** {user} telah dikick. Alasan: {reason}",
+    "mute_success": "🔇 **|** {user} telah dimute selama **{duration}**.",
+    "unmute_success": "🔊 **|** {user} telah diunmute.",
+    "snipe_title": "🔍 Deleted Message",
+    "snipe_empty": "Tidak ada pesan yang dihapus baru-baru ini.",
+    "automod_triggered": "🛡️ **|** Automod: Pesan dari {user} dihapus. Alasan: {reason}"
+  },
+  "voice": {
+    "channel_created": "🔊 **|** Voice channel dibuat: {channel}",
+    "channel_deleted": "🔇 **|** Voice channel dihapus.",
+    "owner_left": "👋 **|** Owner voice channel telah keluar. Gunakan `claim` untuk mengambil alih.",
+    "claimed": "✅ **|** Kamu sekarang owner dari voice channel ini.",
+    "already_owner": "❌ **|** Kamu sudah menjadi owner channel ini.",
+    "not_owner": "❌ **|** Kamu bukan owner voice channel ini.",
+    "user_kicked": "👢 **|** {user} dikeluarkan dari voice channel.",
+    "user_banned": "🚫 **|** {user} dibanned dari voice channel.",
+    "user_unbanned": "✅ **|** {user} diunban dari voice channel.",
+    "channel_locked": "🔒 **|** Voice channel dikunci.",
+    "channel_unlocked": "🔓 **|** Voice channel dibuka.",
+    "channel_hidden": "👁️‍🗨️ **|** Voice channel disembunyikan.",
+    "channel_visible": "👁️ **|** Voice channel ditampilkan.",
+    "limit_set": "👥 **|** Limit user diatur ke **{limit}**.",
+    "name_changed": "✏️ **|** Nama channel diubah ke **{name}**.",
+    "trusted_added": "✅ **|** {user} ditambahkan ke trusted list.",
+    "trusted_removed": "❌ **|** {user} dihapus dari trusted list."
+  },
+  "confession": {
+    "sent": "✅ **|** Confession terkirim secara anonim!",
+    "cooldown": "⏰ **|** Kamu harus menunggu sebelum mengirim confession lagi.",
+    "too_long": "❌ **|** Confession terlalu panjang. Maksimal {max} karakter.",
+    "empty": "❌ **|** Confession tidak boleh kosong.",
+    "disabled": "❌ **|** Sistem confession sedang dinonaktifkan."
+  },
+  "games": {
+    "wordchain": {
+      "started": "🎮 **Word Chain** dimulai! Kata pertama: **{word}**",
+      "correct": "✅ **|** Benar! Giliran selanjutnya.",
+      "wrong": "❌ **|** Salah! Kata harus dimulai dengan huruf **{letter}**.",
+      "used": "❌ **|** Kata **{word}** sudah digunakan!",
+      "timeout": "⏰ **|** Waktu habis! Game berakhir.",
+      "winner": "🏆 **|** Pemenang: {user} dengan **{score}** poin!"
+    },
+    "guess": {
+      "started": "🎮 **Tebak Gambar** dimulai!",
+      "correct": "🎉 **|** {user} menebak dengan benar! Jawabannya adalah **{answer}**.",
+      "hint": "💡 **|** Hint: {hint}",
+      "timeout": "⏰ **|** Waktu habis! Jawabannya adalah **{answer}**.",
+      "already_guessed": "❌ **|** Kamu sudah menebak!"
+    }
+  },
+  "afk": {
+    "set": "💤 **|** Status AFK diatur: {reason}",
+    "removed": "👋 **|** Selamat datang kembali! Kamu AFK selama **{duration}**.",
+    "mention": "💤 **|** {user} sedang AFK: {reason} (sejak {time})"
+  },
+  "autoresponder": {
+    "added": "✅ **|** Auto response ditambahkan untuk trigger: **{trigger}**",
+    "removed": "✅ **|** Auto response dihapus.",
+    "not_found": "❌ **|** Auto response tidak ditemukan.",
+    "list_title": "📝 Auto Responders",
+    "list_empty": "Tidak ada auto responder yang dikonfigurasi."
+  },
+  "customrole": {
+    "created": "✅ **|** Custom role **{role}** berhasil dibuat!",
+    "deleted": "✅ **|** Custom role dihapus.",
+    "edited": "✅ **|** Custom role berhasil diubah.",
+    "limit_reached": "❌ **|** Kamu sudah mencapai batas custom role.",
+    "not_found": "❌ **|** Custom role tidak ditemukan.",
+    "not_owner": "❌ **|** Kamu bukan pemilik custom role ini.",
+    "color_invalid": "❌ **|** Format warna tidak valid. Gunakan format hex (contoh: #FF0000).",
+    "name_invalid": "❌ **|** Nama role tidak valid atau terlalu panjang."
+  },
+  "time": {
+    "seconds": "{count} detik",
+    "minutes": "{count} menit",
+    "hours": "{count} jam",
+    "days": "{count} hari",
+    "weeks": "{count} minggu",
+    "months": "{count} bulan",
+    "years": "{count} tahun",
+    "ago": "{time} yang lalu",
+    "in": "dalam {time}"
+  }
+}

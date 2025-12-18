@@ -3779,3 +3779,379 @@ img {
     font-size: 1.5rem !important;
   }
 }
+
+
+/* ==================== Skeleton Loading Screens ==================== */
+/* Requirements: 8.5 - Performance optimization */
+
+.skeleton-wrapper {
+  animation: skeleton-fade-in 0.3s ease;
+}
+
+@keyframes skeleton-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton Card */
+.skeleton-card {
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 150px;
+}
+
+.skeleton-badge {
+  height: 24px;
+  width: 60px;
+  border-radius: 12px;
+}
+
+.skeleton-body {
+  padding: 1.25rem;
+}
+
+.skeleton-text {
+  height: 14px;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.skeleton-text.short {
+  width: 60%;
+}
+
+.skeleton-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Skeleton Form */
+.skeleton-form {
+  padding: 1rem;
+}
+
+.skeleton-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.skeleton-form-group:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton-label {
+  height: 14px;
+  width: 100px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-input {
+  height: 38px;
+  width: 100%;
+}
+
+.skeleton-select {
+  height: 38px;
+  width: 100%;
+}
+
+/* Skeleton List */
+.skeleton-list {
+  padding: 0.5rem 0;
+}
+
+.skeleton-list-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  gap: 0.75rem;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-list-content {
+  flex: 1;
+}
+
+.skeleton-list-content .skeleton-text {
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-list-content .skeleton-text:last-child {
+  margin-bottom: 0;
+}
+
+/* Skeleton Stat */
+.skeleton-stat {
+  text-align: center;
+  padding: 1rem;
+}
+
+.skeleton-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 auto 0.75rem;
+}
+
+.skeleton-stat-value {
+  height: 28px;
+  width: 60px;
+  margin: 0 auto 0.5rem;
+}
+
+.skeleton-stat-label {
+  height: 14px;
+  width: 80px;
+  margin: 0 auto;
+}
+
+/* Loading Container State */
+.loading-skeleton {
+  min-height: 200px;
+  position: relative;
+}
+
+/* Lazy Loading */
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lazy-image.lazy-loaded {
+  opacity: 1;
+}
+
+/* ==================== Loading States ==================== */
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner-large {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-radius: 50%;
+  border-top-color: var(--primary-color);
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.loading-text {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Section Loading State */
+.section-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.section-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 5;
+}
+
+/* Button Loading State */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+
+.btn-loading .btn-text {
+  visibility: hidden;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-right-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ==================== Performance Optimizations ==================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .loading-spinner,
+  .loading-spinner-large,
+  .btn-loading::after {
+    animation: none;
+  }
+  
+  .skeleton {
+    background: #e8e8e8;
+  }
+  
+  .notification,
+  .lazy-image {
+    transition: none;
+  }
+}
+
+/* GPU acceleration for animations */
+.skeleton,
+.loading-spinner,
+.notification,
+.sidebar .nav-link,
+.card,
+.btn {
+  will-change: auto;
+  transform: translateZ(0);
+}
+
+/* Optimize scrolling performance */
+.config-section,
+.modal-body,
+.changes-list {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Content visibility for off-screen sections */
+.config-section:not(.active) {
+  content-visibility: hidden;
+  contain-intrinsic-size: 0 500px;
+}
+
+/* ==================== Mobile Performance ==================== */
+
+@media (max-width: 767.98px) {
+  /* Reduce animation complexity on mobile */
+  .skeleton {
+    animation-duration: 2s;
+  }
+  
+  /* Optimize touch targets */
+  .btn, .nav-link, .form-control, .form-select {
+    min-height: 44px;
+  }
+  
+  /* Reduce shadow complexity */
+  .card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Skeleton adjustments for mobile */
+  .skeleton-card {
+    margin-bottom: 0.75rem;
+  }
+  
+  .skeleton-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .skeleton-body {
+    padding: 1rem;
+  }
+}
+
+/* ==================== Progressive Loading Indicator ==================== */
+
+.progress-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--border-color);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.progress-loading-bar {
+  height: 100%;
+  background: var(--primary-color);
+  width: 0;
+  transition: width 0.3s ease;
+}
+
+.progress-loading.indeterminate .progress-loading-bar {
+  width: 30%;
+  animation: progress-indeterminate 1.5s infinite ease-in-out;
+}
+
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+/* ==================== Image Optimization ==================== */
+
+.optimized-image {
+  object-fit: cover;
+  background-color: var(--light-bg);
+}
+
+.image-placeholder {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.image-placeholder i {
+  font-size: 2rem;
+  opacity: 0.5;
+}

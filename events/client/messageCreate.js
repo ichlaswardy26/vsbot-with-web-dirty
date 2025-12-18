@@ -8,6 +8,8 @@ const { giveXp } = require("../../util/applyXpWithBoost");
 const { safeSend } = require("../../util/messageUtils");
 const Activity = require("../../schemas/Activity");
 const config = require("../../config.js");
+const automod = require("../../util/automod");
+const auditLogger = require("../../util/auditLogger");
 
 // Cooldown per user for XP
 const messageUsers = new Map();
@@ -21,6 +23,31 @@ module.exports = {
     
     // Skip bot messages
     if (message.author.bot) return;
+
+    // ========================================
+    // AUTO-MODERATION CHECK
+    // ========================================
+    try {
+      const automodResult = await automod.checkMessage(message);
+      if (automodResult.violation) {
+        // Execute action for the violation
+        const actionResult = await automod.executeAction(message, automodResult.primary);
+        
+        // Log to audit
+        await auditLogger.logAutomod(
+          message.guild.id,
+          message.author,
+          automodResult.primary.type,
+          actionResult.action || automodResult.primary.action,
+          message.content
+        );
+        
+        // If message was deleted, stop processing
+        if (actionResult.action === 'deleted') return;
+      }
+    } catch (err) {
+      console.error('AutoMod error:', err);
+    }
 
     // Handle word chain game messages first
     const wasWordChainMessage = await handleWordChainMessage(client, message);
@@ -295,12 +322,17 @@ async function processCommands(client, message) {
 
   if (startsWithPrefix) {
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
-    const commandName = args.shift().toLowerCase();
-    const command = client.commands.get(commandName) || 
-                    client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    const commandName = args.shift();
+    
+    // Skip if no command name provided (just prefix)
+    if (!commandName) return false;
+    
+    const lowerCommandName = commandName.toLowerCase();
+    const command = client.commands.get(lowerCommandName) || 
+                    client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(lowerCommandName));
 
     if (command) {
-      return await executeCommand(command, commandName, args);
+      return await executeCommand(command, lowerCommandName, args);
     }
     return false; // Not a valid command, allow XP
   } else {

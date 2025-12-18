@@ -1,7 +1,8 @@
-# Use Node.js 18 LTS Alpine image for smaller size
+# Villain Seraphyx Discord Bot
+# Node.js 18 LTS Alpine for smaller image size
+
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
 # Install system dependencies for canvas and sharp
@@ -19,29 +20,27 @@ RUN apk add --no-cache \
     make \
     g++
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy source code
 COPY . .
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S botuser -u 1001
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S botuser -u 1001 && \
+    chown -R botuser:nodejs /app
 
-# Change ownership of the app directory
-RUN chown -R botuser:nodejs /app
 USER botuser
 
-# Expose port (if your bot uses express server)
-EXPOSE 3000
+# Expose ports for web dashboard and webhook
+EXPOSE 3000 3001
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "console.log('Bot is running')" || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || exit 0
 
-# Start the bot
 CMD ["npm", "start"]

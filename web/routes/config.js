@@ -4,21 +4,31 @@ const configManager = require('../../util/configManager');
 const { verifyAuth, verifyGuildAccess } = require('../middleware/auth');
 const { validateGuildId, validateConfigSection, sanitizeInput, validateConfigStructure } = require('../middleware/validation');
 const { auditLogger } = require('../services/auditLogger');
+const { cacheService, CacheKeys, CacheTTL } = require('../services/cacheService');
 
 // ==================== GET ROUTES ====================
 
 /**
  * GET /api/config/:guildId
  * Get full configuration for a guild
+ * Performance: Uses caching to reduce database queries
  */
 router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId } = req.params;
-    const config = await configManager.getConfig(guildId);
+    const cacheKey = cacheService.generateKey(CacheKeys.CONFIG, guildId);
+    
+    // Try to get from cache first
+    const config = await cacheService.getOrSet(
+      cacheKey,
+      () => configManager.getConfig(guildId),
+      CacheTTL.CONFIG
+    );
     
     res.json({
       success: true,
-      data: config
+      data: config,
+      cached: cacheService.has(cacheKey)
     });
   } catch (error) {
     console.error('Error getting config:', error);
@@ -32,15 +42,27 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
 /**
  * GET /api/config/:guildId/:section
  * Get specific configuration section
+ * Performance: Uses section-specific caching
  */
 router.get('/:guildId/:section', validateGuildId, validateConfigSection, verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId, section } = req.params;
-    const sectionData = await configManager.getConfigSection(guildId, section);
+    const cacheKey = cacheService.generateKey(section, guildId);
+    
+    // Determine TTL based on section type
+    const ttl = CacheTTL[section.toUpperCase()] || CacheTTL.CONFIG;
+    
+    // Try to get from cache first
+    const sectionData = await cacheService.getOrSet(
+      cacheKey,
+      () => configManager.getConfigSection(guildId, section),
+      ttl
+    );
     
     res.json({
       success: true,
-      data: sectionData
+      data: sectionData,
+      cached: cacheService.has(cacheKey)
     });
   } catch (error) {
     console.error('Error getting config section:', error);
@@ -81,6 +103,9 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
     const oldConfig = await configManager.getConfig(guildId);
     
     const config = await configManager.updateConfig(guildId, updates, userId);
+    
+    // Invalidate cache for this guild
+    cacheService.invalidateGuild(guildId);
     
     // Audit log successful configuration change
     await auditLogger.logConfigChange(req, guildId, null, {
@@ -137,6 +162,10 @@ router.put('/:guildId/:section', validateGuildId, validateConfigSection, sanitiz
     const oldSectionData = await configManager.getConfigSection(guildId, section);
     
     const sectionData = await configManager.updateConfigSection(guildId, section, updates, userId);
+    
+    // Invalidate cache for this section and full config
+    cacheService.invalidateSection(guildId, section);
+    cacheService.delete(cacheService.generateKey(CacheKeys.CONFIG, guildId));
     
     // Audit log successful section update
     await auditLogger.logConfigChange(req, guildId, section, {
@@ -528,17 +557,42 @@ function calculateFeaturesProgress(features) {
 router.delete('/:guildId/cache', verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId } = req.params;
+    
+    // Clear both configManager cache and cacheService cache
     configManager.clearCache(guildId);
+    const cleared = cacheService.invalidateGuild(guildId);
     
     res.json({
       success: true,
-      message: 'Configuration cache cleared'
+      message: 'Configuration cache cleared',
+      itemsCleared: cleared
     });
   } catch (error) {
     console.error('Error clearing cache:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to clear cache'
+    });
+  }
+});
+
+/**
+ * GET /api/config/cache/stats
+ * Get cache statistics for monitoring
+ */
+router.get('/cache/stats', verifyAuth, async (req, res) => {
+  try {
+    const stats = cacheService.getStats();
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error getting cache stats:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get cache statistics'
     });
   }
 });

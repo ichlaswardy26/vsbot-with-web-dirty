@@ -1,143 +1,36 @@
 require("dotenv").config();
 const configManager = require('./util/configManager');
 
-// Static configuration (sensitive data from environment)
+/**
+ * Static Configuration
+ * Contains sensitive data and core settings that MUST come from environment variables
+ * These values cannot be changed via web dashboard for security reasons
+ */
 const staticConfig = {
   // ==================== BOT CREDENTIALS ====================
   token: process.env.TOKEN,
   clientId: process.env.CLIENT_ID,
   guildId: process.env.GUILD_ID,
   
-  // ==================== OWNER & ADMIN ====================
-  ownerId: process.env.OWNER_IDS ? process.env.OWNER_IDS.split(',') : [],
-  
-  // ==================== STAFF USER IDs ====================
-  staffUsers: {
-    executive: process.env.EXECUTIVE_USER_ID || null,
-    supremeVisioner: process.env.SUPREME_VISIONER_USER_ID || null,
-    engineer: process.env.ENGINEER_USER_ID || null,
-  },
-  
-  // ==================== MONGODB ====================
+  // ==================== DATABASE ====================
   mongoUri: process.env.MONGO_URI,
   
-  // ==================== API KEYS ====================
-  removeBgApiKey: process.env.REMOVE_BG_API_KEY || null,
+  // ==================== OWNER & ADMIN ====================
+  ownerIds: process.env.OWNER_IDS ? process.env.OWNER_IDS.split(',').map(id => id.trim()) : [],
   
-  // ==================== BOT IDs ====================
-  owoBotId: process.env.OWO_BOT_ID || '408785106942164992',
+  // ==================== WEB DASHBOARD ====================
+  web: {
+    port: parseInt(process.env.WEB_PORT) || 3001,
+    sessionSecret: process.env.SESSION_SECRET || 'change-this-secret',
+    allowedOrigins: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3001'],
+    discordClientSecret: process.env.DISCORD_CLIENT_SECRET,
+    discordCallbackUrl: process.env.DISCORD_CALLBACK_URL || 'http://localhost:3001/auth/discord/callback',
+  },
   
-  // ==================== ENVIRONMENT ====================
-  nodeEnv: process.env.NODE_ENV || 'development',
-  logLevel: process.env.LOG_LEVEL || 'INFO',
-  maxLogFiles: parseInt(process.env.MAX_LOG_FILES) || 5,
-  maxLogSize: parseInt(process.env.MAX_LOG_SIZE) || 10485760,
-  
-  // ==================== WEBHOOK ====================
-  webhookToken: process.env.WEBHOOK_TOKEN || null,
-};
-
-// Dynamic configuration getter
-async function getConfig(guildId = null) {
-  const targetGuildId = guildId || staticConfig.guildId;
-  
-  if (!targetGuildId) {
-    console.warn('No guild ID provided, using static config only');
-    return staticConfig;
-  }
-
-  try {
-    const webConfig = await configManager.getConfig(targetGuildId);
-    
-    // Merge static and web config
-    return {
-      ...staticConfig,
-      ...webConfig,
-      // Ensure sensitive data is not overridden
-      token: staticConfig.token,
-      mongoUri: staticConfig.mongoUri,
-      ownerId: staticConfig.ownerId,
-      staffUsers: staticConfig.staffUsers,
-      removeBgApiKey: staticConfig.removeBgApiKey,
-      webhookToken: staticConfig.webhookToken,
-    };
-  } catch (error) {
-    console.error('Error loading web config, falling back to static config:', error);
-    return staticConfig;
-  }
-}
-
-// Legacy support - export static config directly
-module.exports = {
-  ...staticConfig,
-  
-  // New methods for dynamic config
-  getConfig,
-  getStaticConfig: () => staticConfig,
-  configManager,
-  
-  // Backward compatibility - these will be deprecated
-  channels: {
-    // These will be loaded dynamically, but provide fallbacks
-    welcome: process.env.WELCOME_CHANNEL_ID || null,
-    welcome2: process.env.WELCOME2_CHANNEL_ID || null,
-    welcomeLog: process.env.WELCOME_LOG_CHANNEL_ID || null,
-    
-    // Boost
-    boostAnnounce: process.env.BOOST_ANNOUNCE_CHANNEL_ID || null,
-    boostLogs: process.env.BOOST_LOGS_CHANNEL_ID || null,
-    
-    // Ticket
-    ticketLogs: process.env.TICKET_LOG_CHANNEL_ID || null,
-    
-    // Confession
-    confession: process.env.CONFESSION_CHANNEL_ID || null,
-    confessionLog: process.env.CONFESSION_LOG_CHANNEL_ID || null,
-    
-    // Custom Role
-    customRoleLogs: process.env.CUSTOM_ROLE_LOGS_CHANNEL_ID || null,
-    
-    // Introduction
-    intro: process.env.INTRO_CHANNEL_ID || null,
-    
-    // Donation
-    donation: process.env.DONATION_CHANNEL_ID || null,
-    chat2: process.env.CHAT_CHANNEL_2_ID || null,
-    chat3: process.env.CHAT_CHANNEL_3_ID || null,
-    chat4: process.env.CHAT_CHANNEL_4_ID || null,
-    chat5: process.env.CHAT_CHANNEL_5_ID || null,
-    
-    // Rules Channels
-    rules1: process.env.RULES_CHANNEL_1_ID || null,
-    rules2: process.env.RULES_CHANNEL_2_ID || null,
-    rules3: process.env.RULES_CHANNEL_3_ID || null,
-    rules4: process.env.RULES_CHANNEL_4_ID || null,
-    announcement: process.env.ANNOUNCEMENT_CHANNEL_ID || null,
-    
-    // Giveaway Channels
-    giveaway1: process.env.GIVEAWAY_CHANNEL_1_ID || null,
-    giveaway2: process.env.GIVEAWAY_CHANNEL_2_ID || null,
-    giveaway3: process.env.GIVEAWAY_CHANNEL_3_ID || null,
-    giveaway4: process.env.GIVEAWAY_CHANNEL_4_ID || null,
-    giveawayWinner: process.env.GIVEAWAY_WINNER_CHANNEL_ID || null,
-    
-    // Premium Channels
-    premium1: process.env.PREMIUM_CHANNEL_1_ID || null,
-    premium2: process.env.PREMIUM_CHANNEL_2_ID || null,
-    premium3: process.env.PREMIUM_CHANNEL_3_ID || null,
-    premiumBenefit: process.env.PREMIUM_BENEFIT_CHANNEL_ID || null,
-    boosterRequest: process.env.BOOSTER_REQUEST_CHANNEL_ID || null,
-    
-    // Support
-    support: process.env.SUPPORT_CHANNEL_ID || null,
-    
-    // Bio Link System
-    bioLinkConfirmation: process.env.BIO_LINK_CONFIRMATION_CHANNEL_ID || null,
-    
-    // Voice System
-    joinToCreate: process.env.JOIN_TO_CREATE_CHANNEL_ID || null,
-    voiceCategory: process.env.VOICE_CATEGORY_ID || null,
-    voiceLog: process.env.VOICE_LOG_CHANNEL_ID || null,
+  // ==================== WEBHOOK SERVER ====================
+  webhook: {
+    port: parseInt(process.env.WEBHOOK_PORT) || 3000,
+    token: process.env.WEBHOOK_TOKEN,
   },
   
   // ==================== API KEYS ====================
@@ -145,198 +38,158 @@ module.exports = {
     removeBg: process.env.REMOVE_BG_API_KEY || null,
   },
   
-  // ==================== BOT IDs ====================
-  botIds: {
-    owoBot: process.env.OWO_BOT_ID || "408785106942164992",
-  },
-  
-  // ==================== CATEGORIES ====================
-  categories: {
-    ticket: process.env.TICKET_CATEGORY_ID || null,
-    partner: process.env.PARTNER_CATEGORY_ID || null,
-  },
-  
-  // ==================== ROLES ====================
-  roles: {
-    // Staff & Permissions
-    staff: process.env.STAFF_ROLE_ID || null,
-    supportTeam: process.env.SUPPORT_TEAM_ROLE_ID || null,
-    
-    // Special Roles
-    welcomeBot: process.env.WELCOME_BOT_ROLE_ID || null,
-    boost: process.env.BOOST_ROLE_ID || null,
-    donate: process.env.DONATE_ROLE_ID || null,
-    
-    // Staff Hierarchy
-    owner: process.env.OWNER_ROLE_ID || null,
-    coOwner: process.env.CO_OWNER_ROLE_ID || null,
-    engineer: process.env.ENGINEER_ROLE_ID || null,
-    admin: process.env.ADMIN_ROLE_ID || null,
-    moderator: process.env.MODERATOR_ROLE_ID || null,
-    eventOrganizer: process.env.EVENT_ORGANIZER_ROLE_ID || null,
-    partnerManager: process.env.PARTNER_MANAGER_ROLE_ID || null,
-    designer: process.env.DESIGNER_ROLE_ID || null,
-    helper: process.env.HELPER_ROLE_ID || null,
-    contentCreator: process.env.CONTENT_CREATOR_ROLE_ID || null,
-    
-    // Support Tiers
-    supportTier1: process.env.SUPPORT_TIER_1_ROLE_ID || null,
-    supportTier2: process.env.SUPPORT_TIER_2_ROLE_ID || null,
-    supportTier3: process.env.SUPPORT_TIER_3_ROLE_ID || null,
-    supportTier4: process.env.SUPPORT_TIER_4_ROLE_ID || null,
-    
-    // Special Community Roles
-    editor: process.env.EDITOR_ROLE_ID || null,
-    special: process.env.SPECIAL_ROLE_ID || null,
-    streamer: process.env.STREAMER_ROLE_ID || null,
-    videoCreator: process.env.VIDEO_CREATOR_ROLE_ID || null,
-    bigGiveawayWinner: process.env.BIG_GIVEAWAY_WINNER_ROLE_ID || null,
-    smallGiveawayWinner: process.env.SMALL_GIVEAWAY_WINNER_ROLE_ID || null,
-    bioLink: process.env.BIO_LINK_ROLE_ID || null,
-    socialFollower: process.env.SOCIAL_FOLLOWER_ROLE_ID || null,
-    activeMember: process.env.ACTIVE_MEMBER_ROLE_ID || null,
-    
-    // Support Package Roles
-    cavernDread: process.env.CAVERN_DREAD_ROLE_ID || null,
-    midnightCovenant: process.env.MIDNIGHT_COVENANT_ROLE_ID || null,
-    dreadLegion: process.env.DREAD_LEGION_ROLE_ID || null,
-    abyssalBlade: process.env.ABYSSAL_BLADE_ROLE_ID || null,
-    valkyrie: process.env.VALKYRIE_ROLE_ID || null,
-    
-    // Special Mention Role
-    mentionRole: process.env.MENTION_ROLE_ID || null,
-    
-    // Position Reference Role
-    customRolePosition: process.env.CUSTOM_ROLE_POSITION_REF || null,
-    
-    // Level Roles (format: level:roleId)
-    level: {
-      1: process.env.LEVEL_1_ROLE_ID || null,
-      2: process.env.LEVEL_2_ROLE_ID || null,
-      7: process.env.LEVEL_7_ROLE_ID || null,
-      10: process.env.LEVEL_10_ROLE_ID || null,
-      20: process.env.LEVEL_20_ROLE_ID || null,
-      30: process.env.LEVEL_30_ROLE_ID || null,
-      40: process.env.LEVEL_40_ROLE_ID || null,
-      50: process.env.LEVEL_50_ROLE_ID || null,
-      60: process.env.LEVEL_60_ROLE_ID || null,
-      70: process.env.LEVEL_70_ROLE_ID || null,
-      80: process.env.LEVEL_80_ROLE_ID || null,
-      90: process.env.LEVEL_90_ROLE_ID || null,
-      100: process.env.LEVEL_100_ROLE_ID || null,
-    }
-  },
-  
-  // ==================== EMOJIS ====================
-  emojis: {
-    // Custom Emojis (format: <:name:id> or <a:name:id> for animated)
-    souls: process.env.EMOJI_SOULS || '💰',
-    dot: process.env.EMOJI_DOT || '🔵',
-    blank: process.env.EMOJI_BLANK || '⚪',
-    seraphyx: process.env.EMOJI_SERAPHYX || '✨',
-    important: process.env.EMOJI_IMPORTANT || '⚠️',
-    question: process.env.EMOJI_QUESTION || '❓',
-    report: process.env.EMOJI_REPORT || '📢',
-    ban: process.env.EMOJI_BAN || '🔨',
-    partner: process.env.EMOJI_PARTNER || '🤝',
-    ticket: process.env.EMOJI_TICKET || '🎫',
-    roles: process.env.EMOJI_ROLES || '👥',
-    info: process.env.EMOJI_INFO || 'ℹ️',
-    website: process.env.EMOJI_WEBSITE || '🌐',
-    levelup: process.env.EMOJI_LEVELUP || '⬆️',
-    tier: process.env.EMOJI_TIER || '🏆',
-    rocket: process.env.EMOJI_ROCKET || '🚀',
-    sparkleThumbsup: process.env.EMOJI_SPARKLE_THUMBSUP || '👍',
-    kittyDance: process.env.EMOJI_KITTYDANCE || '💃',
-    cowoncy: process.env.EMOJI_COWONCY || '🪙',
-    donation: process.env.EMOJI_DONATION || '💝',
-    foryouCommunity: process.env.EMOJI_FORYOU_COMMUNITY || '🏘️',
-    check: process.env.EMOJI_CHECK || '✅',
-    clouds: process.env.EMOJI_CLOUDS || '☁️',
-    blackBoost: process.env.EMOJI_BLACK_BOOST || '🚀',
-    cross: process.env.EMOJI_CROSS || '❌',
-    owoCash: process.env.EMOJI_OWO_CASH || '🪙',
-    blackBat: process.env.EMOJI_BLACK_BAT || '🦇',
-    cards: process.env.EMOJI_CARDS || '🃏',
-    spider: process.env.EMOJI_SPIDER || '🕷️',
-    darkWyvern: process.env.EMOJI_DARK_WYVERN || '🐉',
-    tako: process.env.EMOJI_TAKO || '🐙',
-    paimonPrimogems: process.env.EMOJI_PAIMON_PRIMOGEMS || '💎',
-    witch: process.env.EMOJI_WITCH || '🧙',
-  },
-  
-  // ==================== IMAGES & ASSETS ====================
-  images: {
-    defaultGif: process.env.DEFAULT_GIF_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Default+Image',
-    event: process.env.EVENT_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Event+Image',
-    partner: process.env.PARTNER_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Partner+Image',
-    support: process.env.SUPPORT_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Support+Image',
-    books: process.env.BOOKS_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Books+Image',
-    rules: process.env.RULES_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Rules+Image',
-    rinfo: process.env.RINFO_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=Role+Info',
-    qris: process.env.QRIS_IMAGE_URL || 'https://via.placeholder.com/400x200/5865F2/FFFFFF?text=QRIS+Code',
-  },
-  
-  // ==================== FEATURES SETTINGS ====================
-  features: {
-    // Leveling
-    xpCooldown: parseInt(process.env.XP_COOLDOWN) || 60000, // milliseconds
-    xpMin: parseInt(process.env.XP_MIN) || 15,
-    xpMax: parseInt(process.env.XP_MAX) || 25,
-    voiceXpPerMinute: parseInt(process.env.VOICE_XP_PER_MINUTE) || 10,
-    
-    // Economy
-    dailyReward: parseInt(process.env.DAILY_REWARD) || 100,
-    collectCooldown: parseInt(process.env.COLLECT_COOLDOWN) || 3600000, // milliseconds
-    
-    // Ticket
-    ticketPrefix: process.env.TICKET_PREFIX || 'ticket',
-    partnerTicketPrefix: process.env.PARTNER_TICKET_PREFIX || 'partner',
-    
-    // Custom Role
-    customRolePrice: parseInt(process.env.CUSTOM_ROLE_PRICE) || 1000,
-    customRolePositionRef: process.env.CUSTOM_ROLE_POSITION_REF || null,
-    
-    // Word Chain
-    wordChainTimeout: parseInt(process.env.WORD_CHAIN_TIMEOUT) || 30000, // milliseconds
-  },
-  
-  // ==================== EMBED COLORS ====================
-  colors: {
-    primary: process.env.COLOR_PRIMARY || '#5865F2',
-    success: process.env.COLOR_SUCCESS || '#57F287',
-    error: process.env.COLOR_ERROR || '#ED4245',
-    warning: process.env.COLOR_WARNING || '#FEE75C',
-    info: process.env.COLOR_INFO || '#5865F2',
-  },
-  
-  // ==================== LOGGING CONFIGURATION ====================
+  // ==================== ENVIRONMENT ====================
+  nodeEnv: process.env.NODE_ENV || 'development',
   logging: {
     level: process.env.LOG_LEVEL || 'INFO',
     maxFiles: parseInt(process.env.MAX_LOG_FILES) || 5,
-    maxSize: parseInt(process.env.MAX_LOG_SIZE) || 10485760, // 10MB
+    maxSize: parseInt(process.env.MAX_LOG_SIZE) || 10485760,
   },
+};
 
-  // ==================== ENVIRONMENT ====================
-  nodeEnv: process.env.NODE_ENV || 'development',
+/**
+ * Default dynamic configuration
+ * These are fallback values when database config is not available
+ */
+const defaultDynamicConfig = {
+  channels: {},
+  categories: {},
+  roles: {},
+  emojis: {
+    souls: '💰',
+    dot: '•',
+    blank: '⠀',
+    check: '✅',
+    cross: '❌',
+    info: 'ℹ️',
+    important: '❗',
+    question: '❓',
+    ticket: '🎫',
+    partner: '🤝',
+    levelup: '⬆️',
+    rocket: '🚀',
+  },
+  images: {},
+  features: {
+    leveling: { enabled: true, xpCooldown: 60000, xpMin: 15, xpMax: 25, voiceXpPerMinute: 10 },
+    economy: { enabled: true, dailyReward: 100, collectCooldown: 3600000, customRolePrice: 1000 },
+    ticket: { enabled: true, prefix: 'ticket', partnerPrefix: 'partner' },
+    games: { enabled: true, wordChainTimeout: 30000 },
+    welcome: { enabled: true, message: 'Welcome to the server!' },
+    autoResponder: { enabled: true },
+    confession: { enabled: true },
+    voice: { enabled: true, joinToCreateEnabled: false },
+  },
+  colors: {
+    primary: '#5865F2',
+    success: '#57F287',
+    error: '#ED4245',
+    warning: '#FEE75C',
+    info: '#5865F2',
+  },
+  language: {
+    default: 'en',
+    available: ['en'],
+  },
+};
 
-  // ==================== DEPRECATED (for backward compatibility) ====================
-  // These will be removed in future versions
-  prefix: process.env.PREFIX || 'sera',
-  welcomeChannelId: process.env.WELCOME_CHANNEL_ID || null,
-  welcome2ChannelId: process.env.WELCOME2_CHANNEL_ID || null,
-  welcomeLogChannelId: process.env.WELCOME_LOG_CHANNEL_ID || null,
-  welcomeBotRoleId: process.env.WELCOME_BOT_ROLE_ID || null,
-  boostAnnounceChannelId: process.env.BOOST_ANNOUNCE_CHANNEL_ID || null,
-  boostLogsChannelId: process.env.BOOST_LOGS_CHANNEL_ID || null,
-  ticket_channel: process.env.TICKET_LOG_CHANNEL_ID || null,
-  ticket_category: process.env.TICKET_CATEGORY_ID || null,
-  ticket_logs: process.env.TICKET_LOG_CHANNEL_ID || null,
-  support_team: process.env.SUPPORT_TEAM_ROLE_ID || null,
-  staffRoleId: process.env.STAFF_ROLE_ID || null,
-  ticketCategoryId: process.env.TICKET_CATEGORY_ID || null,
-  ticketLogChannelId: process.env.TICKET_LOG_CHANNEL_ID || null,
-  BOOST_ROLE_ID: process.env.BOOST_ROLE_ID || null,
-  DONATE_ROLE_ID: process.env.DONATE_ROLE_ID || null,
-  customRoleLogsChannelId: process.env.CUSTOM_ROLE_LOGS_CHANNEL_ID || null,
+// Cache for dynamic config
+let dynamicConfigCache = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get full configuration (static + dynamic from database)
+ * @param {string} guildId - Discord guild ID (optional, uses default from env)
+ * @returns {Promise<Object>} Complete configuration object
+ */
+async function getConfig(guildId = null) {
+  const targetGuildId = guildId || staticConfig.guildId;
+  
+  if (!targetGuildId) {
+    console.warn('[Config] No guild ID provided, using static config with defaults');
+    return { ...staticConfig, ...defaultDynamicConfig };
+  }
+
+  // Check cache
+  if (dynamicConfigCache && (Date.now() - cacheTimestamp) < CACHE_TTL) {
+    return { ...staticConfig, ...dynamicConfigCache };
+  }
+
+  try {
+    const webConfig = await configManager.getConfig(targetGuildId);
+    dynamicConfigCache = webConfig;
+    cacheTimestamp = Date.now();
+    
+    return {
+      ...staticConfig,
+      ...webConfig,
+      // Ensure sensitive data is never overridden
+      token: staticConfig.token,
+      mongoUri: staticConfig.mongoUri,
+      ownerIds: staticConfig.ownerIds,
+      apiKeys: staticConfig.apiKeys,
+      web: staticConfig.web,
+      webhook: staticConfig.webhook,
+    };
+  } catch (error) {
+    console.error('[Config] Error loading web config, using defaults:', error.message);
+    return { ...staticConfig, ...defaultDynamicConfig };
+  }
+}
+
+/**
+ * Get static configuration only (synchronous)
+ * @returns {Object} Static configuration
+ */
+function getStaticConfig() {
+  return { ...staticConfig };
+}
+
+/**
+ * Clear configuration cache
+ * Call this when config is updated via web dashboard
+ */
+function clearCache() {
+  dynamicConfigCache = null;
+  cacheTimestamp = 0;
+  configManager.clearAllCache();
+}
+
+/**
+ * Get specific config section
+ * @param {string} section - Section name (channels, roles, features, etc.)
+ * @param {string} guildId - Guild ID (optional)
+ * @returns {Promise<Object>} Configuration section
+ */
+async function getSection(section, guildId = null) {
+  const config = await getConfig(guildId);
+  return config[section] || {};
+}
+
+// Export for backward compatibility and new usage
+module.exports = {
+  // Static config (direct access for credentials)
+  ...staticConfig,
+  
+  // Default dynamic values for backward compatibility (sync access)
+  // These will be overridden when using getConfig() async
+  channels: defaultDynamicConfig.channels,
+  categories: defaultDynamicConfig.categories,
+  roles: defaultDynamicConfig.roles,
+  emojis: defaultDynamicConfig.emojis,
+  images: defaultDynamicConfig.images,
+  features: defaultDynamicConfig.features,
+  colors: defaultDynamicConfig.colors,
+  language: defaultDynamicConfig.language,
+  
+  // Methods for dynamic config
+  getConfig,
+  getStaticConfig,
+  getSection,
+  clearCache,
+  configManager,
+  
+  // Default values (for reference)
+  defaults: defaultDynamicConfig,
 };

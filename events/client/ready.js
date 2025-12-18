@@ -1,7 +1,6 @@
 const { ActivityType } = require("discord.js");
 const logger = require("../../util/logger");
-const introCommand = require("../../commands/test/intro");
-const { checkGiveaways } = require("../../handlers/giveawayHandler"); // <-- tambahkan ini
+const { checkGiveaways } = require("../../handlers/giveawayHandler");
 
 module.exports = {
   name: "clientReady",
@@ -20,13 +19,5 @@ module.exports = {
     // Jalankan sistem giveaway di sini
     await checkGiveaways(client);
     console.log('🎁 Giveaway system initialized and monitoring...');
-
-    if (!client.introHandlersRegistered) {
-      introCommand.exec(client, {
-        channel: {
-          send: () => {},
-        },
-      });
-    }
   },
 };

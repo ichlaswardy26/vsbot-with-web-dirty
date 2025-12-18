@@ -1,55 +1,29 @@
-version: '3.8'
+# Villain Seraphyx Discord Bot - Docker Compose
+# Default configuration for local/development use
 
 services:
   discord-bot:
     build: .
     container_name: villain-seraphyx-bot
     restart: unless-stopped
-    environment:
-      - NODE_ENV=production
     env_file:
       - .env
+    environment:
+      - NODE_ENV=production
     volumes:
-      # Mount .env file untuk auto-restart ketika berubah
-      - ./.env:/app/.env:ro
-      # Mount logs directory (optional)
       - ./logs:/app/logs
-    networks:
-      - bot-network
-    # Uncomment jika bot menggunakan express server
-    # ports:
-    #   - "3000:3000"
-    
-    # Auto-restart ketika .env berubah menggunakan file watcher
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    
-    # Health check
+    ports:
+      - "3000:3000"  # Webhook server
+      - "3001:3001"  # Web dashboard
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('Bot is running')"]
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # File watcher untuk auto-restart ketika .env berubah
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/app:ro
-    environment:
-      - WATCHTOWER_POLL_INTERVAL=30
-      - WATCHTOWER_LABEL_ENABLE=true
-      - WATCHTOWER_CLEANUP=true
-    command: --interval 30 --label-enable
+    networks:
+      - bot-network
 
 networks:
   bot-network:
     driver: bridge
-
-volumes:
-  logs:
-    driver: local

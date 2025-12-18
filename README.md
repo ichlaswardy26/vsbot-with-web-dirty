@@ -76,8 +76,6 @@ npm start
 
 Access dashboard at: `http://localhost:3000/dashboard`
 
-📋 **Development Status:** See [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) for upcoming features
-
 ## 📚 Commands Reference
 
 ### 🎭 Action Commands
@@ -220,20 +218,26 @@ The bot includes Tako.id webhook integration for handling donations:
 
 ```
 ├── commands/           # Command modules organized by category
-│   ├── actions/       # Fun action commands
+│   ├── actions/       # Fun action commands (hug, pat, kiss, etc.)
 │   ├── admin/         # Administrative commands
+│   ├── autores/       # Auto responder commands
+│   ├── confess/       # Confession system commands
+│   ├── cusrole/       # Custom role commands
 │   ├── economy/       # Economy system commands
+│   ├── giveaway/      # Giveaway commands
 │   ├── level/         # Leveling system commands
-│   ├── shop/          # Shop and item management
 │   ├── minigames/     # Interactive games
 │   ├── moderator/     # Moderation tools
+│   ├── shop/          # Shop and item management
 │   ├── ticket/        # Support ticket system
-│   ├── voice/         # Voice channel management
-│   └── test/          # Utility and info commands
+│   ├── utility/       # Utility and info commands
+│   └── voice/         # Voice channel management
 ├── events/            # Discord event handlers
 ├── handlers/          # Feature handlers
 ├── schemas/           # MongoDB data models
+├── scripts/           # Deployment & maintenance scripts
 ├── util/              # Utility functions
+├── web/               # Web dashboard
 ├── config.js          # Bot configuration
 └── index.js           # Main bot file
 ```
@@ -281,12 +285,22 @@ The `config.js` file contains all bot settings including:
 npm start
 ```
 
-### Production Deployment
-1. **Railway/Heroku**: Use provided `Procfile`
-2. **VPS**: Use PM2 or similar process manager
-3. **Docker**: Create Dockerfile for containerization
+### Docker (Recommended)
+```bash
+# Development
+./deploy.sh dev
 
-See `DEPLOYMENT.md` for detailed deployment instructions.
+# Production
+./deploy.sh prod
+```
+
+### Other Options
+- **Railway/Render**: Connect GitHub repo, set env variables
+- **Heroku**: Use provided `Procfile`
+- **VPS**: Use `./scripts/setup-vps.sh` then `./deploy.sh prod`
+- **PM2**: `pm2 start index.js --name villain-seraphyx-bot`
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ## 📝 License
 

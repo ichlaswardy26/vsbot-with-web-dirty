@@ -564,6 +564,11 @@
         </div>
     </div>
 
+    <!-- Progress Loading Bar -->
+    <div class="progress-loading" id="progressLoading" style="display: none;">
+        <div class="progress-loading-bar" id="progressLoadingBar"></div>
+    </div>
+
     <!-- Notifications Container -->
     <div id="notifications" class="notifications-container"></div>
 
@@ -686,15 +691,26 @@
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <!-- Error Handler (load first for global error catching) -->
     <script src="/js/error-handler.js"></script>
+    <!-- Performance utilities for lazy loading and optimization -->
+    <script src="/js/performance-utils.js"></script>
     <script src="/js/config-manager.js"></script>
     <script src="/js/notification-system.js"></script>
     <script src="/js/websocket-client.js"></script>
-    <script src="/js/channels-config.js"></script>
-    <script src="/js/roles-config.js"></script>
-    <script src="/js/features-config.js"></script>
-    <script src="/js/appearance-config.js"></script>
+    <!-- Section-specific scripts loaded on demand for better performance -->
+    <script src="/js/channels-config.js" defer></script>
+    <script src="/js/roles-config.js" defer></script>
+    <script src="/js/features-config.js" defer></script>
+    <script src="/js/appearance-config.js" defer></script>
     <script src="/js/mobile-responsive.js"></script>
     <script src="/js/overview-dashboard.js"></script>
     <script src="/js/dashboard.js"></script>
+    
+    <!-- Performance initialization -->
+    <script>
+      // Mark page load timing
+      if (window.performanceUtils) {
+        window.performanceUtils.mark('dashboard-scripts-loaded');
+      }
+    </script>
 </body>
 </html>

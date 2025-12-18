@@ -1,63 +1,56 @@
-version: '3.8'
+# Villain Seraphyx Discord Bot - Production
+# Usage: docker-compose -f docker-compose.prod.yml up -d
 
 services:
   discord-bot:
     build: .
-    container_name: villain-seraphyx-bot-prod
-    restart: unless-stopped
-    environment:
-      - NODE_ENV=production
+    container_name: villain-seraphyx-bot
+    restart: always
     env_file:
       - .env
+    environment:
+      - NODE_ENV=production
     volumes:
-      # Mount .env file untuk auto-restart ketika berubah
-      - ./.env:/app/.env:ro
-      # Mount logs directory
       - ./logs:/app/logs
-      # Mount data directory untuk persistent storage
-      - ./data:/app/data
-    networks:
-      - bot-network
-    
-    # Resource limits untuk production
+    ports:
+      - "3000:3000"
+      - "3001:3001"
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 1G
         reservations:
-          cpus: '0.5'
-          memory: 512M
-    
-    # Auto-restart ketika .env berubah
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    
-    # Health check yang lebih ketat untuk production
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('Bot is running')"]
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - bot-network
 
-  # File watcher untuk auto-restart ketika .env berubah
+  # Optional: Watchtower for auto-updates
   watchtower:
     image: containrrr/watchtower
-    container_name: watchtower-prod
+    container_name: watchtower
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./:/app:ro
     environment:
-      - WATCHTOWER_POLL_INTERVAL=30
-      - WATCHTOWER_LABEL_ENABLE=true
       - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_INCLUDE_STOPPED=true
-      - WATCHTOWER_REVIVE_STOPPED=true
-    command: --interval 30 --label-enable --cleanup
+      - WATCHTOWER_POLL_INTERVAL=300
+    profiles:
+      - monitoring
 
-  # Monitoring dengan Portainer (optional)
+  # Optional: Portainer for container management
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
@@ -67,6 +60,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+    profiles:
+      - monitoring
     networks:
       - bot-network
 
@@ -75,7 +70,4 @@ networks:
     driver: bridge
 
 volumes:
-  logs:
-    driver: local
   portainer_data:
-    driver: local

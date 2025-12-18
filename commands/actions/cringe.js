@@ -1,23 +1,10 @@
-const { EmbedBuilder } = require("discord.js");
-const axios = require("axios");
+const { createActionCommand } = require("../../util/actionCommandHelper");
 
-module.exports = {
+// Using helper for cleaner, standardized action command
+module.exports = createActionCommand({
   name: "cringe",
   description: "Cringe!",
-  category: "action",
-  async exec(client, message) {
-    try {
-      const response = await axios.get("https://api.waifu.pics/sfw/cringe");
-
-      const embed = new EmbedBuilder()
-        .setColor("#FFC0CB")
-        .setDescription(`${message.author.username} cringe!`)
-        .setImage(response.data.url);
-
-      message.channel.send({ embeds: [embed] });
-    } catch (error) {
-      console.error(error);
-      message.reply("API Rosakkk.");
-    }
-  },
-};
+  action: "cringe",
+  apiEndpoint: "cringe",
+  requiresTarget: false, // cringe doesn't need a target
+});

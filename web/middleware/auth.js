@@ -6,10 +6,12 @@ const UserSession = require('../../schemas/UserSession');
  * Configure Discord OAuth2 strategy
  */
 function configurePassport() {
+  const config = require('../../config');
+  
   passport.use(new DiscordStrategy({
-    clientID: process.env.DISCORD_CLIENT_ID,
-    clientSecret: process.env.DISCORD_CLIENT_SECRET,
-    callbackURL: process.env.DISCORD_CALLBACK_URL || '/auth/discord/callback',
+    clientID: config.clientId,
+    clientSecret: config.web?.discordClientSecret || process.env.DISCORD_CLIENT_SECRET,
+    callbackURL: config.web?.discordCallbackUrl || '/auth/discord/callback',
     scope: ['identify', 'guilds']
   }, async (accessToken, refreshToken, profile, done) => {
     try {

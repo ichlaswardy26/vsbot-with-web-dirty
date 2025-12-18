@@ -4,55 +4,65 @@
  * Requirements: 9.2, 9.4, 9.5
  */
 
-const { WebSocketService, resetWebSocketService } = require('../services/websocket');
-
-// Mock Socket.IO Server
-jest.mock('socket.io', () => {
-  const mockSocket = {
-    id: 'test-socket-id',
-    authenticated: true,
-    userId: 'user123',
-    username: 'TestUser',
-    join: jest.fn(),
-    leave: jest.fn(),
-    to: jest.fn().mockReturnThis(),
-    emit: jest.fn(),
-    on: jest.fn(),
-    request: {
-      session: {
-        passport: {
-          user: {
-            id: 'user123',
-            username: 'TestUser'
-          }
+// Mock Socket.IO Server - must be defined before require
+const mockSocket = {
+  id: 'test-socket-id',
+  authenticated: true,
+  userId: 'user123',
+  username: 'TestUser',
+  join: jest.fn(),
+  leave: jest.fn(),
+  to: jest.fn().mockReturnThis(),
+  emit: jest.fn(),
+  on: jest.fn(),
+  request: {
+    session: {
+      passport: {
+        user: {
+          id: 'user123',
+          username: 'TestUser'
         }
       }
     }
-  };
+  }
+};
 
-  const mockIo = {
-    use: jest.fn(),
-    on: jest.fn((event, callback) => {
-      if (event === 'connection') {
-        // Store the callback for later use
-        mockIo._connectionCallback = callback;
-      }
-    }),
-    to: jest.fn().mockReturnThis(),
-    emit: jest.fn(),
-    engine: {
-      use: jest.fn()
-    },
-    disconnectSockets: jest.fn(),
-    close: jest.fn(),
-    _connectionCallback: null,
-    _mockSocket: mockSocket
-  };
+const mockIo = {
+  use: jest.fn((middleware) => {
+    if (typeof middleware === 'function') {
+      middleware(mockSocket, jest.fn());
+    }
+  }),
+  on: jest.fn((event, callback) => {
+    if (event === 'connection') {
+      mockIo._connectionCallback = callback;
+    }
+  }),
+  to: jest.fn().mockReturnThis(),
+  emit: jest.fn(),
+  engine: {
+    use: jest.fn()
+  },
+  disconnectSockets: jest.fn(),
+  close: jest.fn(),
+  _connectionCallback: null,
+  _mockSocket: mockSocket
+};
 
-  return {
-    Server: jest.fn(() => mockIo)
-  };
-});
+// Mock socket.io BEFORE requiring the module
+jest.mock('socket.io', () => ({
+  Server: jest.fn(() => mockIo)
+}));
+
+// Mock config
+jest.mock('../../config', () => ({
+  web: {
+    allowedOrigins: ['http://localhost:3001']
+  }
+}));
+
+// Now require the module after mocks are set up
+const { WebSocketService, resetWebSocketService } = require('../services/websocket');
 
 describe('WebSocketService', () => {
   let wsService;
@@ -323,4 +333,9 @@ describe('WebSocketService', () => {
       expect(wsService.io).toBeNull();
     });
   });
+});
+
+// Ensure all timers are cleared after tests
+afterAll(() => {
+  jest.useRealTimers();
 });

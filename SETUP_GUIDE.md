@@ -23,7 +23,12 @@ Panduan lengkap untuk setup bot Discord dari awal.
 3. **Copy TOKEN** - simpan untuk nanti
 4. **Copy APPLICATION ID** (dari General Information) - ini adalah CLIENT_ID
 
-### 1.3 Bot Permissions
+### 1.3 Setup OAuth2 (untuk Web Dashboard)
+1. Di sidebar kiri, klik "OAuth2" > "General"
+2. Add Redirect URL: `http://localhost:3001/auth/discord/callback`
+3. **Copy CLIENT SECRET** - simpan untuk nanti
+
+### 1.4 Bot Permissions
 Aktifkan permissions berikut di tab "Bot":
 - [x] Send Messages
 - [x] Use Slash Commands
@@ -34,7 +39,7 @@ Aktifkan permissions berikut di tab "Bot":
 - [x] Connect (Voice)
 - [x] Speak (Voice)
 
-### 1.4 Invite Bot ke Server
+### 1.5 Invite Bot ke Server
 1. Di sidebar kiri, klik "OAuth2" > "URL Generator"
 2. Pilih scopes:
    - [x] bot
@@ -70,20 +75,32 @@ mongodb://localhost:27017/villain-seraphyx-bot
 
 ## ⚙️ Step 3: Configure Environment
 
-### 3.1 Edit .env File
-File `.env` sudah dibuat. Edit dengan informasi Anda:
+### 3.1 Copy dan Edit .env File
+```bash
+cp .env.example .env
+```
+
+Edit `.env` dengan informasi Anda:
 
 ```env
-# ==================== BOT CREDENTIALS ====================
+# ==================== CORE CREDENTIALS (REQUIRED) ====================
 TOKEN=your_discord_bot_token_here
 CLIENT_ID=your_bot_client_id_here
 GUILD_ID=your_guild_id_here
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database
 
-# ==================== MONGODB ====================
-MONGO_URI=your_mongodb_connection_string_here
-
-# ==================== OWNER & ADMIN ====================
+# ==================== OWNER & ADMIN (REQUIRED) ====================
 OWNER_IDS=your_user_id_here
+
+# ==================== WEB DASHBOARD ====================
+SESSION_SECRET=generate-random-string-here
+WEB_PORT=3001
+DISCORD_CLIENT_SECRET=your_discord_client_secret_here
+DISCORD_CALLBACK_URL=http://localhost:3001/auth/discord/callback
+
+# ==================== WEBHOOK SERVER (Optional) ====================
+WEBHOOK_PORT=3000
+WEBHOOK_TOKEN=your_tako_webhook_token_here
 ```
 
 ### 3.2 Cara Mendapatkan IDs Discord
@@ -95,44 +112,53 @@ OWNER_IDS=your_user_id_here
 **Guild ID (Server ID):**
 1. Right-click nama server > Copy ID
 
-**Channel ID:**
-1. Right-click channel > Copy ID
+## 🎯 Step 4: Install & Run
 
-**Role ID:**
-1. Server Settings > Roles > Right-click role > Copy ID
-
-## 🎯 Step 4: Basic Configuration
-
-### 4.1 Minimal Required Settings
-Edit file `.env` dengan minimal settings ini:
-
-```env
-# Required
-TOKEN=your_bot_token
-CLIENT_ID=your_client_id
-GUILD_ID=your_guild_id
-MONGO_URI=your_mongo_connection_string
-OWNER_IDS=your_user_id
-
-# Recommended
-WELCOME_CHANNEL_ID=your_welcome_channel_id
-STAFF_ROLE_ID=your_staff_role_id
+### 4.1 Install Dependencies
+```bash
+npm install
 ```
 
-### 4.2 Test Bot
+### 4.2 Start Bot
 ```bash
-# Test bot locally
 npm start
 ```
 
 Jika berhasil, Anda akan melihat:
 ```
-✅ Bot is ready! Logged in as YourBotName#1234
-✅ Connected to MongoDB
-✅ Loaded X commands
+╔════════════════════════════════════════╗
+║   🗄️  DATABASE CONNECTION SUCCESS     ║
+╠════════════════════════════════════════╣
+║  Status    : ✅ Connected              ║
+║  Database  : MongoDB Atlas             ║
+╚════════════════════════════════════════╝
+
+╔════════════════════════════════════════╗
+║        🤖 BOT IS NOW ONLINE! 🚀       ║
+╠════════════════════════════════════════╣
+║  Bot Tag   : YourBot#1234             ║
+║  Status    : ✅ All Systems Ready      ║
+╚════════════════════════════════════════╝
+
+[Dashboard] Web dashboard running on port 3001
 ```
 
-## 🚀 Step 5: Deployment Options
+## 🌐 Step 5: Web Dashboard Configuration
+
+### 5.1 Access Dashboard
+1. Buka browser: `http://localhost:3001/dashboard`
+2. Login dengan Discord OAuth2
+3. Pilih server yang ingin dikonfigurasi
+
+### 5.2 Configure via Dashboard
+Semua pengaturan berikut dapat dikelola melalui web dashboard:
+- **Channels** - Welcome, ticket, confession, giveaway, dll.
+- **Roles** - Staff, level roles, support tiers, dll.
+- **Features** - Leveling, economy, ticket system, dll.
+- **Appearance** - Colors, emojis, images
+- **Language** - Default language settings
+
+## 🚀 Step 6: Deployment Options
 
 ### Option A: Local Development
 ```bash
@@ -161,53 +187,12 @@ docker-compose up -d
 docker-compose logs -f discord-bot
 ```
 
-### Option D: Cloud Platforms
-- **Heroku**: Push ke GitHub, connect repository
-- **Railway**: Import GitHub repository
-- **Replit**: Import project, add secrets
+## 🔧 Server Ports
 
-## 🔧 Step 6: Advanced Configuration
-
-### 6.1 Channel Setup
-Setelah bot berjalan, setup channel IDs di `.env`:
-
-```env
-# Welcome System
-WELCOME_CHANNEL_ID=123456789
-WELCOME_LOG_CHANNEL_ID=123456789
-
-# Ticket System
-TICKET_LOG_CHANNEL_ID=123456789
-TICKET_CATEGORY_ID=123456789
-
-# Economy & Levels
-CONFESSION_CHANNEL_ID=123456789
-DONATION_CHANNEL_ID=123456789
-```
-
-### 6.2 Role Setup
-Setup role IDs untuk leveling system:
-
-```env
-# Staff Roles
-STAFF_ROLE_ID=123456789
-ADMIN_ROLE_ID=123456789
-MODERATOR_ROLE_ID=123456789
-
-# Level Roles
-LEVEL_10_ROLE_ID=123456789
-LEVEL_20_ROLE_ID=123456789
-LEVEL_30_ROLE_ID=123456789
-```
-
-### 6.3 Custom Emojis (Optional)
-Upload custom emojis ke server dan tambahkan ke `.env`:
-
-```env
-EMOJI_SOULS=<:souls:123456789>
-EMOJI_CHECK=<a:check:123456789>
-EMOJI_CROSS=<:cross:123456789>
-```
+| Port | Service | Description |
+|------|---------|-------------|
+| 3000 | Tako Webhook | Donation webhook server |
+| 3001 | Web Dashboard | Configuration dashboard |
 
 ## ✅ Step 7: Verification
 
@@ -218,7 +203,13 @@ Test beberapa command dasar:
 - `/rank` - User ranking
 - `/balance` - Economy system
 
-### 7.2 Check Logs
+### 7.2 Test Dashboard
+1. Buka `http://localhost:3001/dashboard`
+2. Login dengan Discord
+3. Coba ubah beberapa settings
+4. Verify perubahan tersimpan
+
+### 7.3 Check Logs
 ```bash
 # PM2
 pm2 logs villain-seraphyx-bot
@@ -235,8 +226,13 @@ Check console output
 ### Bot tidak start
 - ✅ Check TOKEN di `.env`
 - ✅ Check MongoDB connection
-- ✅ Check Node.js version
+- ✅ Check Node.js version (v16.9.0+)
 - ✅ Check console errors
+
+### Dashboard tidak bisa login
+- ✅ Check DISCORD_CLIENT_SECRET di `.env`
+- ✅ Check DISCORD_CALLBACK_URL match dengan Discord Developer Portal
+- ✅ Check SESSION_SECRET sudah diset
 
 ### Commands tidak bekerja
 - ✅ Check bot permissions di server
@@ -261,11 +257,11 @@ Jika mengalami masalah:
 Bot Anda sekarang siap digunakan! 
 
 **Next Steps:**
-- Customize welcome messages
-- Setup economy system
-- Configure moderation tools
+- Configure bot via web dashboard
+- Setup welcome messages
+- Configure economy system
+- Setup moderation tools
 - Add custom emojis
-- Setup monitoring
 
 ---
 

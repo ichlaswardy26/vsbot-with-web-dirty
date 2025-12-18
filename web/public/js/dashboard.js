@@ -29,6 +29,11 @@ class Dashboard {
       // Track initialization start time for performance monitoring
       const initStart = performance.now();
       
+      // Mark performance timing
+      if (window.performanceUtils) {
+        window.performanceUtils.mark('dashboard-init-start');
+      }
+      
       // Setup navigation
       this.setupNavigation();
       
@@ -44,6 +49,9 @@ class Dashboard {
       // Initialize config manager connectivity monitoring
       this.configManager.startConnectivityMonitoring();
       
+      // Setup lazy loading for images
+      this.setupLazyLoading();
+      
       // Load initial section from URL hash or default to overview
       const hash = window.location.hash.slice(1);
       if (hash && this.isValidSection(hash)) {
@@ -53,6 +61,12 @@ class Dashboard {
       }
       
       this.initialized = true;
+      
+      // Mark performance timing
+      if (window.performanceUtils) {
+        window.performanceUtils.mark('dashboard-init-end');
+        window.performanceUtils.measure('dashboard-init', 'dashboard-init-start', 'dashboard-init-end');
+      }
       
       // Log initialization time for performance monitoring
       const initTime = performance.now() - initStart;
@@ -66,6 +80,24 @@ class Dashboard {
       console.error('Error initializing dashboard:', error);
       this.configManager.showNotification('Failed to initialize dashboard', 'error');
     }
+  }
+  
+  /**
+   * Setup lazy loading for images and sections
+   * Requirements: 8.5 - Performance optimization
+   */
+  setupLazyLoading() {
+    if (!window.performanceUtils) return;
+    
+    // Observe all lazy images
+    document.querySelectorAll('img[data-lazy-src]').forEach(img => {
+      window.performanceUtils.observeLazyElement(img);
+    });
+    
+    // Observe lazy sections
+    document.querySelectorAll('[data-lazy-section]').forEach(section => {
+      window.performanceUtils.observeLazyElement(section);
+    });
   }
 
   /**
@@ -438,26 +470,56 @@ class Dashboard {
   }
 
   /**
-   * Show mobile loading state
-   * Requirements: 8.5
+   * Show loading state with skeleton screens
+   * Requirements: 8.5 - Performance optimization
    */
   showMobileLoadingState(section) {
     const targetSection = document.getElementById(`${section}-section`);
-    if (targetSection && window.mobileResponsive) {
-      const container = targetSection.querySelector('[id$="-config-container"]');
-      if (container) {
+    if (!targetSection) return;
+    
+    const container = targetSection.querySelector('[id$="-config-container"]');
+    if (container) {
+      // Use performanceUtils for skeleton if available
+      if (window.performanceUtils) {
+        const skeletonType = this.getSkeletonTypeForSection(section);
+        window.performanceUtils.showLoadingSkeleton(container, skeletonType, 3);
+      } else if (window.mobileResponsive) {
         window.mobileResponsive.showLoadingSkeleton(container);
       }
     }
   }
 
   /**
-   * Hide mobile loading state
+   * Get appropriate skeleton type for section
+   */
+  getSkeletonTypeForSection(section) {
+    const skeletonTypes = {
+      overview: 'stat',
+      channels: 'form',
+      roles: 'form',
+      features: 'card',
+      appearance: 'form'
+    };
+    return skeletonTypes[section] || 'card';
+  }
+
+  /**
+   * Hide loading state
    * Requirements: 8.5
    */
   hideMobileLoadingState() {
-    document.querySelectorAll('.mobile-loading-skeleton').forEach(skeleton => {
+    // Remove skeleton wrappers
+    document.querySelectorAll('.skeleton-wrapper, .mobile-loading-skeleton').forEach(skeleton => {
       skeleton.remove();
+    });
+    
+    // Remove loading-skeleton class from containers
+    document.querySelectorAll('.loading-skeleton').forEach(container => {
+      if (window.performanceUtils) {
+        window.performanceUtils.hideLoadingSkeleton(container);
+      } else {
+        container.classList.remove('loading-skeleton');
+      }
     });
   }
 

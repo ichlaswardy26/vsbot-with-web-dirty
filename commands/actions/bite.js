@@ -6,31 +6,34 @@ module.exports = {
   name: "bite",
   description: "Bite someone!",
   category: "action",
+  usage: "bite @user",
   async exec(client, message) {
+    const importantEmoji = config.emojis?.important || "❗";
+    
     const target = message.mentions.users.first();
     if (!target) {
-      return message.reply(`${config.emojis.important} **|** Mention seseorang!`);
+      return message.reply(`${importantEmoji} **|** Mention seseorang!`);
     }
     if (target.id === client.user.id) {
-      return message.reply(`*${config.emojis.important} **|** Kamu tidak dapat melakukannya ke bot!`);
+      return message.reply(`${importantEmoji} **|** Kamu tidak dapat melakukannya ke bot!`);
     }
     
     if (target.id === message.author.id) {
-      return message.reply(`${config.emojis.important} **|** Kamu tidak dapat melakukannya ke diri sendiri!`);
+      return message.reply(`${importantEmoji} **|** Kamu tidak dapat melakukannya ke diri sendiri!`);
     }
 
     try {
       const response = await axios.get("https://api.waifu.pics/sfw/bite");
 
       const embed = new EmbedBuilder()
-        .setColor("#FFC0CB")
+        .setColor(config.colors?.primary || "#FFC0CB")
         .setDescription(`${message.author.username} bite <@${target.id}>!`)
         .setImage(response.data.url);
 
       message.channel.send({ embeds: [embed] });
     } catch (error) {
-      console.error(error);
-      message.reply("API Rosakkk.");
+      console.error("[bite] API error:", error.message);
+      message.reply(`${config.emojis?.cross || "❌"} **|** Gagal mengambil GIF dari API.`);
     }
   },
 };
