@@ -21,13 +21,35 @@ const {
  * GET /api/config/:guildId/dashboard
  * Get comprehensive dashboard overview with analytics
  */
-router.get('/:guildId/dashboard', validateGuildId, verifyAuth, verifyGuildAccess, getDashboardOverview);
+router.get('/:guildId/dashboard', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
+  try {
+    await getDashboardOverview(req, res);
+  } catch (error) {
+    console.error('[Dashboard] Error in dashboard overview:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load dashboard overview',
+      details: error.message
+    });
+  }
+});
 
 /**
  * GET /api/config/:guildId/analytics
  * Get configuration analytics and change history
  */
-router.get('/:guildId/analytics', validateGuildId, verifyAuth, verifyGuildAccess, getConfigurationAnalytics);
+router.get('/:guildId/analytics', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
+  try {
+    await getConfigurationAnalytics(req, res);
+  } catch (error) {
+    console.error('[Dashboard] Error in analytics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load analytics data',
+      details: error.message
+    });
+  }
+});
 
 /**
  * GET /api/config/:guildId/bot-status

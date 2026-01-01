@@ -130,7 +130,13 @@ class ConfigSyncService extends EventEmitter {
         }
       }
 
-      let config = await WebConfig.findOne({ guildId });
+      // Add timeout to database query
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Database query timeout')), 10000); // 10 second timeout
+      });
+
+      const configPromise = WebConfig.findOne({ guildId });
+      let config = await Promise.race([configPromise, timeoutPromise]);
       
       if (!config) {
         config = await this.createDefaultConfig(guildId);
@@ -140,7 +146,12 @@ class ConfigSyncService extends EventEmitter {
       
       // Validate with bot if requested and available
       if (validateWithBot && this.botClient) {
-        await this.validateConfigWithBot(guildId, configObj);
+        try {
+          await this.validateConfigWithBot(guildId, configObj);
+        } catch (validationError) {
+          console.warn('[ConfigSync] Bot validation failed:', validationError.message);
+          // Continue without validation rather than failing completely
+        }
       }
       
       // Update cache
@@ -164,6 +175,27 @@ class ConfigSyncService extends EventEmitter {
       });
       
       return configObj;
+    } catch (error) {
+      this.updateSyncStats(Date.now() - startTime, false);
+      console.error('[ConfigSync] Error getting config:', error);
+      
+      // Emit error event
+      this.emit('config:error', {
+        guildId,
+        operation: 'getConfig',
+        error: error.message,
+        timestamp: Date.now()
+      });
+      
+      // Return default config as fallback
+      try {
+        return this.getDefaultConfig(guildId);
+      } catch (fallbackError) {
+        console.error('[ConfigSync] Failed to get default config:', fallbackError);
+        throw new Error('Failed to load configuration and fallback failed');
+      }
+    }
+  }
     } catch (error) {
       this.updateSyncStats(Date.now() - startTime, false);
       console.error('[ConfigSync] Error getting config:', error);

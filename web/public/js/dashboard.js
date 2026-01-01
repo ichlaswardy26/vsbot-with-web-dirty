@@ -57,30 +57,145 @@ class Dashboard {
    */
   getGuildIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('guild') || localStorage.getItem('selectedGuild');
+    const guildId = urlParams.get('guild') || localStorage.getItem('selectedGuild');
+    
+    // If no guild ID found, try to get from user's guilds
+    if (!guildId) {
+      console.warn('[Dashboard] No guild ID found in URL or localStorage');
+      this.showGuildSelector();
+      return null;
+    }
+    
+    return guildId;
+  }
+
+  /**
+   * Show guild selector if no guild ID is available
+   */
+  showGuildSelector() {
+    // Create a simple guild selector
+    const selectorHtml = `
+      <div class="guild-selector" style="padding: 20px; text-align: center;">
+        <h3>Select a Server</h3>
+        <p>Please select a Discord server to configure:</p>
+        <div id="guild-list" style="margin: 20px 0;">
+          <div class="loading">Loading your servers...</div>
+        </div>
+      </div>
+    `;
+    
+    const mainContent = document.querySelector('.main-content') || document.body;
+    mainContent.innerHTML = selectorHtml;
+    
+    // Load user's guilds
+    this.loadUserGuilds();
+  }
+
+  /**
+   * Load user's guilds for selection
+   */
+  async loadUserGuilds() {
+    try {
+      const response = await fetch('/api/user/guilds');
+      if (response.ok) {
+        const data = await response.json();
+        this.displayGuildList(data.guilds || []);
+      } else {
+        throw new Error('Failed to load guilds');
+      }
+    } catch (error) {
+      console.error('[Dashboard] Failed to load guilds:', error);
+      document.getElementById('guild-list').innerHTML = `
+        <div class="error">
+          <p>Failed to load your servers. Please try refreshing the page.</p>
+          <button onclick="window.location.reload()">Refresh</button>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Display guild list for selection
+   */
+  displayGuildList(guilds) {
+    if (guilds.length === 0) {
+      document.getElementById('guild-list').innerHTML = `
+        <div class="no-guilds">
+          <p>No servers found. Make sure the bot is added to your Discord server.</p>
+          <a href="/auth/discord" class="btn">Re-authenticate</a>
+        </div>
+      `;
+      return;
+    }
+
+    const guildListHtml = guilds.map(guild => `
+      <div class="guild-item" onclick="window.dashboard.selectGuild('${guild.id}')" style="
+        display: inline-block; 
+        margin: 10px; 
+        padding: 15px; 
+        border: 1px solid #ddd; 
+        border-radius: 8px; 
+        cursor: pointer;
+        text-align: center;
+        min-width: 150px;
+      ">
+        <img src="${guild.icon || '/assets/default-guild.png'}" alt="${guild.name}" style="width: 48px; height: 48px; border-radius: 50%; margin-bottom: 8px;">
+        <div style="font-weight: bold;">${guild.name}</div>
+        <div style="font-size: 12px; color: #666;">${guild.memberCount || 0} members</div>
+      </div>
+    `).join('');
+
+    document.getElementById('guild-list').innerHTML = guildListHtml;
+  }
+
+  /**
+   * Select a guild and reload dashboard
+   */
+  selectGuild(guildId) {
+    localStorage.setItem('selectedGuild', guildId);
+    window.location.href = `/dashboard?guild=${guildId}`;
   }
 
   /**
    * Initialize WebSocket connection
    */
   initWebSocket() {
+    // Add connection status indicator
+    this.updateConnectionStatus(false, 'Connecting...');
+    
     this.socket = io({
       transports: ['polling', 'websocket'],
-      upgrade: true
+      upgrade: true,
+      timeout: 20000,
+      forceNew: true
     });
 
     this.socket.on('connect', () => {
       console.log('[WebSocket] Connected');
-      this.updateConnectionStatus(true);
+      this.updateConnectionStatus(true, 'Connected');
       
       if (this.currentGuildId) {
         this.socket.emit('join:guild', { guildId: this.currentGuildId });
       }
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('[WebSocket] Disconnected');
-      this.updateConnectionStatus(false);
+    this.socket.on('disconnect', (reason) => {
+      console.log('[WebSocket] Disconnected:', reason);
+      this.updateConnectionStatus(false, 'Disconnected');
+      
+      // Show user-friendly message
+      if (reason === 'io server disconnect') {
+        this.showNotification('Server disconnected. Refreshing page...', 'warning');
+        setTimeout(() => window.location.reload(), 3000);
+      } else {
+        this.showNotification('Connection lost. Attempting to reconnect...', 'warning');
+      }
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('[WebSocket] Connection error:', error);
+      this.updateConnectionStatus(false, 'Connection failed');
+      this.showNotification('Real-time updates unavailable. Some features may be limited.', 'warning');
     });
 
     this.socket.on('config:updated', (data) => {
@@ -160,12 +275,17 @@ class Dashboard {
    * Load dashboard overview data
    */
   async loadDashboardData() {
-    if (!this.currentGuildId) return;
+    if (!this.currentGuildId) {
+      console.warn('[Dashboard] No guild ID available, showing guild selector');
+      return;
+    }
 
     try {
       this.showLoading(true);
 
-      const response = await this.apiRequest(`/api/config/${this.currentGuildId}/dashboard`);
+      const response = await this.apiRequest(`/api/config/${this.currentGuildId}/dashboard`, {
+        timeout: 10000 // 10 second timeout
+      });
       
       if (response.success) {
         this.updateProgressCards(response.data.progress);
@@ -173,9 +293,15 @@ class Dashboard {
         this.updateGuildInfo(response.data.guild);
         this.updateRecentActivity(response.data.recentActivity);
         this.config = response.data;
+        
+        // Hide any error messages
+        this.hideErrorMessage();
+      } else {
+        throw new Error(response.error || 'Failed to load dashboard data');
       }
     } catch (error) {
       console.error('[Dashboard] Failed to load dashboard data:', error);
+      this.showErrorMessage('Failed to load dashboard data: ' + error.message);
       this.showNotification('Failed to load dashboard data', 'error');
     } finally {
       this.showLoading(false);
@@ -489,9 +615,81 @@ class Dashboard {
   /**
    * Update connection status
    */
-  updateConnectionStatus(connected) {
-    // You can add visual indicators for WebSocket connection status here
+  updateConnectionStatus(connected, message = null) {
+    // Update visual indicators for WebSocket connection status
     console.log(`[Dashboard] Connection status: ${connected ? 'Connected' : 'Disconnected'}`);
+    
+    const statusIndicator = document.getElementById('botStatusIndicator');
+    const statusText = document.getElementById('botStatusText');
+    
+    if (statusIndicator && statusText) {
+      if (connected) {
+        statusIndicator.className = 'status-indicator status-online';
+        statusText.textContent = message || 'Connected';
+      } else {
+        statusIndicator.className = 'status-indicator status-offline';
+        statusText.textContent = message || 'Disconnected';
+      }
+    }
+  }
+
+  /**
+   * Show error message in dashboard
+   */
+  showErrorMessage(message) {
+    const errorContainer = document.getElementById('error-container') || this.createErrorContainer();
+    errorContainer.innerHTML = `
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-red-400"></i>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error</h3>
+            <div class="mt-2 text-sm text-red-700">
+              <p>${message}</p>
+            </div>
+            <div class="mt-4">
+              <div class="flex space-x-2">
+                <button onclick="window.location.reload()" class="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200">
+                  Retry
+                </button>
+                <button onclick="window.dashboard.hideErrorMessage()" class="bg-white px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-gray-50 border border-red-300">
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    errorContainer.style.display = 'block';
+  }
+
+  /**
+   * Hide error message
+   */
+  hideErrorMessage() {
+    const errorContainer = document.getElementById('error-container');
+    if (errorContainer) {
+      errorContainer.style.display = 'none';
+    }
+  }
+
+  /**
+   * Create error container if it doesn't exist
+   */
+  createErrorContainer() {
+    let container = document.getElementById('error-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'error-container';
+      container.style.display = 'none';
+      
+      const mainContent = document.querySelector('.main-content') || document.querySelector('main') || document.body;
+      mainContent.insertBefore(container, mainContent.firstChild);
+    }
+    return container;
   }
 
   /**
@@ -512,13 +710,44 @@ class Dashboard {
       mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
     }
 
-    const response = await fetch(url, mergedOptions);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+    // Add timeout support
+    const timeout = options.timeout || 15000; // Default 15 seconds
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    mergedOptions.signal = controller.signal;
 
-    return await response.json();
+    try {
+      const response = await fetch(url, mergedOptions);
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        // Handle specific error codes
+        if (response.status === 401) {
+          this.showNotification('Session expired. Please log in again.', 'warning');
+          setTimeout(() => window.location.href = '/auth/discord', 2000);
+          throw new Error('Authentication required');
+        } else if (response.status === 403) {
+          throw new Error('Access denied. You may not have permission to access this server.');
+        } else if (response.status === 404) {
+          throw new Error('Configuration not found for this server.');
+        } else if (response.status >= 500) {
+          throw new Error('Server error. Please try again later.');
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      throw error;
+    }
   }
 
   /**

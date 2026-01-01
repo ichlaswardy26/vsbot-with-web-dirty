@@ -3,7 +3,7 @@ const logger = require("../../util/logger");
 const { checkGiveaways } = require("../../handlers/giveawayHandler");
 
 module.exports = {
-  name: "ready",
+  name: "clientReady",
   exec: async (client) => {
     client.user.setPresence({
       activities: [{ name: `Villain Seraphyx`, type: ActivityType.Custom }],

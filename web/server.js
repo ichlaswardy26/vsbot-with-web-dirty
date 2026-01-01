@@ -235,6 +235,41 @@ class WebServer {
     this.app.use('/api/roles', limiters.api, csrfMiddleware, require('./routes/roles'));
     this.app.use('/api/templates', limiters.api, csrfMiddleware, require('./routes/templates'));
 
+    // User guilds endpoint for guild selection
+    this.app.get('/api/user/guilds', requireAuth, async (req, res) => {
+      try {
+        if (!req.user || !req.user.guilds) {
+          return res.json({
+            success: true,
+            guilds: []
+          });
+        }
+
+        // Filter guilds where user has admin permissions or bot is present
+        const userGuilds = req.user.guilds.filter(guild => {
+          // Check if user has admin permissions (permission value includes ADMINISTRATOR)
+          return guild.permissions && (BigInt(guild.permissions) & BigInt(0x8)) === BigInt(0x8);
+        });
+
+        res.json({
+          success: true,
+          guilds: userGuilds.map(guild => ({
+            id: guild.id,
+            name: guild.name,
+            icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+            permissions: guild.permissions,
+            owner: guild.owner
+          }))
+        });
+      } catch (error) {
+        console.error('Error getting user guilds:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to get user guilds'
+        });
+      }
+    });
+
     // Audit log endpoint (admin only)
     this.app.get('/api/audit-logs', requireAuth, async (req, res) => {
       try {
