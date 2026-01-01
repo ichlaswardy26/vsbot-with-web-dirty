@@ -17,6 +17,7 @@ class WebSocketService {
     this.configVersions = new Map(); // guildId -> version number
     this.botStatusCheckInterval = null;
     this.lastBotStatus = 'unknown';
+    this.configSync = null;
     
     if (httpServer) {
       this.initialize(httpServer);
@@ -28,6 +29,12 @@ class WebSocketService {
    */
   initialize(httpServer) {
     const config = require('../../config');
+    
+    // Get config sync service
+    this.configSync = global.configSync || require('../../util/configSync');
+    
+    // Subscribe to config sync events
+    this.setupConfigSyncListeners();
     
     // Get allowed origins, including tunnel URLs
     const allowedOrigins = config.web?.allowedOrigins || ['http://localhost:3001'];
@@ -65,8 +72,47 @@ class WebSocketService {
     this.setupEventHandlers();
     this.startBotStatusMonitoring();
 
-    console.log('WebSocket service initialized');
+    // Make WebSocket service available globally
+    global.webSocketService = this;
+
+    console.log('WebSocket service initialized with config sync integration');
     return this.io;
+  }
+
+  /**
+   * Setup configuration sync event listeners
+   */
+  setupConfigSyncListeners() {
+    if (!this.configSync) return;
+    
+    // Listen for config updates from sync service
+    this.configSync.on('config:updated', (data) => {
+      this.broadcastConfigUpdate(data.guildId, {
+        config: data.config,
+        updates: data.updates,
+        userId: data.userId,
+        source: data.source,
+        version: data.version,
+        timestamp: Date.now()
+      });
+    });
+
+    // Listen for config errors
+    this.configSync.on('config:error', (data) => {
+      this.broadcastToGuild(data.guildId, 'config:error', {
+        error: data.error,
+        updates: data.updates,
+        userId: data.userId,
+        source: data.source
+      });
+    });
+
+    // Listen for config loaded events
+    this.configSync.on('config:loaded', (data) => {
+      this.broadcastToGuild(data.guildId, 'config:loaded', {
+        config: data.config
+      });
+    });
   }
 
   /**
@@ -460,6 +506,49 @@ class WebSocketService {
     }
   }
 
+
+  /**
+   * Broadcast configuration update from sync service
+   * Requirements: 9.2
+   */
+  broadcastConfigUpdate(guildId, data) {
+    if (!this.io) return;
+
+    // Update config version
+    const currentVersion = this.configVersions.get(guildId) || 0;
+    const newVersion = currentVersion + 1;
+    this.configVersions.set(guildId, newVersion);
+
+    this.io.to(`guild:${guildId}`).emit('config:updated', {
+      guildId,
+      section: data.section || 'full',
+      changes: data.updates,
+      version: data.version || newVersion,
+      updatedBy: data.userId ? {
+        userId: data.userId,
+        username: data.username || 'System'
+      } : null,
+      source: data.source,
+      timestamp: data.timestamp || Date.now()
+    });
+
+    console.log(`[WebSocket] Broadcasted config update to guild ${guildId}`);
+  }
+
+  /**
+   * Broadcast to all users in a guild
+   */
+  broadcastToGuild(guildId, event, data) {
+    if (!this.io) return;
+    
+    this.io.to(`guild:${guildId}`).emit(event, {
+      guildId,
+      ...data,
+      timestamp: Date.now()
+    });
+
+    console.log(`[WebSocket] Broadcasted ${event} to guild ${guildId}`);
+  }
 
   // ==================== PUBLIC API METHODS ====================
 

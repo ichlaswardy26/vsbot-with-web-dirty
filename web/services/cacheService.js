@@ -1,7 +1,6 @@
 /**
- * Cache Service for Web Dashboard
- * Provides in-memory caching with TTL support for API responses
- * Requirements: Performance optimization - database query caching
+ * Enhanced Cache Service
+ * Provides intelligent caching with TTL, statistics, and invalidation strategies
  */
 
 class CacheService {
@@ -11,63 +10,92 @@ class CacheService {
       hits: 0,
       misses: 0,
       sets: 0,
-      deletes: 0
+      deletes: 0,
+      invalidations: 0,
+      totalRequests: 0
     };
-    
-    // Default TTL: 5 minutes
-    this.defaultTTL = 5 * 60 * 1000;
+    this.defaultTTL = 5 * 60 * 1000; // 5 minutes
+    this.maxSize = 1000;
+    this.cleanupInterval = null;
     
     // Start cleanup interval
-    this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
+    this.startCleanup();
   }
 
   /**
-   * Generate cache key from parameters
+   * Generate cache key
    */
-  generateKey(prefix, ...parts) {
-    return `${prefix}:${parts.join(':')}`;
+  generateKey(type, ...args) {
+    return `${type}:${args.join(':')}`;
   }
 
   /**
-   * Get item from cache
+   * Get value from cache
    */
   get(key) {
-    const item = this.cache.get(key);
+    this.stats.totalRequests++;
     
+    const item = this.cache.get(key);
     if (!item) {
       this.stats.misses++;
       return null;
     }
-    
+
     // Check if expired
-    if (item.expiresAt && Date.now() > item.expiresAt) {
+    if (Date.now() > item.expiresAt) {
       this.cache.delete(key);
       this.stats.misses++;
       return null;
     }
-    
+
+    // Update access time
+    item.lastAccessed = Date.now();
     this.stats.hits++;
     return item.value;
   }
 
   /**
-   * Set item in cache
+   * Set value in cache
    */
   set(key, value, ttl = this.defaultTTL) {
-    const item = {
+    // Enforce max size
+    if (this.cache.size >= this.maxSize) {
+      this.evictLRU();
+    }
+
+    this.cache.set(key, {
       value,
       createdAt: Date.now(),
-      expiresAt: ttl ? Date.now() + ttl : null
-    };
-    
-    this.cache.set(key, item);
+      lastAccessed: Date.now(),
+      expiresAt: Date.now() + ttl,
+      ttl
+    });
+
     this.stats.sets++;
-    
     return true;
   }
 
   /**
-   * Delete item from cache
+   * Get or set with callback
+   */
+  async getOrSet(key, callback, ttl = this.defaultTTL) {
+    const cached = this.get(key);
+    if (cached !== null) {
+      return cached;
+    }
+
+    try {
+      const value = await callback();
+      this.set(key, value, ttl);
+      return value;
+    } catch (error) {
+      console.error('[Cache] Error in getOrSet callback:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete specific key
    */
   delete(key) {
     const deleted = this.cache.delete(key);
@@ -78,9 +106,24 @@ class CacheService {
   }
 
   /**
-   * Delete items matching a pattern
+   * Check if key exists and is not expired
    */
-  deletePattern(pattern) {
+  has(key) {
+    const item = this.cache.get(key);
+    if (!item) return false;
+    
+    if (Date.now() > item.expiresAt) {
+      this.cache.delete(key);
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Invalidate by pattern
+   */
+  invalidatePattern(pattern) {
     let count = 0;
     const regex = new RegExp(pattern);
     
@@ -91,8 +134,22 @@ class CacheService {
       }
     }
     
-    this.stats.deletes += count;
+    this.stats.invalidations += count;
     return count;
+  }
+
+  /**
+   * Invalidate all cache entries for a guild
+   */
+  invalidateGuild(guildId) {
+    return this.invalidatePattern(`.*:${guildId}(:|$)`);
+  }
+
+  /**
+   * Invalidate specific section for a guild
+   */
+  invalidateSection(guildId, section) {
+    return this.invalidatePattern(`.*:${guildId}:${section}(:|$)`);
   }
 
   /**
@@ -106,95 +163,127 @@ class CacheService {
   }
 
   /**
-   * Check if key exists and is not expired
+   * Evict least recently used item
    */
-  has(key) {
-    const item = this.cache.get(key);
-    
-    if (!item) return false;
-    
-    if (item.expiresAt && Date.now() > item.expiresAt) {
-      this.cache.delete(key);
-      return false;
+  evictLRU() {
+    let oldestKey = null;
+    let oldestTime = Date.now();
+
+    for (const [key, item] of this.cache.entries()) {
+      if (item.lastAccessed < oldestTime) {
+        oldestTime = item.lastAccessed;
+        oldestKey = key;
+      }
     }
-    
-    return true;
+
+    if (oldestKey) {
+      this.cache.delete(oldestKey);
+      this.stats.deletes++;
+    }
   }
 
   /**
-   * Get or set with callback
+   * Start cleanup interval
    */
-  async getOrSet(key, callback, ttl = this.defaultTTL) {
-    const cached = this.get(key);
-    
-    if (cached !== null) {
-      return cached;
-    }
-    
-    const value = await callback();
-    this.set(key, value, ttl);
-    
-    return value;
+  startCleanup() {
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, 60000); // Every minute
   }
 
   /**
-   * Cleanup expired items
+   * Cleanup expired entries
    */
   cleanup() {
     const now = Date.now();
     let cleaned = 0;
-    
+
     for (const [key, item] of this.cache.entries()) {
-      if (item.expiresAt && now > item.expiresAt) {
+      if (now > item.expiresAt) {
         this.cache.delete(key);
         cleaned++;
       }
     }
-    
-    return cleaned;
+
+    if (cleaned > 0) {
+      console.log(`[Cache] Cleaned up ${cleaned} expired entries`);
+      this.stats.deletes += cleaned;
+    }
   }
 
   /**
    * Get cache statistics
    */
   getStats() {
-    const hitRate = this.stats.hits + this.stats.misses > 0
-      ? (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(2)
-      : 0;
-    
+    const hitRate = this.stats.totalRequests > 0 ? 
+      (this.stats.hits / this.stats.totalRequests * 100).toFixed(2) : 0;
+
     return {
       ...this.stats,
+      hitRate: parseFloat(hitRate),
       size: this.cache.size,
-      hitRate: `${hitRate}%`
+      maxSize: this.maxSize,
+      memoryUsage: this.getMemoryUsage()
     };
   }
 
   /**
-   * Invalidate guild-specific cache
+   * Get memory usage estimate
    */
-  invalidateGuild(guildId) {
-    return this.deletePattern(`^.*:${guildId}(:|$)`);
+  getMemoryUsage() {
+    let totalSize = 0;
+    
+    for (const [key, item] of this.cache.entries()) {
+      totalSize += key.length * 2; // Approximate string size
+      totalSize += JSON.stringify(item.value).length * 2; // Approximate object size
+      totalSize += 64; // Metadata overhead
+    }
+    
+    return {
+      bytes: totalSize,
+      kb: (totalSize / 1024).toFixed(2),
+      mb: (totalSize / 1024 / 1024).toFixed(2)
+    };
   }
 
   /**
-   * Invalidate section-specific cache for a guild
+   * Get cache entries for debugging
    */
-  invalidateSection(guildId, section) {
-    return this.deletePattern(`^${section}:${guildId}`);
+  getEntries(pattern = null) {
+    const entries = [];
+    const regex = pattern ? new RegExp(pattern) : null;
+    
+    for (const [key, item] of this.cache.entries()) {
+      if (!regex || regex.test(key)) {
+        entries.push({
+          key,
+          createdAt: new Date(item.createdAt).toISOString(),
+          lastAccessed: new Date(item.lastAccessed).toISOString(),
+          expiresAt: new Date(item.expiresAt).toISOString(),
+          ttl: item.ttl,
+          isExpired: Date.now() > item.expiresAt,
+          valueType: typeof item.value,
+          valueSize: JSON.stringify(item.value).length
+        });
+      }
+    }
+    
+    return entries.sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed));
   }
 
   /**
-   * Shutdown cleanup
+   * Shutdown cache service
    */
   shutdown() {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
     this.clear();
   }
 }
 
-// Cache keys for different data types
+// Cache key constants
 const CacheKeys = {
   CONFIG: 'config',
   CHANNELS: 'channels',
@@ -202,20 +291,24 @@ const CacheKeys = {
   FEATURES: 'features',
   APPEARANCE: 'appearance',
   TEMPLATES: 'templates',
+  USER_SESSION: 'user_session',
   GUILD_INFO: 'guild_info',
-  USER_SESSION: 'user_session'
+  BOT_STATUS: 'bot_status',
+  VALIDATION: 'validation'
 };
 
-// TTL values for different cache types (in milliseconds)
+// Cache TTL constants (in milliseconds)
 const CacheTTL = {
-  CONFIG: 5 * 60 * 1000,      // 5 minutes
-  CHANNELS: 2 * 60 * 1000,    // 2 minutes (Discord data changes more frequently)
-  ROLES: 2 * 60 * 1000,       // 2 minutes
-  FEATURES: 5 * 60 * 1000,    // 5 minutes
-  APPEARANCE: 10 * 60 * 1000, // 10 minutes (rarely changes)
-  TEMPLATES: 30 * 60 * 1000,  // 30 minutes (static data)
-  GUILD_INFO: 5 * 60 * 1000,  // 5 minutes
-  USER_SESSION: 60 * 60 * 1000 // 1 hour
+  CONFIG: 5 * 60 * 1000,        // 5 minutes
+  CHANNELS: 2 * 60 * 1000,      // 2 minutes
+  ROLES: 2 * 60 * 1000,         // 2 minutes
+  FEATURES: 5 * 60 * 1000,      // 5 minutes
+  APPEARANCE: 10 * 60 * 1000,   // 10 minutes
+  TEMPLATES: 30 * 60 * 1000,    // 30 minutes
+  USER_SESSION: 60 * 60 * 1000, // 1 hour
+  GUILD_INFO: 5 * 60 * 1000,    // 5 minutes
+  BOT_STATUS: 30 * 1000,        // 30 seconds
+  VALIDATION: 60 * 1000         // 1 minute
 };
 
 // Create singleton instance

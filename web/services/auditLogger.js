@@ -1,53 +1,39 @@
 /**
- * Audit Logger Service
- * Provides comprehensive audit logging for configuration changes
- * Requirements: Security aspects of all requirements
+ * Enhanced Audit Logger Service
+ * Comprehensive audit logging with buffering, filtering, and analytics
  */
 
 const fs = require('fs').promises;
 const path = require('path');
 
-/**
- * Audit event types
- */
+// Audit event types
 const AuditEventType = {
   // Authentication events
   AUTH_LOGIN: 'AUTH_LOGIN',
   AUTH_LOGOUT: 'AUTH_LOGOUT',
   AUTH_FAILED: 'AUTH_FAILED',
-  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
   
   // Configuration events
-  CONFIG_VIEW: 'CONFIG_VIEW',
-  CONFIG_UPDATE: 'CONFIG_UPDATE',
-  CONFIG_IMPORT: 'CONFIG_IMPORT',
+  CONFIG_CHANGE: 'CONFIG_CHANGE',
   CONFIG_EXPORT: 'CONFIG_EXPORT',
+  CONFIG_IMPORT: 'CONFIG_IMPORT',
   CONFIG_RESET: 'CONFIG_RESET',
   CONFIG_BACKUP: 'CONFIG_BACKUP',
   CONFIG_RESTORE: 'CONFIG_RESTORE',
   
-  // Section-specific events
-  CHANNELS_UPDATE: 'CHANNELS_UPDATE',
-  ROLES_UPDATE: 'ROLES_UPDATE',
-  FEATURES_UPDATE: 'FEATURES_UPDATE',
-  APPEARANCE_UPDATE: 'APPEARANCE_UPDATE',
-  
-  // Template events
-  TEMPLATE_APPLY: 'TEMPLATE_APPLY',
-  TEMPLATE_CREATE: 'TEMPLATE_CREATE',
-  TEMPLATE_DELETE: 'TEMPLATE_DELETE',
-  
   // Security events
-  SECURITY_CSRF_FAILURE: 'SECURITY_CSRF_FAILURE',
-  SECURITY_RATE_LIMIT: 'SECURITY_RATE_LIMIT',
-  SECURITY_ACCESS_DENIED: 'SECURITY_ACCESS_DENIED',
-  SECURITY_INVALID_INPUT: 'SECURITY_INVALID_INPUT'
+  SECURITY_VIOLATION: 'SECURITY_VIOLATION',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
+  SUSPICIOUS_ACTIVITY: 'SUSPICIOUS_ACTIVITY',
+  
+  // System events
+  SYSTEM_START: 'SYSTEM_START',
+  SYSTEM_STOP: 'SYSTEM_STOP',
+  SYSTEM_ERROR: 'SYSTEM_ERROR'
 };
 
-/**
- * Audit severity levels
- */
-const AuditSeverity = {
+// Severity levels
+const Severity = {
   INFO: 'INFO',
   WARNING: 'WARNING',
   ERROR: 'ERROR',
@@ -56,249 +42,87 @@ const AuditSeverity = {
 
 class AuditLogger {
   constructor() {
-    this.logDirectory = './logs';
-    this.auditLogFile = 'audit.log';
-    this.maxLogSize = 50 * 1024 * 1024; // 50MB
-    this.maxLogFiles = 10;
-    this.inMemoryBuffer = [];
+    this.buffer = [];
     this.bufferSize = 100;
     this.flushInterval = 5000; // 5 seconds
+    this.logDirectory = path.join(__dirname, '../../logs/audit');
+    this.maxFileSize = 50 * 1024 * 1024; // 50MB
+    this.maxFiles = 10;
+    this.flushTimer = null;
     
-    this.initializeLogDirectory();
-    this.startFlushInterval();
+    this.initialize();
   }
 
   /**
-   * Initialize log directory
+   * Initialize audit logger
    */
-  async initializeLogDirectory() {
+  async initialize() {
     try {
+      // Ensure log directory exists
       await fs.mkdir(this.logDirectory, { recursive: true });
+      
+      // Start flush timer
+      this.startFlushTimer();
+      
+      console.log('[AuditLogger] Initialized successfully');
     } catch (error) {
-      console.error('Failed to create audit log directory:', error);
+      console.error('[AuditLogger] Failed to initialize:', error);
     }
-  }
-
-  /**
-   * Start periodic flush of in-memory buffer
-   */
-  startFlushInterval() {
-    setInterval(() => this.flushBuffer(), this.flushInterval);
-  }
-
-  /**
-   * Format audit entry
-   * @param {Object} entry - Audit entry data
-   * @returns {string} Formatted log entry
-   */
-  formatEntry(entry) {
-    return JSON.stringify({
-      timestamp: entry.timestamp,
-      eventType: entry.eventType,
-      severity: entry.severity,
-      userId: entry.userId,
-      username: entry.username,
-      guildId: entry.guildId,
-      ipAddress: entry.ipAddress,
-      userAgent: entry.userAgent,
-      requestId: entry.requestId,
-      action: entry.action,
-      details: entry.details,
-      changes: entry.changes,
-      success: entry.success,
-      errorMessage: entry.errorMessage
-    });
   }
 
   /**
    * Log an audit event
-   * @param {Object} options - Audit event options
    */
-  async log(options) {
-    const {
-      eventType,
-      severity = AuditSeverity.INFO,
-      userId,
-      username,
-      guildId,
-      ipAddress,
-      userAgent,
-      requestId,
-      action,
-      details = {},
-      changes = null,
-      success = true,
-      errorMessage = null
-    } = options;
-
+  async log(eventType, data = {}) {
     const entry = {
+      id: this.generateId(),
       timestamp: new Date().toISOString(),
       eventType,
-      severity,
-      userId,
-      username,
-      guildId,
-      ipAddress,
-      userAgent,
-      requestId,
-      action,
-      details,
-      changes,
-      success,
-      errorMessage
+      severity: data.severity || Severity.INFO,
+      userId: data.userId || null,
+      username: data.username || null,
+      guildId: data.guildId || null,
+      ipAddress: data.ipAddress || null,
+      userAgent: data.userAgent || null,
+      requestId: data.requestId || null,
+      message: data.message || '',
+      metadata: data.metadata || {},
+      success: data.success !== false // Default to true unless explicitly false
     };
 
     // Add to buffer
-    this.inMemoryBuffer.push(entry);
+    this.buffer.push(entry);
 
     // Flush if buffer is full
-    if (this.inMemoryBuffer.length >= this.bufferSize) {
+    if (this.buffer.length >= this.bufferSize) {
       await this.flushBuffer();
-    }
-
-    // Also log to console in development
-    if (process.env.NODE_ENV !== 'production') {
-      const color = this.getSeverityColor(severity);
-      console.log(`${color}[AUDIT] [${severity}] ${eventType}: ${action}\x1b[0m`);
     }
 
     return entry;
   }
 
   /**
-   * Get color code for severity level
-   */
-  getSeverityColor(severity) {
-    const colors = {
-      INFO: '\x1b[36m',     // Cyan
-      WARNING: '\x1b[33m',  // Yellow
-      ERROR: '\x1b[31m',    // Red
-      CRITICAL: '\x1b[35m'  // Magenta
-    };
-    return colors[severity] || '\x1b[37m';
-  }
-
-  /**
-   * Flush in-memory buffer to file
-   */
-  async flushBuffer() {
-    if (this.inMemoryBuffer.length === 0) return;
-
-    const entries = [...this.inMemoryBuffer];
-    this.inMemoryBuffer = [];
-
-    try {
-      const filePath = path.join(this.logDirectory, this.auditLogFile);
-      
-      // Check file size and rotate if necessary
-      try {
-        const stats = await fs.stat(filePath);
-        if (stats.size > this.maxLogSize) {
-          await this.rotateLogFile();
-        }
-      } catch (error) {
-        // File doesn't exist, which is fine
-      }
-
-      const logContent = entries.map(e => this.formatEntry(e)).join('\n') + '\n';
-      await fs.appendFile(filePath, logContent);
-    } catch (error) {
-      console.error('Failed to flush audit buffer:', error);
-      // Re-add entries to buffer on failure
-      this.inMemoryBuffer = [...entries, ...this.inMemoryBuffer];
-    }
-  }
-
-  /**
-   * Rotate log file when it gets too large
-   */
-  async rotateLogFile() {
-    try {
-      const baseName = this.auditLogFile.replace('.log', '');
-      
-      // Shift existing rotated files
-      for (let i = this.maxLogFiles - 1; i > 0; i--) {
-        const oldFile = path.join(this.logDirectory, `${baseName}.${i}.log`);
-        const newFile = path.join(this.logDirectory, `${baseName}.${i + 1}.log`);
-        
-        try {
-          await fs.rename(oldFile, newFile);
-        } catch (error) {
-          // File might not exist, continue
-        }
-      }
-
-      // Move current file to .1
-      const currentFile = path.join(this.logDirectory, this.auditLogFile);
-      const rotatedFile = path.join(this.logDirectory, `${baseName}.1.log`);
-      
-      await fs.rename(currentFile, rotatedFile);
-    } catch (error) {
-      console.error('Failed to rotate audit log file:', error);
-    }
-  }
-
-  // ==================== Convenience Methods ====================
-
-  /**
-   * Log authentication event
-   */
-  async logAuth(req, eventType, success, details = {}) {
-    return this.log({
-      eventType,
-      severity: success ? AuditSeverity.INFO : AuditSeverity.WARNING,
-      userId: req.user?.userId,
-      username: req.user?.username,
-      ipAddress: this.getClientIp(req),
-      userAgent: req.headers['user-agent'],
-      requestId: req.requestId,
-      action: `Authentication: ${eventType}`,
-      details,
-      success
-    });
-  }
-
-  /**
    * Log configuration change
    */
-  async logConfigChange(req, guildId, section, changes, success = true, errorMessage = null) {
-    const eventType = section ? 
-      `${section.toUpperCase()}_UPDATE` : 
-      AuditEventType.CONFIG_UPDATE;
-
-    return this.log({
-      eventType,
-      severity: success ? AuditSeverity.INFO : AuditSeverity.ERROR,
-      userId: req.user?.userId,
+  async logConfigChange(req, guildId, section, updates, success, errorMessage = null) {
+    return await this.log(AuditEventType.CONFIG_CHANGE, {
+      userId: req.user?.id,
       username: req.user?.username,
       guildId,
-      ipAddress: this.getClientIp(req),
-      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
       requestId: req.requestId,
-      action: `Configuration ${section || 'full'} update`,
-      changes,
+      message: success ? 
+        `Configuration ${section ? `section ${section}` : 'full config'} updated successfully` :
+        `Configuration update failed: ${errorMessage}`,
+      severity: success ? Severity.INFO : Severity.ERROR,
       success,
-      errorMessage
-    });
-  }
-
-  /**
-   * Log configuration import
-   */
-  async logConfigImport(req, guildId, importedSections, success = true, errorMessage = null) {
-    return this.log({
-      eventType: AuditEventType.CONFIG_IMPORT,
-      severity: success ? AuditSeverity.INFO : AuditSeverity.ERROR,
-      userId: req.user?.userId,
-      username: req.user?.username,
-      guildId,
-      ipAddress: this.getClientIp(req),
-      userAgent: req.headers['user-agent'],
-      requestId: req.requestId,
-      action: 'Configuration import',
-      details: { importedSections },
-      success,
-      errorMessage
+      metadata: {
+        section,
+        updates,
+        errorMessage,
+        changedFields: updates ? Object.keys(updates) : []
+      }
     });
   }
 
@@ -306,123 +130,121 @@ class AuditLogger {
    * Log configuration export
    */
   async logConfigExport(req, guildId) {
-    return this.log({
-      eventType: AuditEventType.CONFIG_EXPORT,
-      severity: AuditSeverity.INFO,
-      userId: req.user?.userId,
+    return await this.log(AuditEventType.CONFIG_EXPORT, {
+      userId: req.user?.id,
       username: req.user?.username,
       guildId,
-      ipAddress: this.getClientIp(req),
-      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
       requestId: req.requestId,
-      action: 'Configuration export',
-      success: true
+      message: 'Configuration exported',
+      severity: Severity.INFO
+    });
+  }
+
+  /**
+   * Log configuration import
+   */
+  async logConfigImport(req, guildId, appliedSections, success, errorMessage = null) {
+    return await this.log(AuditEventType.CONFIG_IMPORT, {
+      userId: req.user?.id,
+      username: req.user?.username,
+      guildId,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      requestId: req.requestId,
+      message: success ? 
+        `Configuration imported successfully (${appliedSections.length} sections)` :
+        `Configuration import failed: ${errorMessage}`,
+      severity: success ? Severity.INFO : Severity.ERROR,
+      success,
+      metadata: {
+        appliedSections,
+        errorMessage
+      }
+    });
+  }
+
+  /**
+   * Log authentication event
+   */
+  async logAuth(eventType, req, success, errorMessage = null) {
+    return await this.log(eventType, {
+      userId: req.user?.id,
+      username: req.user?.username,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      requestId: req.requestId,
+      message: success ? 
+        `Authentication ${eventType.toLowerCase().replace('auth_', '')} successful` :
+        `Authentication failed: ${errorMessage}`,
+      severity: success ? Severity.INFO : Severity.WARNING,
+      success
     });
   }
 
   /**
    * Log security event
    */
-  async logSecurityEvent(req, eventType, details = {}) {
-    return this.log({
-      eventType,
-      severity: AuditSeverity.WARNING,
-      userId: req.user?.userId,
+  async logSecurity(eventType, req, message, severity = Severity.WARNING) {
+    return await this.log(eventType, {
+      userId: req.user?.id,
       username: req.user?.username,
-      guildId: req.params?.guildId,
-      ipAddress: this.getClientIp(req),
-      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
       requestId: req.requestId,
-      action: `Security event: ${eventType}`,
-      details,
+      message,
+      severity,
       success: false
     });
   }
 
   /**
-   * Log template operation
+   * Log system event
    */
-  async logTemplateOperation(req, guildId, operation, templateName, success = true) {
-    const eventTypeMap = {
-      apply: AuditEventType.TEMPLATE_APPLY,
-      create: AuditEventType.TEMPLATE_CREATE,
-      delete: AuditEventType.TEMPLATE_DELETE
-    };
-
-    return this.log({
-      eventType: eventTypeMap[operation] || 'TEMPLATE_OPERATION',
-      severity: AuditSeverity.INFO,
-      userId: req.user?.userId,
-      username: req.user?.username,
-      guildId,
-      ipAddress: this.getClientIp(req),
-      userAgent: req.headers['user-agent'],
-      requestId: req.requestId,
-      action: `Template ${operation}: ${templateName}`,
-      details: { templateName, operation },
-      success
+  async logSystem(eventType, message, metadata = {}) {
+    return await this.log(eventType, {
+      message,
+      severity: Severity.INFO,
+      metadata
     });
   }
 
   /**
-   * Get client IP address
+   * Query audit logs
    */
-  getClientIp(req) {
-    const forwarded = req.headers['x-forwarded-for'];
-    return forwarded ? forwarded.split(',')[0].trim() : req.connection?.remoteAddress || req.ip;
-  }
-
-  /**
-   * Query audit logs (for admin interface)
-   */
-  async queryLogs(options = {}) {
-    const {
-      guildId,
-      userId,
-      eventType,
-      startDate,
-      endDate,
-      limit = 100
-    } = options;
-
+  async queryLogs(filters = {}) {
     try {
-      const filePath = path.join(this.logDirectory, this.auditLogFile);
-      const content = await fs.readFile(filePath, 'utf-8');
-      const lines = content.trim().split('\n');
+      const logs = [];
+      const files = await this.getLogFiles();
       
-      let entries = lines
-        .map(line => {
+      for (const file of files) {
+        const content = await fs.readFile(file, 'utf8');
+        const lines = content.split('\n').filter(line => line.trim());
+        
+        for (const line of lines) {
           try {
-            return JSON.parse(line);
-          } catch {
-            return null;
+            const entry = JSON.parse(line);
+            if (this.matchesFilters(entry, filters)) {
+              logs.push(entry);
+            }
+          } catch (parseError) {
+            // Skip invalid JSON lines
           }
-        })
-        .filter(entry => entry !== null);
-
-      // Apply filters
-      if (guildId) {
-        entries = entries.filter(e => e.guildId === guildId);
+        }
       }
-      if (userId) {
-        entries = entries.filter(e => e.userId === userId);
+      
+      // Sort by timestamp (newest first)
+      logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      // Apply limit
+      if (filters.limit) {
+        return logs.slice(0, filters.limit);
       }
-      if (eventType) {
-        entries = entries.filter(e => e.eventType === eventType);
-      }
-      if (startDate) {
-        entries = entries.filter(e => new Date(e.timestamp) >= new Date(startDate));
-      }
-      if (endDate) {
-        entries = entries.filter(e => new Date(e.timestamp) <= new Date(endDate));
-      }
-
-      // Sort by timestamp descending and limit
-      return entries
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .slice(0, limit);
+      
+      return logs;
     } catch (error) {
-      console.error('Failed to query audit logs:', error);
+      console.error('[AuditLogger] Error querying logs:', error);
       return [];
     }
   }
@@ -432,43 +254,197 @@ class AuditLogger {
    */
   async getStats(guildId = null) {
     try {
-      const entries = await this.queryLogs({ guildId, limit: 10000 });
+      const logs = await this.queryLogs(guildId ? { guildId } : {});
       
       const stats = {
-        totalEvents: entries.length,
-        byEventType: {},
-        bySeverity: {},
-        byUser: {},
-        recentActivity: entries.slice(0, 10)
+        totalEvents: logs.length,
+        eventsByType: {},
+        eventsBySeverity: {},
+        eventsByUser: {},
+        recentActivity: logs.slice(0, 10),
+        timeRange: {
+          oldest: logs.length > 0 ? logs[logs.length - 1].timestamp : null,
+          newest: logs.length > 0 ? logs[0].timestamp : null
+        }
       };
-
-      entries.forEach(entry => {
-        // Count by event type
-        stats.byEventType[entry.eventType] = (stats.byEventType[entry.eventType] || 0) + 1;
+      
+      logs.forEach(log => {
+        // Count by type
+        stats.eventsByType[log.eventType] = (stats.eventsByType[log.eventType] || 0) + 1;
         
         // Count by severity
-        stats.bySeverity[entry.severity] = (stats.bySeverity[entry.severity] || 0) + 1;
+        stats.eventsBySeverity[log.severity] = (stats.eventsBySeverity[log.severity] || 0) + 1;
         
         // Count by user
-        if (entry.userId) {
-          stats.byUser[entry.userId] = (stats.byUser[entry.userId] || 0) + 1;
+        if (log.userId) {
+          const userKey = `${log.username || 'Unknown'} (${log.userId})`;
+          stats.eventsByUser[userKey] = (stats.eventsByUser[userKey] || 0) + 1;
         }
       });
-
+      
       return stats;
     } catch (error) {
-      console.error('Failed to get audit stats:', error);
-      return null;
+      console.error('[AuditLogger] Error getting stats:', error);
+      return {
+        totalEvents: 0,
+        eventsByType: {},
+        eventsBySeverity: {},
+        eventsByUser: {},
+        recentActivity: [],
+        timeRange: { oldest: null, newest: null }
+      };
     }
+  }
+
+  /**
+   * Check if log entry matches filters
+   */
+  matchesFilters(entry, filters) {
+    if (filters.guildId && entry.guildId !== filters.guildId) return false;
+    if (filters.userId && entry.userId !== filters.userId) return false;
+    if (filters.eventType && entry.eventType !== filters.eventType) return false;
+    if (filters.severity && entry.severity !== filters.severity) return false;
+    if (filters.success !== undefined && entry.success !== filters.success) return false;
+    
+    if (filters.startDate) {
+      const entryDate = new Date(entry.timestamp);
+      const startDate = new Date(filters.startDate);
+      if (entryDate < startDate) return false;
+    }
+    
+    if (filters.endDate) {
+      const entryDate = new Date(entry.timestamp);
+      const endDate = new Date(filters.endDate);
+      if (entryDate > endDate) return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Flush buffer to file
+   */
+  async flushBuffer() {
+    if (this.buffer.length === 0) return;
+    
+    try {
+      const filename = this.getCurrentLogFile();
+      const entries = this.buffer.splice(0); // Clear buffer
+      
+      const logLines = entries.map(entry => JSON.stringify(entry)).join('\n') + '\n';
+      
+      await fs.appendFile(filename, logLines);
+      
+      // Check file size and rotate if needed
+      await this.rotateLogsIfNeeded();
+      
+    } catch (error) {
+      console.error('[AuditLogger] Error flushing buffer:', error);
+      // Put entries back in buffer if write failed
+      this.buffer.unshift(...entries);
+    }
+  }
+
+  /**
+   * Start flush timer
+   */
+  startFlushTimer() {
+    this.flushTimer = setInterval(async () => {
+      await this.flushBuffer();
+    }, this.flushInterval);
+  }
+
+  /**
+   * Stop flush timer
+   */
+  stopFlushTimer() {
+    if (this.flushTimer) {
+      clearInterval(this.flushTimer);
+      this.flushTimer = null;
+    }
+  }
+
+  /**
+   * Get current log file path
+   */
+  getCurrentLogFile() {
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    return path.join(this.logDirectory, `audit-${date}.log`);
+  }
+
+  /**
+   * Get all log files
+   */
+  async getLogFiles() {
+    try {
+      const files = await fs.readdir(this.logDirectory);
+      const logFiles = files
+        .filter(file => file.startsWith('audit-') && file.endsWith('.log'))
+        .map(file => path.join(this.logDirectory, file))
+        .sort()
+        .reverse(); // Newest first
+      
+      return logFiles;
+    } catch (error) {
+      console.error('[AuditLogger] Error getting log files:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Rotate logs if needed
+   */
+  async rotateLogsIfNeeded() {
+    try {
+      const files = await this.getLogFiles();
+      
+      // Check current file size
+      const currentFile = this.getCurrentLogFile();
+      try {
+        const stats = await fs.stat(currentFile);
+        if (stats.size > this.maxFileSize) {
+          // File is too large, it will naturally rotate to next day
+          console.log(`[AuditLogger] Log file ${currentFile} is ${stats.size} bytes (max: ${this.maxFileSize})`);
+        }
+      } catch (statError) {
+        // File doesn't exist yet, that's fine
+      }
+      
+      // Remove old files if we have too many
+      if (files.length > this.maxFiles) {
+        const filesToDelete = files.slice(this.maxFiles);
+        for (const file of filesToDelete) {
+          await fs.unlink(file);
+          console.log(`[AuditLogger] Deleted old log file: ${file}`);
+        }
+      }
+    } catch (error) {
+      console.error('[AuditLogger] Error rotating logs:', error);
+    }
+  }
+
+  /**
+   * Generate unique ID
+   */
+  generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+
+  /**
+   * Shutdown audit logger
+   */
+  async shutdown() {
+    this.stopFlushTimer();
+    await this.flushBuffer();
+    console.log('[AuditLogger] Shutdown complete');
   }
 }
 
-// Export singleton instance
+// Create singleton instance
 const auditLogger = new AuditLogger();
 
 module.exports = {
   auditLogger,
-  AuditLogger,
   AuditEventType,
-  AuditSeverity
+  Severity
 };

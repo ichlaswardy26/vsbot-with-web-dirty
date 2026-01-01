@@ -1,121 +1,123 @@
+/**
+ * Authentication Middleware
+ * Discord OAuth2 integration with session management
+ */
+
 const passport = require('passport');
-const DiscordStrategy = require('discord-strategy');
+const DiscordStrategy = require('passport-discord').Strategy;
 const UserSession = require('../../schemas/UserSession');
 
 /**
- * Fetch user's guilds from Discord API
- * @param {string} accessToken - Discord OAuth2 access token
- * @returns {Promise<Array>} Array of guild objects
- */
-async function fetchUserGuilds(accessToken) {
-  try {
-    const response = await fetch('https://discord.com/api/v10/users/@me/guilds', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      console.error('[Auth] Failed to fetch guilds:', response.status, response.statusText);
-      return [];
-    }
-
-    const guilds = await response.json();
-    console.log(`[Auth] Fetched ${guilds.length} guilds from Discord API`);
-    return guilds;
-  } catch (error) {
-    console.error('[Auth] Error fetching guilds:', error);
-    return [];
-  }
-}
-
-/**
- * Configure Discord OAuth2 strategy
+ * Configure Passport with Discord OAuth2 strategy
  */
 function configurePassport() {
   const config = require('../../config');
   
   passport.use(new DiscordStrategy({
     clientID: config.clientId,
-    clientSecret: config.web?.discordClientSecret || process.env.DISCORD_CLIENT_SECRET,
-    callbackURL: config.web?.discordCallbackUrl || '/auth/discord/callback',
+    clientSecret: config.web.discordClientSecret,
+    callbackURL: config.web.discordCallbackUrl,
     scope: ['identify', 'guilds']
   }, async (accessToken, refreshToken, profile, done) => {
     try {
-      // Fetch user's guilds from Discord API (not included in profile by default)
-      const guilds = await fetchUserGuilds(accessToken);
-      
-      console.log(`[Auth] User ${profile.username} authenticated with ${guilds.length} guilds`);
-      
-      // Create or update user session
-      const sessionData = {
-        userId: profile.id,
-        username: profile.username,
-        discriminator: profile.discriminator,
-        avatar: profile.avatar,
-        guilds: guilds,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-        createdAt: new Date()
-      };
-
+      // Save or update user session
       const userSession = await UserSession.findOneAndUpdate(
         { userId: profile.id },
-        sessionData,
+        {
+          userId: profile.id,
+          username: profile.username,
+          discriminator: profile.discriminator,
+          avatar: profile.avatar,
+          guilds: profile.guilds || [],
+          accessToken,
+          refreshToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+        },
         { upsert: true, new: true }
       );
 
-      return done(null, userSession);
+      return done(null, {
+        id: profile.id,
+        username: profile.username,
+        discriminator: profile.discriminator,
+        avatar: profile.avatar,
+        guilds: profile.guilds || []
+      });
     } catch (error) {
+      console.error('[Auth] Error in Discord strategy:', error);
       return done(error, null);
     }
   }));
 
   passport.serializeUser((user, done) => {
-    done(null, user.userId);
+    done(null, user.id);
   });
 
-  passport.deserializeUser(async (userId, done) => {
+  passport.deserializeUser(async (id, done) => {
     try {
-      const userSession = await UserSession.findOne({ userId });
-      done(null, userSession);
+      const userSession = await UserSession.findOne({ userId: id });
+      if (!userSession) {
+        return done(null, false);
+      }
+
+      // Check if session is expired
+      if (userSession.expiresAt < new Date()) {
+        await UserSession.deleteOne({ userId: id });
+        return done(null, false);
+      }
+
+      done(null, {
+        id: userSession.userId,
+        username: userSession.username,
+        discriminator: userSession.discriminator,
+        avatar: userSession.avatar,
+        guilds: userSession.guilds
+      });
     } catch (error) {
+      console.error('[Auth] Error deserializing user:', error);
       done(error, null);
     }
   });
 }
 
 /**
- * Middleware to verify user authentication
+ * Middleware to require authentication
+ */
+function requireAuth(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  
+  if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+  
+  res.redirect('/auth/discord');
+}
+
+/**
+ * Middleware to verify authentication (optional)
  */
 function verifyAuth(req, res, next) {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      error: 'Authentication required',
-      redirectUrl: '/auth/discord'
-    });
-  }
-
-  // Check if session is expired
-  if (req.user.expiresAt && new Date() > req.user.expiresAt) {
-    return res.status(401).json({
-      success: false,
-      error: 'Session expired',
-      redirectUrl: '/auth/discord'
-    });
-  }
-
+  // This middleware doesn't redirect, just sets req.user if authenticated
   next();
 }
 
 /**
- * Middleware to verify guild access permissions
+ * Middleware to verify guild access
  */
 function verifyGuildAccess(req, res, next) {
-  const { guildId } = req.params;
-  
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    });
+  }
+
+  const guildId = req.params.guildId;
   if (!guildId) {
     return res.status(400).json({
       success: false,
@@ -124,25 +126,20 @@ function verifyGuildAccess(req, res, next) {
   }
 
   // Check if user has access to this guild
-  // Discord sends permissions as string for large numbers, so we use BigInt
-  const hasAccess = req.user.guilds.some(guild => {
-    if (guild.id !== guildId) return false;
-    
-    // Owner always has access
-    if (guild.owner) return true;
-    
-    // Convert permissions to BigInt for accurate bitwise operations
-    const permissions = BigInt(guild.permissions || 0);
-    const ADMINISTRATOR = BigInt(0x8);
-    
-    return (permissions & ADMINISTRATOR) === ADMINISTRATOR;
-  });
-
-  if (!hasAccess) {
+  const userGuild = req.user.guilds?.find(guild => guild.id === guildId);
+  if (!userGuild) {
     return res.status(403).json({
       success: false,
-      error: 'Insufficient permissions for this server',
-      message: 'You need Administrator permissions to manage bot configuration'
+      error: 'Access denied to this guild'
+    });
+  }
+
+  // Check if user has administrator permissions
+  const hasAdminPerms = (userGuild.permissions & 0x8) === 0x8; // Administrator permission
+  if (!hasAdminPerms) {
+    return res.status(403).json({
+      success: false,
+      error: 'Administrator permissions required'
     });
   }
 
@@ -150,39 +147,26 @@ function verifyGuildAccess(req, res, next) {
 }
 
 /**
- * Middleware to handle authentication redirects for web pages
- */
-function requireAuth(req, res, next) {
-  if (!req.user) {
-    return res.redirect('/auth/discord');
-  }
-
-  // Check if session is expired
-  if (req.user.expiresAt && new Date() > req.user.expiresAt) {
-    return res.redirect('/auth/discord');
-  }
-
-  next();
-}
-
-/**
- * Session cleanup utility
+ * Clean up expired sessions
  */
 async function cleanupExpiredSessions() {
   try {
     const result = await UserSession.deleteMany({
       expiresAt: { $lt: new Date() }
     });
-    console.log(`Cleaned up ${result.deletedCount} expired sessions`);
+    
+    if (result.deletedCount > 0) {
+      console.log(`[Auth] Cleaned up ${result.deletedCount} expired sessions`);
+    }
   } catch (error) {
-    console.error('Error cleaning up expired sessions:', error);
+    console.error('[Auth] Error cleaning up expired sessions:', error);
   }
 }
 
 module.exports = {
   configurePassport,
+  requireAuth,
   verifyAuth,
   verifyGuildAccess,
-  requireAuth,
   cleanupExpiredSessions
 };

@@ -1,11 +1,11 @@
+/**
+ * User Session Schema
+ * Stores Discord OAuth2 session data
+ */
+
 const mongoose = require('mongoose');
 
 const userSessionSchema = new mongoose.Schema({
-  sessionId: {
-    type: String,
-    unique: true,
-    sparse: true
-  },
   userId: {
     type: String,
     required: true,
@@ -18,7 +18,7 @@ const userSessionSchema = new mongoose.Schema({
   },
   discriminator: {
     type: String,
-    required: true
+    default: '0000'
   },
   avatar: {
     type: String,
@@ -43,23 +43,12 @@ const userSessionSchema = new mongoose.Schema({
     type: Date,
     required: true,
     index: { expireAfterSeconds: 0 }
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  lastActivity: {
-    type: Date,
-    default: Date.now
   }
 }, {
   timestamps: true
 });
 
-// Update last activity on save
-userSessionSchema.pre('save', function(next) {
-  this.lastActivity = new Date();
-  next();
-});
+// Index for cleanup
+userSessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model('UserSession', userSessionSchema);

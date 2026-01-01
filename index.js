@@ -38,6 +38,47 @@ client.snipes = new Map();
 let webServer = null;
 
 /**
+ * Enhanced bot startup with configuration synchronization
+ */
+async function startBot() {
+  try {
+    // Connect to database first
+    await connectDB();
+    
+    // Initialize configuration with bot client integration
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║   ⚙️  INITIALIZING CONFIGURATION      ║');
+    console.log('╚════════════════════════════════════════╝');
+    
+    await config.initializeConfig();
+    
+    // Set bot client for config sync integration
+    config.setBotClient(client);
+    
+    // Load confession states
+    await loadConfessionStates();
+    
+    // Load handlers
+    require("./handlers/command")(client);
+    require("./handlers/event")(client);
+    
+    // Start webhook server for Tako donations
+    startWebhookServer();
+    
+    // Login to Discord
+    await client.login(config.token);
+    
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║   🤖 BOT STARTUP COMPLETE             ║');
+    console.log('╚════════════════════════════════════════╝');
+    
+  } catch (error) {
+    console.error('Failed to start bot:', error);
+    process.exit(1);
+  }
+}
+
+/**
  * Connect to MongoDB
  */
 const connectDB = async () => {
@@ -168,14 +209,30 @@ const startWebhookServer = () => {
 };
 
 /**
- * Start Web Dashboard
+ * Start Web Dashboard with enhanced integration
  */
 const startWebDashboard = async () => {
   try {
     const WebServer = require('./web/server');
     webServer = new WebServer(client);
+    
+    // Start the web server
     await webServer.start();
-    console.log(`[Dashboard] Web dashboard running on port ${config.web?.port || 3001}`);
+    
+    // Get WebSocket service and integrate with config sync
+    const wsService = webServer.getWebSocketService();
+    if (wsService) {
+      config.setWebSocketService(wsService);
+      console.log('[Dashboard] WebSocket service integrated with config sync');
+    }
+    
+    console.log('\n╔════════════════════════════════════════╗');
+    console.log('║   🌐 WEB DASHBOARD STARTED            ║');
+    console.log('╠════════════════════════════════════════╣');
+    console.log(`║  URL: http://localhost:${config.web?.port || 3001}/dashboard ║`);
+    console.log('║  Features: Real-time sync, Analytics   ║');
+    console.log('╚════════════════════════════════════════╝');
+    
   } catch (error) {
     console.error('[Dashboard] Failed to start web dashboard:', error);
   }
@@ -188,11 +245,15 @@ const initialize = async () => {
   // Connect to database first
   await connectDB();
   
-  // Initialize configuration from database
+  // Initialize configuration from database with bot integration
   console.log('[Config] Loading configuration from database...');
   try {
     await config.initializeConfig();
-    console.log('[Config] Configuration loaded successfully');
+    
+    // Set bot client for enhanced config sync
+    config.setBotClient(client);
+    
+    console.log('[Config] Configuration loaded successfully with bot integration');
     
     // Log loaded config summary
     const loadedConfig = config.configLoader.get();

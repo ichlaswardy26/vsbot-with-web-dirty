@@ -31,6 +31,9 @@ const { webLogger, requestLoggingMiddleware } = require('./services/webLogger');
 const { debugMiddleware, createDebugRoutes, isDebugMode } = require('./services/debugTools');
 const { auditLogger, AuditEventType } = require('./services/auditLogger');
 
+// Import configuration sync service
+const configSync = require('../util/configSync');
+
 class WebServer {
   constructor(client) {
     this.client = client;
@@ -42,12 +45,32 @@ class WebServer {
     this.port = config.web?.port || 3001;
     this.sessionMiddleware = null;
     
+    // Initialize configuration sync service
+    this.initializeConfigSync();
+    
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
     
     // Clean up expired sessions every hour
     setInterval(cleanupExpiredSessions, 60 * 60 * 1000);
+  }
+
+  /**
+   * Initialize configuration synchronization service with enhanced integration
+   */
+  async initializeConfigSync() {
+    try {
+      // Initialize with bot client and websocket service references
+      await configSync.initialize(this.client, null);
+      
+      // Make config sync available globally for routes
+      global.configSync = configSync;
+      
+      console.log('[WebServer] Configuration sync service initialized with bot integration');
+    } catch (error) {
+      console.error('[WebServer] Error initializing config sync service:', error);
+    }
   }
 
   setupMiddleware() {
@@ -191,6 +214,13 @@ class WebServer {
     this.app.use('/api/channels', limiters.api, csrfMiddleware, require('./routes/channels'));
     this.app.use('/api/roles', limiters.api, csrfMiddleware, require('./routes/roles'));
     this.app.use('/api/templates', limiters.api, csrfMiddleware, require('./routes/templates'));
+
+    // Dashboard routes (enhanced with new endpoints)
+    this.app.get('/api/dashboard/:guildId/overview', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getDashboardOverview);
+    this.app.get('/api/dashboard/:guildId/analytics', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getConfigurationAnalytics);
+    this.app.get('/api/dashboard/:guildId/bot-status', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getBotIntegrationStatus);
+    this.app.get('/api/dashboard/:guildId/validate', limiters.api, csrfMiddleware, require('./controllers/dashboardController').validateConfiguration);
+    this.app.get('/api/dashboard/:guildId/suggestions', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getConfigurationSuggestions);
 
     // Audit log endpoint (admin only)
     this.app.get('/api/audit-logs', requireAuth, async (req, res) => {

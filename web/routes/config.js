@@ -1,35 +1,74 @@
 const express = require('express');
 const router = express.Router();
 const configManager = require('../../util/configManager');
+const configSync = require('../../util/configSync');
 const config = require('../../config');
 const { verifyAuth, verifyGuildAccess } = require('../middleware/auth');
 const { validateGuildId, validateConfigSection, sanitizeInput, validateConfigStructure } = require('../middleware/validation');
 const { auditLogger } = require('../services/auditLogger');
 const { cacheService, CacheKeys, CacheTTL } = require('../services/cacheService');
+const { 
+  getDashboardOverview, 
+  getConfigurationAnalytics, 
+  getBotIntegrationStatus, 
+  validateConfiguration, 
+  getConfigurationSuggestions 
+} = require('../controllers/dashboardController');
+
+// ==================== DASHBOARD ROUTES ====================
+
+/**
+ * GET /api/config/:guildId/dashboard
+ * Get comprehensive dashboard overview with analytics
+ */
+router.get('/:guildId/dashboard', validateGuildId, verifyAuth, verifyGuildAccess, getDashboardOverview);
+
+/**
+ * GET /api/config/:guildId/analytics
+ * Get configuration analytics and change history
+ */
+router.get('/:guildId/analytics', validateGuildId, verifyAuth, verifyGuildAccess, getConfigurationAnalytics);
+
+/**
+ * GET /api/config/:guildId/bot-status
+ * Get bot integration status and capabilities
+ */
+router.get('/:guildId/bot-status', validateGuildId, verifyAuth, verifyGuildAccess, getBotIntegrationStatus);
+
+/**
+ * GET /api/config/:guildId/validate
+ * Validate configuration in real-time
+ */
+router.get('/:guildId/validate', validateGuildId, verifyAuth, verifyGuildAccess, validateConfiguration);
+
+/**
+ * GET /api/config/:guildId/suggestions
+ * Get configuration suggestions based on guild analysis
+ */
+router.get('/:guildId/suggestions', validateGuildId, verifyAuth, verifyGuildAccess, getConfigurationSuggestions);
 
 // ==================== GET ROUTES ====================
 
 /**
  * GET /api/config/:guildId
- * Get full configuration for a guild
- * Performance: Uses caching to reduce database queries
+ * Get full configuration for a guild with enhanced sync
+ * Performance: Uses enhanced sync service with bot validation
  */
 router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId } = req.params;
-    const cacheKey = cacheService.generateKey(CacheKeys.CONFIG, guildId);
+    const { validate = 'false' } = req.query;
     
-    // Try to get from cache first
-    const config = await cacheService.getOrSet(
-      cacheKey,
-      () => configManager.getConfig(guildId),
-      CacheTTL.CONFIG
-    );
+    // Use enhanced config sync service for unified access
+    const config = await configSync.getConfig(guildId, false, validate === 'true');
     
     res.json({
       success: true,
       data: config,
-      cached: cacheService.has(cacheKey)
+      version: configSync.configVersions.get(guildId) || 1,
+      syncStats: configSync.getSyncStats(),
+      validated: validate === 'true',
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Error getting config:', error);
@@ -49,7 +88,7 @@ router.get('/:guildId', validateGuildId, verifyAuth, verifyGuildAccess, async (r
 router.get('/:guildId/progress', validateGuildId, verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId } = req.params;
-    const config = await configManager.getConfig(guildId);
+    const config = await configSync.getConfig(guildId);
     
     // Calculate progress for each section
     const progress = {
@@ -82,27 +121,20 @@ router.get('/:guildId/progress', validateGuildId, verifyAuth, verifyGuildAccess,
 /**
  * GET /api/config/:guildId/:section
  * Get specific configuration section
- * Performance: Uses section-specific caching
+ * Performance: Uses sync service with section-specific access
  */
 router.get('/:guildId/:section', validateGuildId, validateConfigSection, verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId, section } = req.params;
-    const cacheKey = cacheService.generateKey(section, guildId);
     
-    // Determine TTL based on section type
-    const ttl = CacheTTL[section.toUpperCase()] || CacheTTL.CONFIG;
-    
-    // Try to get from cache first
-    const sectionData = await cacheService.getOrSet(
-      cacheKey,
-      () => configManager.getConfigSection(guildId, section),
-      ttl
-    );
+    // Get full config from sync service
+    const fullConfig = await configSync.getConfig(guildId);
+    const sectionData = fullConfig[section] || {};
     
     res.json({
       success: true,
       data: sectionData,
-      cached: cacheService.has(cacheKey)
+      version: configSync.configVersions.get(guildId) || 1
     });
   } catch (error) {
     console.error('Error getting config section:', error);
@@ -117,51 +149,31 @@ router.get('/:guildId/:section', validateGuildId, validateConfigSection, verifyA
 
 /**
  * PUT /api/config/:guildId
- * Update full configuration for a guild
- * Requirements: 9.2 - Broadcasts changes via WebSocket
+ * Update full configuration for a guild with enhanced validation
+ * Requirements: 9.2 - Broadcasts changes via WebSocket with bot integration
  */
 router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure, verifyAuth, verifyGuildAccess, async (req, res) => {
   try {
     const { guildId } = req.params;
     const updates = req.body;
     const userId = req.user.id;
+    const { validateWithBot = 'true', atomic = 'true' } = req.query;
     
-    // Validate configuration
-    const validation = configManager.validateConfig(updates);
-    if (!validation.isValid) {
-      // Audit log validation failure
-      await auditLogger.logConfigChange(req, guildId, null, updates, false, 'Validation failed');
-      
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid configuration',
-        details: validation.errors
-      });
-    }
-    
-    // Get old config for audit comparison
-    const oldConfig = await configManager.getConfig(guildId);
-    
-    const updatedConfig = await configManager.updateConfig(guildId, updates, userId);
-    
-    // Invalidate cache for this guild
-    cacheService.invalidateGuild(guildId);
+    // Use enhanced config sync service for update
+    const updatedConfig = await configSync.updateConfig(guildId, updates, {
+      userId,
+      source: 'dashboard',
+      validateWithBot: validateWithBot === 'true',
+      broadcastUpdate: true,
+      atomic: atomic === 'true'
+    });
     
     // Audit log successful configuration change
     await auditLogger.logConfigChange(req, guildId, null, {
-      oldConfig: oldConfig,
+      oldConfig: await configSync.getConfig(guildId, true), // Force refresh for old config
       newConfig: updates,
       changedFields: Object.keys(updates)
     }, true);
-    
-    // Broadcast configuration change via WebSocket
-    const websocketService = req.app.get('websocketService');
-    if (websocketService) {
-      websocketService.broadcastConfigChange(guildId, 'full', updates, {
-        userId: req.user.id,
-        username: req.user.username
-      });
-    }
     
     // Reload bot's config cache so changes take effect immediately
     try {
@@ -174,7 +186,9 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
     res.json({
       success: true,
       data: updatedConfig,
-      message: 'Configuration updated successfully'
+      version: configSync.configVersions.get(guildId),
+      message: 'Configuration updated successfully',
+      timestamp: Date.now()
     });
   } catch (error) {
     console.error('Error updating config:', error);
@@ -190,7 +204,8 @@ router.put('/:guildId', validateGuildId, sanitizeInput, validateConfigStructure,
     
     res.status(500).json({
       success: false,
-      error: 'Failed to update configuration'
+      error: error.message || 'Failed to update configuration',
+      timestamp: Date.now()
     });
   }
 });

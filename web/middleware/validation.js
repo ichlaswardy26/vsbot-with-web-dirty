@@ -1,108 +1,81 @@
 /**
- * Request validation middleware
+ * Validation Middleware
+ * Request validation and sanitization
  */
+
+const { body, param, validationResult } = require('express-validator');
+const DOMPurify = require('isomorphic-dompurify');
+const crypto = require('crypto');
 
 /**
- * Validate request body size and content type
+ * Add unique request ID to each request
  */
-function validateRequest(options = {}) {
-  const {
-    maxSize = 10 * 1024 * 1024, // 10MB default
-    allowedContentTypes = ['application/json', 'application/x-www-form-urlencoded'],
-    requireContentType = true
-  } = options;
+function addRequestId(req, res, next) {
+  req.requestId = crypto.randomBytes(16).toString('hex');
+  res.setHeader('X-Request-ID', req.requestId);
+  next();
+}
 
+/**
+ * Validate request and return errors if any
+ */
+function validateRequest() {
   return (req, res, next) => {
-    // Check content length
-    const contentLength = parseInt(req.headers['content-length'] || '0');
-    if (contentLength > maxSize) {
-      return res.status(413).json({
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
         success: false,
-        error: 'Request too large',
-        message: `Request size exceeds ${maxSize} bytes`
+        error: 'Validation failed',
+        details: errors.array(),
+        requestId: req.requestId
       });
     }
-
-    // Check content type for POST/PUT requests
-    if (requireContentType && ['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      const contentType = req.headers['content-type'];
-      
-      if (!contentType) {
-        return res.status(400).json({
-          success: false,
-          error: 'Missing content type',
-          message: 'Content-Type header is required'
-        });
-      }
-
-      const baseContentType = contentType.split(';')[0].trim();
-      if (!allowedContentTypes.includes(baseContentType)) {
-        return res.status(415).json({
-          success: false,
-          error: 'Unsupported content type',
-          message: `Content type must be one of: ${allowedContentTypes.join(', ')}`
-        });
-      }
-    }
-
     next();
   };
 }
 
 /**
- * Validate guild ID parameter
+ * Validate Discord guild ID
  */
 function validateGuildId(req, res, next) {
-  const { guildId } = req.params;
+  const guildId = req.params.guildId;
   
   if (!guildId) {
     return res.status(400).json({
       success: false,
-      error: 'Missing guild ID',
-      message: 'Guild ID parameter is required'
+      error: 'Guild ID is required'
     });
   }
-
-  // Discord snowflake validation (18-19 digits)
+  
+  // Discord snowflake validation (17-19 digits)
   if (!/^\d{17,19}$/.test(guildId)) {
     return res.status(400).json({
       success: false,
-      error: 'Invalid guild ID',
-      message: 'Guild ID must be a valid Discord snowflake'
+      error: 'Invalid guild ID format'
     });
   }
-
+  
   next();
 }
 
 /**
- * Validate configuration section parameter
+ * Validate configuration section
  */
 function validateConfigSection(req, res, next) {
-  const { section } = req.params;
-  
-  if (!section) {
-    return res.status(400).json({
-      success: false,
-      error: 'Missing section',
-      message: 'Configuration section parameter is required'
-    });
-  }
-
+  const section = req.params.section;
   const validSections = [
-    'channels', 'roles', 'features', 'appearance', 
-    'leveling', 'economy', 'moderation', 'tickets',
-    'voice', 'welcome', 'logs'
+    'channels', 'roles', 'features', 'colors', 'emojis', 
+    'images', 'language', 'categories', 'appearance'
   ];
-
-  if (!validSections.includes(section)) {
+  
+  if (section && !validSections.includes(section)) {
     return res.status(400).json({
       success: false,
-      error: 'Invalid section',
-      message: `Section must be one of: ${validSections.join(', ')}`
+      error: 'Invalid configuration section',
+      validSections
     });
   }
-
+  
   next();
 }
 
@@ -113,7 +86,6 @@ function sanitizeInput(req, res, next) {
   if (req.body && typeof req.body === 'object') {
     req.body = sanitizeObject(req.body);
   }
-  
   next();
 }
 
@@ -121,103 +93,225 @@ function sanitizeInput(req, res, next) {
  * Recursively sanitize object properties
  */
 function sanitizeObject(obj) {
-  if (obj === null || typeof obj !== 'object') {
+  if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
-
+  
   if (Array.isArray(obj)) {
     return obj.map(item => sanitizeObject(item));
   }
-
-  const sanitized = {};
   
+  const sanitized = {};
   for (const [key, value] of Object.entries(obj)) {
-    // Skip potentially dangerous properties
-    if (key.startsWith('__') || key === 'constructor' || key === 'prototype') {
-      continue;
-    }
-
     if (typeof value === 'string') {
-      // Basic XSS prevention
-      sanitized[key] = value
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+\s*=/gi, '');
+      // Sanitize HTML and remove potentially dangerous content
+      sanitized[key] = DOMPurify.sanitize(value, { 
+        ALLOWED_TAGS: [],
+        ALLOWED_ATTR: []
+      }).trim();
     } else if (typeof value === 'object') {
       sanitized[key] = sanitizeObject(value);
     } else {
       sanitized[key] = value;
     }
   }
-
+  
   return sanitized;
 }
 
 /**
- * Validate JSON structure for configuration
+ * Validate configuration structure
  */
 function validateConfigStructure(req, res, next) {
-  if (!req.body || typeof req.body !== 'object') {
+  const config = req.body;
+  
+  if (!config || typeof config !== 'object') {
     return res.status(400).json({
       success: false,
-      error: 'Invalid request body',
-      message: 'Request body must be a valid JSON object'
+      error: 'Configuration must be an object'
     });
   }
-
-  // Check for required fields based on the endpoint
-  const path = req.route.path;
   
-  if (path.includes('/import')) {
-    // Validate import structure
-    const requiredFields = ['guildId'];
-    const missingFields = requiredFields.filter(field => !(field in req.body));
-    
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required fields',
-        message: `Required fields: ${missingFields.join(', ')}`
-      });
+  // Validate specific sections if present
+  const validationErrors = [];
+  
+  // Validate channels
+  if (config.channels) {
+    const channelErrors = validateChannelsSection(config.channels);
+    validationErrors.push(...channelErrors);
+  }
+  
+  // Validate roles
+  if (config.roles) {
+    const roleErrors = validateRolesSection(config.roles);
+    validationErrors.push(...roleErrors);
+  }
+  
+  // Validate features
+  if (config.features) {
+    const featureErrors = validateFeaturesSection(config.features);
+    validationErrors.push(...featureErrors);
+  }
+  
+  // Validate colors
+  if (config.colors) {
+    const colorErrors = validateColorsSection(config.colors);
+    validationErrors.push(...colorErrors);
+  }
+  
+  if (validationErrors.length > 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'Configuration validation failed',
+      details: validationErrors
+    });
+  }
+  
+  next();
+}
+
+/**
+ * Validate channels section
+ */
+function validateChannelsSection(channels) {
+  const errors = [];
+  
+  for (const [key, channelId] of Object.entries(channels)) {
+    if (channelId !== null && channelId !== undefined && channelId !== '') {
+      if (typeof channelId !== 'string' || !/^\d{17,19}$/.test(channelId)) {
+        errors.push({
+          field: `channels.${key}`,
+          message: 'Invalid channel ID format',
+          value: channelId
+        });
+      }
     }
   }
-
-  next();
+  
+  return errors;
 }
 
 /**
- * Add request ID for tracking
+ * Validate roles section
  */
-function addRequestId(req, res, next) {
-  req.requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  res.setHeader('X-Request-ID', req.requestId);
-  next();
+function validateRolesSection(roles) {
+  const errors = [];
+  
+  for (const [key, roleId] of Object.entries(roles)) {
+    if (roleId !== null && roleId !== undefined && roleId !== '') {
+      if (typeof roleId !== 'string' || !/^\d{17,19}$/.test(roleId)) {
+        errors.push({
+          field: `roles.${key}`,
+          message: 'Invalid role ID format',
+          value: roleId
+        });
+      }
+    }
+  }
+  
+  return errors;
 }
 
 /**
- * Log requests for debugging
+ * Validate features section
  */
-function logRequest(req, res, next) {
-  const start = Date.now();
+function validateFeaturesSection(features) {
+  const errors = [];
   
-  // Log request
-  console.log(`[${req.requestId}] ${req.method} ${req.path} - ${req.ip}`);
+  for (const [featureName, featureConfig] of Object.entries(features)) {
+    if (typeof featureConfig !== 'object' || featureConfig === null) {
+      errors.push({
+        field: `features.${featureName}`,
+        message: 'Feature configuration must be an object',
+        value: featureConfig
+      });
+      continue;
+    }
+    
+    // Validate enabled property
+    if ('enabled' in featureConfig && typeof featureConfig.enabled !== 'boolean') {
+      errors.push({
+        field: `features.${featureName}.enabled`,
+        message: 'Enabled property must be a boolean',
+        value: featureConfig.enabled
+      });
+    }
+    
+    // Validate specific feature properties
+    if (featureName === 'leveling') {
+      if ('xpMin' in featureConfig && (!Number.isInteger(featureConfig.xpMin) || featureConfig.xpMin < 1)) {
+        errors.push({
+          field: `features.${featureName}.xpMin`,
+          message: 'XP minimum must be a positive integer',
+          value: featureConfig.xpMin
+        });
+      }
+      
+      if ('xpMax' in featureConfig && (!Number.isInteger(featureConfig.xpMax) || featureConfig.xpMax < 1)) {
+        errors.push({
+          field: `features.${featureName}.xpMax`,
+          message: 'XP maximum must be a positive integer',
+          value: featureConfig.xpMax
+        });
+      }
+      
+      if ('xpMin' in featureConfig && 'xpMax' in featureConfig && featureConfig.xpMin >= featureConfig.xpMax) {
+        errors.push({
+          field: `features.${featureName}`,
+          message: 'XP minimum must be less than XP maximum',
+          value: { xpMin: featureConfig.xpMin, xpMax: featureConfig.xpMax }
+        });
+      }
+    }
+  }
   
-  // Log response when finished
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`[${req.requestId}] ${res.statusCode} - ${duration}ms`);
-  });
-  
-  next();
+  return errors;
 }
+
+/**
+ * Validate colors section
+ */
+function validateColorsSection(colors) {
+  const errors = [];
+  const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
+  
+  for (const [key, color] of Object.entries(colors)) {
+    if (color !== null && color !== undefined && color !== '') {
+      if (typeof color !== 'string' || !hexColorRegex.test(color)) {
+        errors.push({
+          field: `colors.${key}`,
+          message: 'Color must be a valid hex color (e.g., #FF0000)',
+          value: color
+        });
+      }
+    }
+  }
+  
+  return errors;
+}
+
+/**
+ * Validation rules for specific endpoints
+ */
+const validationRules = {
+  guildId: param('guildId').isLength({ min: 17, max: 19 }).isNumeric(),
+  configSection: param('section').isIn([
+    'channels', 'roles', 'features', 'colors', 'emojis', 
+    'images', 'language', 'categories', 'appearance'
+  ]),
+  channelId: body('channelId').optional().isLength({ min: 17, max: 19 }).isNumeric(),
+  roleId: body('roleId').optional().isLength({ min: 17, max: 19 }).isNumeric(),
+  hexColor: body('color').optional().matches(/^#[0-9A-Fa-f]{6}$/),
+  boolean: (field) => body(field).optional().isBoolean(),
+  positiveInteger: (field) => body(field).optional().isInt({ min: 1 })
+};
 
 module.exports = {
+  addRequestId,
   validateRequest,
   validateGuildId,
   validateConfigSection,
   sanitizeInput,
   validateConfigStructure,
-  addRequestId,
-  logRequest
+  validationRules
 };
