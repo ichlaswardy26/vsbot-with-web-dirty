@@ -1,234 +1,152 @@
-# Docker CSP Fix Guide - VPS Linux
+# Docker CSP Fix Guide
 
-## 🐳 Your Docker Setup
-You're running on VPS Linux with Docker Compose. The CSP fixes are ready in the code, but Docker containers need to be rebuilt to pick up the changes.
+## 🎯 Problem
+You're getting CSP violations when running the Docker deployment because the container was built with the old code that didn't have the CSP fixes.
 
-## 🚀 Quick Fix Commands
+## ✅ Solution
+The CSP fixes are already applied to your local code, but Docker needs to rebuild the container with the updated files.
 
-### Option 1: Full Rebuild (Recommended)
+## 🚀 Quick Fix
+
+### Option 1: Use the Rebuild Script (Recommended)
+
+**For Windows PowerShell:**
+```powershell
+.\scripts\rebuild-with-csp-fix.ps1
+```
+
+**For Linux/Mac/WSL:**
 ```bash
-# Stop and remove containers
-docker-compose down
-
-# Rebuild with no cache to ensure CSP fixes are included
-docker-compose build --no-cache
-
-# Start containers
-docker-compose up -d
-
-# Check status
-docker-compose ps
+chmod +x scripts/rebuild-with-csp-fix.sh
+./scripts/rebuild-with-csp-fix.sh
 ```
 
-### Option 2: Restart Existing Container
-```bash
-# Just restart (if you're sure the image has the fixes)
-docker-compose restart
+### Option 2: Manual Docker Rebuild
 
-# Or stop and start
-docker-compose stop
-docker-compose start
-```
+1. **Stop existing containers:**
+   ```bash
+   docker compose -f docker-compose.ip.yml down
+   ```
 
-### Option 3: Manual Docker Commands
-```bash
-# Stop container
-docker stop villain-seraphyx-bot
+2. **Remove old images to force rebuild:**
+   ```bash
+   docker rmi $(docker images -q villain-seraphyx*)
+   ```
 
-# Remove container
-docker rm villain-seraphyx-bot
+3. **Rebuild without cache:**
+   ```bash
+   docker compose -f docker-compose.ip.yml build --no-cache
+   ```
 
-# Rebuild image
-docker build -t villain-seraphyx-bot --no-cache .
+4. **Start containers:**
+   ```bash
+   docker compose -f docker-compose.ip.yml --profile monitoring up -d
+   ```
 
-# Run new container
-docker run -d --name villain-seraphyx-bot \
-  --env-file .env \
-  -p 3000:3000 -p 3001:3001 \
-  --restart unless-stopped \
-  villain-seraphyx-bot
-```
+## 🔍 Verification Steps
 
-## 🔍 Verify the Fix
+After rebuilding:
 
-### 1. Check Container Status
-```bash
-docker-compose ps
-# Should show container as "Up"
-```
+1. **Wait for containers to start** (about 30 seconds)
 
-### 2. Check Container Logs
-```bash
-docker-compose logs -f
-# Look for: "[Security] Applying FIXED CSP configuration for external resources"
-```
+2. **Check container status:**
+   ```bash
+   docker compose -f docker-compose.ip.yml ps
+   ```
 
-### 3. Test CSP Headers
-```bash
-# Test from your VPS
-curl -I http://localhost:3001/dashboard | grep -i content-security-policy
+3. **Test the dashboard:**
+   - Visit: `http://43.129.55.161/dashboard`
+   - Clear browser cache: `Ctrl+Shift+R`
+   - Check browser console for CSP errors
 
-# Should show CSP with style-src-elem and script-src-elem
-```
+4. **Check container logs if needed:**
+   ```bash
+   docker compose -f docker-compose.ip.yml logs -f discord-bot
+   ```
 
-### 4. Test Health Endpoint
-```bash
-curl http://localhost:3001/health
-# Should return JSON with status: "ok"
-```
+## 🎉 Expected Result
 
-## 🌐 Access Your Dashboard
-
-After restart, access your dashboard at:
-```
-http://YOUR_VPS_IP:3001/dashboard
-```
-
-**Important**: Clear your browser cache (`Ctrl+Shift+R`) before testing!
+After the rebuild, you should see:
+- ✅ No CSP violation errors in browser console
+- ✅ Tailwind CSS styles loading properly
+- ✅ Font Awesome icons displaying
+- ✅ Socket.IO connecting successfully
+- ✅ Chart.js working for analytics
 
 ## 🔧 Troubleshooting
 
-### If CSP Violations Still Occur:
+### If CSP errors persist:
 
-1. **Verify Container Rebuilt**
+1. **Verify the rebuild completed:**
    ```bash
-   docker images | grep villain-seraphyx-bot
-   # Check the "Created" timestamp - should be recent
+   docker images | grep villain-seraphyx
+   ```
+   Should show a recent timestamp
+
+2. **Check if the container is using the updated code:**
+   ```bash
+   docker exec villain-seraphyx-bot grep -n "scriptSrcAttr" /app/web/middleware/security.js
+   ```
+   Should return a line with `scriptSrcAttr`
+
+3. **Force complete rebuild:**
+   ```bash
+   docker system prune -f
+   docker compose -f docker-compose.ip.yml build --no-cache --pull
    ```
 
-2. **Check Container Logs**
+### If containers won't start:
+
+1. **Check logs:**
    ```bash
-   docker-compose logs | grep -i security
-   # Should see: "Applying FIXED CSP configuration"
+   docker compose -f docker-compose.ip.yml logs
    ```
 
-3. **Verify CSP Header**
+2. **Check disk space:**
    ```bash
-   curl -I http://localhost:3001/dashboard 2>/dev/null | grep -i content-security-policy
+   df -h
    ```
 
-4. **Test from Browser DevTools**
-   - Open dashboard in browser
-   - F12 → Network tab
-   - Refresh page
-   - Click on main document request
-   - Check Response Headers for `Content-Security-Policy`
-   - Should include `style-src-elem` and `script-src-elem`
-
-### If Container Won't Start:
-
-1. **Check Logs**
+3. **Check Docker daemon:**
    ```bash
-   docker-compose logs
+   docker info
    ```
 
-2. **Check Environment Variables**
-   ```bash
-   docker-compose config
-   ```
+## 📋 Management Commands
 
-3. **Verify .env File**
-   ```bash
-   ls -la .env
-   cat .env | grep -v "TOKEN\|SECRET"  # Don't show sensitive data
-   ```
-
-### If Port Issues:
-
-1. **Check Port Binding**
-   ```bash
-   docker-compose ps
-   netstat -tlnp | grep :3001
-   ```
-
-2. **Check Firewall**
-   ```bash
-   # Ubuntu/Debian
-   sudo ufw status
-   sudo ufw allow 3001
-   
-   # CentOS/RHEL
-   sudo firewall-cmd --list-ports
-   sudo firewall-cmd --add-port=3001/tcp --permanent
-   sudo firewall-cmd --reload
-   ```
-
-## 📋 Complete Restart Script
-
-Save this as `restart-csp-fix.sh`:
+After successful deployment:
 
 ```bash
-#!/bin/bash
-echo "🐳 Restarting Docker with CSP fixes..."
+# View logs
+docker compose -f docker-compose.ip.yml logs -f discord-bot
 
-# Stop containers
-echo "Stopping containers..."
-docker-compose down
+# Restart services
+docker compose -f docker-compose.ip.yml restart
 
-# Rebuild with no cache
-echo "Rebuilding image..."
-docker-compose build --no-cache
+# Stop everything
+docker compose -f docker-compose.ip.yml down
 
-# Start containers
-echo "Starting containers..."
-docker-compose up -d
-
-# Wait for startup
-echo "Waiting for services..."
-sleep 10
-
-# Test health
-echo "Testing health endpoint..."
-curl -s http://localhost:3001/health | jq . || echo "Health check failed"
-
-# Test CSP
-echo "Testing CSP headers..."
-CSP=$(curl -s -I http://localhost:3001/dashboard | grep -i content-security-policy)
-if [[ $CSP == *"style-src-elem"* ]]; then
-    echo "✅ CSP fix applied successfully!"
-else
-    echo "❌ CSP fix may not be applied"
-fi
-
-echo "✨ Restart complete!"
-echo "🌐 Dashboard: http://$(curl -s ifconfig.me):3001/dashboard"
+# Update and restart
+docker compose -f docker-compose.ip.yml pull
+docker compose -f docker-compose.ip.yml up -d
 ```
 
-Make it executable and run:
-```bash
-chmod +x restart-csp-fix.sh
-./restart-csp-fix.sh
-```
+## 🌐 Access URLs
 
-## 🎯 Expected Result
+After successful deployment:
+- **Dashboard:** http://43.129.55.161/dashboard
+- **Health Check:** http://43.129.55.161/health
+- **Portainer:** http://43.129.55.161:9000
 
-After the Docker restart:
-- ✅ No CSP violation errors in browser console
-- ✅ Tailwind CSS styles load properly
-- ✅ Font Awesome icons display
-- ✅ Socket.IO connects successfully
-- ✅ Chart.js renders charts
-- ✅ All dashboard functionality works
+## 🔒 Security Notes
 
-## 🆘 Emergency CSP Disable
+The CSP configuration now allows:
+- External CDN resources (Tailwind, Font Awesome, Socket.IO, Chart.js)
+- Inline scripts and styles (with `unsafe-inline`)
+- WebSocket connections for real-time features
 
-If CSP completely blocks access, temporarily disable it:
-
-1. **Edit security middleware in container**
-   ```bash
-   docker-compose exec discord-bot sh
-   # Inside container:
-   sed -i 's/contentSecurityPolicy: {/contentSecurityPolicy: false, \/\/ {/' /app/web/middleware/security.js
-   exit
-   ```
-
-2. **Restart container**
-   ```bash
-   docker-compose restart
-   ```
-
-3. **Re-enable CSP later** by rebuilding with proper configuration.
+This is a balanced approach between functionality and security for your Discord bot dashboard.
 
 ---
 
-**The CSP fix is ready - just rebuild your Docker container to activate it!** 🚀
+**Remember:** Always clear your browser cache after deploying updates!
