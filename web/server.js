@@ -127,10 +127,12 @@ class WebServer {
     const callbackUrl = config.web?.discordCallbackUrl || '';
     const isHttpsCallback = callbackUrl.startsWith('https://');
     
-    // Fix for authentication loop: Don't force secure cookies for IP-based deployments
+    // Fix for authentication loop: Force disable secure cookies for IP-based deployments
     const serverIp = process.env.SERVER_IP || '43.129.55.161';
     const isIpBasedDeployment = callbackUrl.includes(serverIp);
-    const isSecure = (isProduction || forceSecureCookies || isHttpsCallback) && !isIpBasedDeployment;
+    
+    // CRITICAL FIX: Always disable secure cookies for IP deployments with self-signed certs
+    const isSecure = false; // Force disable for IP deployments
     
     const sessionConfig = {
       secret: config.web?.sessionSecret || 'your-secret-key-change-this',
@@ -138,11 +140,11 @@ class WebServer {
       saveUninitialized: false,
       name: 'sessionId', // Custom session cookie name
       cookie: {
-        secure: isSecure, // Don't force secure for IP-based deployments
+        secure: false, // Always false for IP deployments
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: isIpBasedDeployment ? 'none' : 'lax', // 'none' for IP-based, 'lax' for domain-based
-        domain: undefined // Don't set domain for IP-based deployments
+        sameSite: 'lax', // Change back to 'lax' for better compatibility
+        domain: undefined // No domain restriction for IP deployments
       }
     };
     
@@ -177,8 +179,8 @@ class WebServer {
     this.sessionMiddleware = session(sessionConfig);
     this.app.use(this.sessionMiddleware);
 
-    // Security: Session security enhancements
-    this.app.use(sessionSecurity);
+    // DISABLE session security middleware that regenerates sessions
+    // this.app.use(sessionSecurity);
 
     // Passport configuration
     configurePassport();

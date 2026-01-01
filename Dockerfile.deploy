@@ -45,8 +45,8 @@ RUN echo "Checking for package-lock.json..." && \
 COPY . .
 
 # Create logs directory with proper permissions
-RUN mkdir -p /app/logs && \
-    chmod 755 /app/logs
+RUN mkdir -p /app/logs /app/logs/audit && \
+    chmod 755 /app/logs /app/logs/audit
 
 # Create non-root user for security
 RUN groupadd -g 1001 nodejs && \
