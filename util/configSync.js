@@ -196,22 +196,6 @@ class ConfigSyncService extends EventEmitter {
       }
     }
   }
-    } catch (error) {
-      this.updateSyncStats(Date.now() - startTime, false);
-      console.error('[ConfigSync] Error getting config:', error);
-      
-      // Emit error event
-      this.emit('config:error', {
-        guildId,
-        operation: 'getConfig',
-        error: error.message,
-        timestamp: Date.now()
-      });
-      
-      // Return default config as fallback
-      return this.getDefaultConfig(guildId);
-    }
-  }
 
   /**
    * Update configuration with enhanced validation and real-time sync
