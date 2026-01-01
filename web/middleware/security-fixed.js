@@ -1,6 +1,6 @@
 /**
- * Security Middleware
- * Comprehensive security measures for the web application
+ * Fixed Security Middleware
+ * Comprehensive security measures with corrected CSP for external resources
  */
 
 const helmet = require('helmet');
