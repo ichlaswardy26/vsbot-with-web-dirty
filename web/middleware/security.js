@@ -127,20 +127,48 @@ function parseSize(size) {
  * Suspicious activity detection middleware
  */
 function suspiciousActivityDetector(req, res, next) {
-  const suspiciousPatterns = [
-    // SQL injection patterns
-    /(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)/i,
-    // XSS patterns
-    /<script[^>]*>.*?<\/script>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
-    // Path traversal
-    /\.\.[\/\\]/g,
-    // Command injection
-    /[;&|`$(){}[\]]/g
+  // Skip security checks for basic navigation and static assets
+  const skipPaths = [
+    '/',
+    '/dashboard',
+    '/health',
+    '/auth/discord',
+    '/auth/discord/callback',
+    '/css/',
+    '/js/',
+    '/assets/',
+    '/favicon.ico'
   ];
   
-  const checkString = JSON.stringify(req.body) + JSON.stringify(req.query) + req.url;
+  // Check if this is a path we should skip
+  const shouldSkip = skipPaths.some(path => 
+    req.path === path || req.path.startsWith(path)
+  );
+  
+  if (shouldSkip) {
+    return next();
+  }
+  
+  // Only check requests with body content for suspicious patterns
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return next();
+  }
+  
+  const suspiciousPatterns = [
+    // SQL injection patterns (more specific)
+    /(\bunion\s+select\b|\bselect\s+.*\bfrom\b|\binsert\s+into\b|\bupdate\s+.*\bset\b|\bdelete\s+from\b|\bdrop\s+table\b)/i,
+    // XSS patterns (more specific)
+    /<script[^>]*>.*?<\/script>/gi,
+    /javascript\s*:/gi,
+    /on(load|error|click|mouseover)\s*=/gi,
+    // Path traversal (more specific)
+    /\.\.[\/\\]{2,}/g,
+    // Command injection (more specific)
+    /[;&|`]\s*(rm|del|format|shutdown|reboot|wget|curl|nc|netcat)/gi
+  ];
+  
+  // Only check request body and query parameters
+  const checkString = JSON.stringify(req.body || {}) + JSON.stringify(req.query || {});
   
   for (const pattern of suspiciousPatterns) {
     if (pattern.test(checkString)) {
@@ -154,7 +182,8 @@ function suspiciousActivityDetector(req, res, next) {
       
       return res.status(400).json({
         success: false,
-        error: 'Request contains suspicious content'
+        error: 'Request contains suspicious content',
+        code: 'SECURITY_VIOLATION'
       });
     }
   }

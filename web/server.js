@@ -89,9 +89,6 @@ class WebServer {
     // Security: Request size limiter (DoS prevention)
     this.app.use(requestSizeLimiter());
 
-    // Security: Suspicious activity detection
-    this.app.use(suspiciousActivityDetector);
-
     // Request validation
     this.app.use(validateRequest());
 
@@ -102,8 +99,18 @@ class WebServer {
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Security: Enhanced input sanitization
-    this.app.use(enhancedSanitization);
+    // Security: Enhanced input sanitization (only for API routes)
+    this.app.use('/api', enhancedSanitization);
+
+    // Security: Suspicious activity detection (only for API routes and form submissions)
+    this.app.use('/api', suspiciousActivityDetector);
+    this.app.use((req, res, next) => {
+      // Apply to POST/PUT/DELETE requests on non-API routes
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method) && !req.path.startsWith('/api/')) {
+        return suspiciousActivityDetector(req, res, next);
+      }
+      next();
+    });
 
     // Static files
     this.app.use('/css', express.static(path.join(__dirname, 'public/css')));
