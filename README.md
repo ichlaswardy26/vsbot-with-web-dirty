@@ -1,9 +1,10 @@
 # 🤖 Villain Seraphyx Manager Bot
 
-A comprehensive Discord bot built with Discord.js v14, featuring leveling, economy, voice tracking, moderation tools, and Tako donation integration.
+A comprehensive Discord bot built with Discord.js v14, featuring leveling, economy, voice tracking, moderation tools, and an advanced web dashboard with real-time configuration management.
 
 ## ✨ Features
 
+### 🎯 Core Bot Features
 - **🎯 Leveling System** - XP tracking with voice activity and boost multipliers
 - **💰 Economy System** - Virtual currency (souls) with shop and exclusive items  
 - **🎫 Ticket System** - Support and partner ticket management
@@ -14,9 +15,19 @@ A comprehensive Discord bot built with Discord.js v14, featuring leveling, econo
 - **💝 Tako Integration** - Donation webhook for Tako.id platform
 - **🎁 Giveaway System** - Create and manage server giveaways
 
+### 🌐 Enhanced Web Dashboard
+- **⚡ Real-time Sync** - Instant synchronization between dashboard and bot
+- **📊 Analytics Dashboard** - Configuration analytics and progress tracking
+- **🔄 Live Validation** - Real-time validation against Discord API
+- **🛡️ Advanced Security** - CSRF protection, rate limiting, audit logging
+- **📱 Modern UI** - Responsive design with real-time updates
+- **🔧 Smart Suggestions** - AI-powered configuration recommendations
+- **📋 Template System** - Pre-built configuration templates
+- **🔍 Comprehensive Monitoring** - Bot status, performance metrics, and health checks
+
 ## 📋 Prerequisites
 
-- Node.js v16.9.0 or higher
+- Node.js v20.8.0 or higher
 - MongoDB database
 - Discord Bot Token
 
@@ -40,19 +51,99 @@ cp .env.example .env
 
 Edit `.env` with your credentials:
 ```env
+# Required Bot Configuration
 TOKEN=your_discord_bot_token
-MONGO_URI=your_mongodb_connection_string
 CLIENT_ID=your_bot_client_id
-GUILD_ID=your_guild_id
+MONGO_URI=your_mongodb_connection_string
+
+# Optional Configuration
+GUILD_ID=your_main_guild_id
 OWNER_IDS=your_user_id
+
+# Web Dashboard (Optional)
+SESSION_SECRET=your_session_secret
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+DISCORD_CALLBACK_URL=http://localhost:3001/auth/discord/callback
+WEB_PORT=3001
+
+# Webhook Server (Optional)
+WEBHOOK_PORT=3000
+WEBHOOK_TOKEN=your_webhook_token
 ```
 
-Then start the bot:
+### Test and Start
 ```bash
+# Test configuration
+npm run test:startup
+
+# Start the bot
 npm start
 ```
 
-📖 **Need detailed setup guide?** Check [SETUP_GUIDE.md](SETUP_GUIDE.md)
+## 🌐 Web Dashboard Access
+
+Once the bot is running, access the web dashboard at:
+- **Dashboard URL**: `http://localhost:3001/dashboard`
+- **Health Check**: `http://localhost:3001/health`
+
+### Dashboard Features
+- **Real-time Configuration**: Edit bot settings with instant synchronization
+- **Discord Integration**: Live validation of channels, roles, and permissions
+- **Analytics**: Track configuration changes and bot performance
+- **Security**: Comprehensive audit logging and access control
+- **Templates**: Quick setup with pre-configured templates
+
+## 🐳 Docker Deployment
+
+### Quick Docker Setup
+```bash
+# Clone and setup
+git clone <repository-url>
+cd villain-seraphyx-bot
+cp .env.example .env
+# Edit .env with your credentials
+
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Check status
+docker-compose ps
+docker logs villain-seraphyx-bot
+```
+
+### Production Deployment
+```bash
+# Use production configuration
+docker-compose -f docker-compose.prod.yml up -d
+
+# With monitoring (optional)
+docker-compose -f docker-compose.prod.yml --profile monitoring up -d
+```
+
+### Docker Troubleshooting
+If you encounter Docker issues:
+```bash
+# Test local startup first
+npm run test:startup
+
+# Check Docker logs
+docker logs villain-seraphyx-bot
+
+# Run health check
+docker exec villain-seraphyx-bot npm run docker:health
+```
+
+📖 **Docker Issues?** Check [DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md)
+
+## 📖 Documentation
+
+- **[Setup Guide](SETUP_GUIDE.md)** - Detailed installation and configuration
+- **[Configuration Guide](CONFIGURATION.md)** - Complete configuration reference
+- **[Dashboard Refactor Summary](DASHBOARD_REFACTOR_SUMMARY.md)** - Enhanced dashboard features
+- **[Docker Troubleshooting](DOCKER_TROUBLESHOOTING.md)** - Docker deployment issues
+- **[Features Documentation](FEATURES.md)** - Complete feature list
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment
+- **[Contributing Guide](CONTRIBUTING.md)** - Development guidelines
 
 ## 🌐 Web Dashboard
 

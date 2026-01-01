@@ -40,8 +40,8 @@ USER botuser
 # Expose ports for web dashboard and webhook
 EXPOSE 3000 3001
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || exit 0
+# Health check using our custom script
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
+    CMD node docker-health-check.js
 
 CMD ["npm", "start"]
