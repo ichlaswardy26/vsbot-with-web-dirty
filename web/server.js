@@ -126,7 +126,11 @@ class WebServer {
     const forceSecureCookies = process.env.FORCE_SECURE_COOKIES === 'true';
     const callbackUrl = config.web?.discordCallbackUrl || '';
     const isHttpsCallback = callbackUrl.startsWith('https://');
-    const isSecure = isProduction || forceSecureCookies || isHttpsCallback;
+    
+    // Fix for authentication loop: Don't force secure cookies for IP-based deployments
+    const serverIp = process.env.SERVER_IP || '43.129.55.161';
+    const isIpBasedDeployment = callbackUrl.includes(serverIp);
+    const isSecure = (isProduction || forceSecureCookies || isHttpsCallback) && !isIpBasedDeployment;
     
     const sessionConfig = {
       secret: config.web?.sessionSecret || 'your-secret-key-change-this',
@@ -134,14 +138,21 @@ class WebServer {
       saveUninitialized: false,
       name: 'sessionId', // Custom session cookie name
       cookie: {
-        secure: isSecure, // Secure if HTTPS (production, tunnel, or forced)
+        secure: isSecure, // Don't force secure for IP-based deployments
         httpOnly: true,
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: 'lax' // 'lax' for OAuth compatibility with tunnels
+        sameSite: isIpBasedDeployment ? 'none' : 'lax', // 'none' for IP-based, 'lax' for domain-based
+        domain: undefined // Don't set domain for IP-based deployments
       }
     };
     
-    console.log(`[Session] Cookie secure: ${isSecure}, sameSite: lax, env: ${config.nodeEnv}, httpsCallback: ${isHttpsCallback}`);
+    console.log(`[Session] Configuration:`);
+    console.log(`  - Cookie secure: ${isSecure}`);
+    console.log(`  - SameSite: ${sessionConfig.cookie.sameSite}`);
+    console.log(`  - Environment: ${config.nodeEnv}`);
+    console.log(`  - HTTPS callback: ${isHttpsCallback}`);
+    console.log(`  - IP-based deployment: ${isIpBasedDeployment}`);
+    console.log(`  - Callback URL: ${callbackUrl}`);
 
     // Only add MongoStore if MongoDB URI is provided and not in test environment
     if (config.mongoUri && config.nodeEnv !== 'test') {

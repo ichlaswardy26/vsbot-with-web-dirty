@@ -19,14 +19,33 @@ router.get('/discord', passport.authenticate('discord'));
  * Handle Discord OAuth2 callback
  */
 router.get('/discord/callback', 
-  passport.authenticate('discord', { failureRedirect: '/auth/failed' }),
+  (req, res, next) => {
+    console.log(`[Auth] OAuth callback received`);
+    console.log(`[Auth] Query params:`, req.query);
+    console.log(`[Auth] Session ID:`, req.sessionID);
+    next();
+  },
+  passport.authenticate('discord', { 
+    failureRedirect: '/auth/failed',
+    failureMessage: true
+  }),
   async (req, res) => {
     try {
+      console.log(`[Auth] OAuth callback successful for user: ${req.user.username}`);
+      
       // Log successful authentication
       await auditLogger.logAuth(AuditEventType.AUTH_LOGIN, req, true);
       
-      // Redirect to dashboard
-      res.redirect('/dashboard');
+      // Ensure session is saved before redirect
+      req.session.save((err) => {
+        if (err) {
+          console.error('[Auth] Session save error:', err);
+          return res.redirect('/auth/failed');
+        }
+        
+        console.log(`[Auth] Session saved, redirecting to dashboard`);
+        res.redirect('/dashboard');
+      });
     } catch (error) {
       console.error('[Auth] Error in callback:', error);
       res.redirect('/auth/failed');
@@ -144,6 +163,44 @@ router.get('/guilds', (req, res) => {
         null,
       permissions: guild.permissions
     }))
+  });
+});
+
+/**
+ * GET /auth/debug
+ * Debug authentication status (development only)
+ */
+router.get('/debug', (req, res) => {
+  const config = require('../../config');
+  
+  // Only allow in development or when explicitly enabled
+  if (config.nodeEnv === 'production' && !process.env.ENABLE_AUTH_DEBUG) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  
+  res.json({
+    success: true,
+    debug: {
+      isAuthenticated: req.isAuthenticated(),
+      sessionID: req.sessionID,
+      user: req.user || null,
+      session: {
+        cookie: req.session?.cookie,
+        passport: req.session?.passport
+      },
+      headers: {
+        userAgent: req.headers['user-agent'],
+        origin: req.headers.origin,
+        referer: req.headers.referer,
+        cookie: req.headers.cookie ? 'Present' : 'Missing'
+      },
+      config: {
+        callbackUrl: config.web?.discordCallbackUrl,
+        clientId: config.clientId,
+        nodeEnv: config.nodeEnv,
+        sessionSecret: config.web?.sessionSecret ? 'Set' : 'Missing'
+      }
+    }
   });
 });
 

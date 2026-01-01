@@ -1,6 +1,7 @@
 /**
  * Authentication Middleware
  * Discord OAuth2 integration with session management
+ * Fixed for authentication loop issues
  */
 
 const passport = require('passport');
@@ -13,6 +14,16 @@ const UserSession = require('../../schemas/UserSession');
 function configurePassport() {
   const config = require('../../config');
   
+  // Validate configuration
+  if (!config.clientId || !config.web.discordClientSecret) {
+    console.error('[Auth] Missing Discord OAuth2 configuration');
+    return;
+  }
+  
+  console.log('[Auth] Configuring Discord OAuth2 strategy');
+  console.log(`[Auth] Client ID: ${config.clientId}`);
+  console.log(`[Auth] Callback URL: ${config.web.discordCallbackUrl}`);
+  
   passport.use(new DiscordStrategy({
     clientID: config.clientId,
     clientSecret: config.web.discordClientSecret,
@@ -20,6 +31,8 @@ function configurePassport() {
     scope: ['identify', 'guilds']
   }, async (accessToken, refreshToken, profile, done) => {
     try {
+      console.log(`[Auth] Discord OAuth callback for user: ${profile.username}#${profile.discriminator}`);
+      
       // Save or update user session
       const userSession = await UserSession.findOneAndUpdate(
         { userId: profile.id },
@@ -36,6 +49,8 @@ function configurePassport() {
         { upsert: true, new: true }
       );
 
+      console.log(`[Auth] User session saved for ${profile.username}`);
+
       return done(null, {
         id: profile.id,
         username: profile.username,
@@ -50,22 +65,29 @@ function configurePassport() {
   }));
 
   passport.serializeUser((user, done) => {
+    console.log(`[Auth] Serializing user: ${user.id}`);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id, done) => {
     try {
+      console.log(`[Auth] Deserializing user: ${id}`);
+      
       const userSession = await UserSession.findOne({ userId: id });
       if (!userSession) {
+        console.log(`[Auth] No session found for user: ${id}`);
         return done(null, false);
       }
 
       // Check if session is expired
       if (userSession.expiresAt < new Date()) {
+        console.log(`[Auth] Session expired for user: ${id}`);
         await UserSession.deleteOne({ userId: id });
         return done(null, false);
       }
 
+      console.log(`[Auth] User session valid for: ${userSession.username}`);
+      
       done(null, {
         id: userSession.userId,
         username: userSession.username,
@@ -84,14 +106,22 @@ function configurePassport() {
  * Middleware to require authentication
  */
 function requireAuth(req, res, next) {
+  console.log(`[Auth] Checking authentication for ${req.method} ${req.path}`);
+  console.log(`[Auth] User authenticated: ${req.isAuthenticated()}`);
+  console.log(`[Auth] Session ID: ${req.sessionID}`);
+  
   if (req.isAuthenticated()) {
+    console.log(`[Auth] User ${req.user.username} is authenticated`);
     return next();
   }
+  
+  console.log(`[Auth] User not authenticated, redirecting to Discord OAuth`);
   
   if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
     return res.status(401).json({
       success: false,
-      error: 'Authentication required'
+      error: 'Authentication required',
+      redirectUrl: '/auth/discord'
     });
   }
   
@@ -103,6 +133,11 @@ function requireAuth(req, res, next) {
  */
 function verifyAuth(req, res, next) {
   // This middleware doesn't redirect, just sets req.user if authenticated
+  if (req.isAuthenticated()) {
+    console.log(`[Auth] User ${req.user.username} verified`);
+  } else {
+    console.log(`[Auth] No authenticated user found`);
+  }
   next();
 }
 
