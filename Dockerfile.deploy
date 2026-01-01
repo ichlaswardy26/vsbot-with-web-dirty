@@ -1,0 +1,66 @@
+# Villain Seraphyx Discord Bot - Deployment Dockerfile
+# Robust deployment configuration with fallback strategies
+
+FROM node:20-bullseye-slim
+
+WORKDIR /app
+
+# Install system dependencies for canvas and sharp
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    libpixman-1-dev \
+    python3 \
+    pkg-config \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
+# Install dependencies with robust error handling
+RUN echo "Checking for package-lock.json..." && \
+    if [ -f package-lock.json ]; then \
+        echo "✅ Found package-lock.json, using npm ci"; \
+        npm ci --omit=dev --no-audit --verbose || { \
+            echo "❌ npm ci failed, falling back to npm install"; \
+            rm -f package-lock.json; \
+            npm install --omit=dev --no-audit --verbose; \
+        }; \
+    else \
+        echo "⚠️ No package-lock.json found, using npm install"; \
+        npm install --omit=dev --no-audit --verbose; \
+    fi && \
+    echo "✅ Dependencies installed successfully" && \
+    npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs && \
+    chmod 755 /app/logs
+
+# Create non-root user for security
+RUN groupadd -g 1001 nodejs && \
+    useradd -r -u 1001 -g nodejs botuser && \
+    chown -R botuser:nodejs /app
+
+USER botuser
+
+# Expose ports for web dashboard and webhook
+EXPOSE 3000 3001
+
+# Health check using our custom script
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
+    CMD node docker-health-check.js
+
+# Use our enhanced startup script
+CMD ["npm", "start"]

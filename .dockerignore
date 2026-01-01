@@ -2,6 +2,10 @@
 node_modules
 npm-debug.log*
 
+# Explicitly include package files
+!package.json
+!package-lock.json
+
 # Git
 .git
 .gitignore
