@@ -108,7 +108,7 @@ class Dashboard {
       document.getElementById('guild-list').innerHTML = `
         <div class="error">
           <p>Failed to load your servers. Please try refreshing the page.</p>
-          <button onclick="window.location.reload()">Refresh</button>
+          <button class="refresh-btn">Refresh</button>
         </div>
       `;
     }
@@ -129,7 +129,7 @@ class Dashboard {
     }
 
     const guildListHtml = guilds.map(guild => `
-      <div class="guild-item" onclick="window.dashboard.selectGuild('${guild.id}')" style="
+      <div class="guild-item" data-guild-id="${guild.id}" style="
         display: inline-block; 
         margin: 10px; 
         padding: 15px; 
@@ -146,6 +146,14 @@ class Dashboard {
     `).join('');
 
     document.getElementById('guild-list').innerHTML = guildListHtml;
+    
+    // Add event listeners for guild selection
+    document.querySelectorAll('.guild-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const guildId = item.dataset.guildId;
+        this.selectGuild(guildId);
+      });
+    });
   }
 
   /**
@@ -557,8 +565,10 @@ class Dashboard {
             <p class="text-gray-600 mb-3">${suggestion.description}</p>
             <p class="text-sm text-gray-500">${suggestion.suggestion}</p>
           </div>
-          <button class="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors" 
-                  onclick="dashboard.applySuggestion('${suggestion.action?.type}', '${suggestion.action?.field}', '${suggestion.action?.value}')">
+          <button class="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition-colors suggestion-apply-btn" 
+                  data-action-type="${suggestion.action?.type}" 
+                  data-action-field="${suggestion.action?.field}" 
+                  data-action-value="${suggestion.action?.value}">
             Apply
           </button>
         </div>
@@ -566,6 +576,16 @@ class Dashboard {
     `).join('');
 
     container.innerHTML = suggestionsHtml;
+    
+    // Add event listeners for suggestion buttons
+    container.querySelectorAll('.suggestion-apply-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.actionType;
+        const field = btn.dataset.actionField;
+        const value = btn.dataset.actionValue;
+        this.applySuggestion(type, field, value);
+      });
+    });
   }
 
   /**
@@ -651,10 +671,10 @@ class Dashboard {
             </div>
             <div class="mt-4">
               <div class="flex space-x-2">
-                <button onclick="window.location.reload()" class="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200">
+                <button class="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 error-retry-btn">
                   Retry
                 </button>
-                <button onclick="window.dashboard.hideErrorMessage()" class="bg-white px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-gray-50 border border-red-300">
+                <button class="bg-white px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-gray-50 border border-red-300 error-dismiss-btn">
                   Dismiss
                 </button>
               </div>
@@ -664,6 +684,18 @@ class Dashboard {
       </div>
     `;
     errorContainer.style.display = 'block';
+    
+    // Add event listeners for error buttons
+    const retryBtn = errorContainer.querySelector('.error-retry-btn');
+    const dismissBtn = errorContainer.querySelector('.error-dismiss-btn');
+    
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => window.location.reload());
+    }
+    
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => this.hideErrorMessage());
+    }
   }
 
   /**
@@ -769,7 +801,7 @@ class Dashboard {
           <p class="text-sm font-medium text-gray-900">${message}</p>
         </div>
         <div class="ml-auto pl-3">
-          <button class="text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.parentElement.remove()">
+          <button class="text-gray-400 hover:text-gray-600 notification-close">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -777,6 +809,12 @@ class Dashboard {
     `;
 
     container.appendChild(notification);
+
+    // Add event listener for close button
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => notification.remove());
+    }
 
     // Auto-remove after 5 seconds
     setTimeout(() => {

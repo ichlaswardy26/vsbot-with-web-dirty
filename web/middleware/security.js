@@ -63,10 +63,13 @@ function securityHeaders() {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-        scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.socket.io"],
-        imgSrc: ["'self'", "data:", "https:", "http:"],
-        connectSrc: ["'self'", "wss:", "ws:"],
-        fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.socket.io"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrcElem: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+        scriptSrcElem: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.socket.io"],
+        imgSrc: ["'self'", "data:", "https:", "http:", "https://via.placeholder.com"],
+        connectSrc: ["'self'", "wss:", "ws:", "https:", "http:"],
+        fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         frameSrc: ["'none'"]
