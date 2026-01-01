@@ -17,6 +17,7 @@ COPY package*.json ./
 RUN sed -i '/"canvas":/d' package.json && \
     sed -i '/"canvafy":/d' package.json && \
     sed -i '/"discord-card-canvas":/d' package.json && \
+    sed -i '/"discord-arts":/d' package.json && \
     sed -i '/"greetify":/d' package.json
 
 # Set NODE_ENV to production
