@@ -55,100 +55,19 @@ function sanitizeDeep(obj) {
 }
 
 /**
- * FIXED Security headers middleware with comprehensive CSP
+ * EMERGENCY: CSP DISABLED - Security headers middleware
  */
 function securityHeaders() {
-  console.log('[Security] Applying FIXED CSP configuration for external resources');
+  console.log('[Security] CSP TEMPORARILY DISABLED - Dashboard should work now');
   
   return helmet({
-    contentSecurityPolicy: {
-      directives: {
-        // Default source
-        defaultSrc: ["'self'"],
-        
-        // Styles - allow external CDNs and inline styles
-        styleSrc: [
-          "'self'", 
-          "'unsafe-inline'", 
-          "https://cdn.jsdelivr.net", 
-          "https://cdnjs.cloudflare.com"
-        ],
-        
-        // Scripts - allow external CDNs and inline scripts
-        scriptSrc: [
-          "'self'", 
-          "'unsafe-inline'", 
-          "'unsafe-eval'", 
-          "https://cdn.jsdelivr.net", 
-          "https://cdnjs.cloudflare.com", 
-          "https://cdn.socket.io"
-        ],
-        
-        // Script attributes - allow inline event handlers
-        scriptSrcAttr: ["'unsafe-inline'"],
-        
-        // Style elements - explicit directive for external stylesheets
-        styleSrcElem: [
-          "'self'", 
-          "'unsafe-inline'", 
-          "https://cdn.jsdelivr.net", 
-          "https://cdnjs.cloudflare.com"
-        ],
-        
-        // Script elements - explicit directive for external scripts
-        scriptSrcElem: [
-          "'self'", 
-          "https://cdn.jsdelivr.net", 
-          "https://cdnjs.cloudflare.com", 
-          "https://cdn.socket.io"
-        ],
-        
-        // Images - allow all HTTPS and placeholder services
-        imgSrc: [
-          "'self'", 
-          "data:", 
-          "https:", 
-          "http:", 
-          "https://via.placeholder.com",
-          "https://cdn.discordapp.com"
-        ],
-        
-        // Connections - allow WebSocket and HTTPS
-        connectSrc: [
-          "'self'", 
-          "wss:", 
-          "ws:", 
-          "https:", 
-          "http:"
-        ],
-        
-        // Fonts - allow external font CDNs
-        fontSrc: [
-          "'self'", 
-          "https://cdnjs.cloudflare.com", 
-          "https://cdn.jsdelivr.net"
-        ],
-        
-        // Security restrictions
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"]
-      },
-      // Report violations for debugging
-      reportOnly: false
-    },
-    
-    // Disable COEP for Socket.IO compatibility
+    contentSecurityPolicy: false, // DISABLED FOR EMERGENCY ACCESS
     crossOriginEmbedderPolicy: false,
-    
-    // HSTS configuration
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
       preload: true
     },
-    
-    // Additional security headers
     noSniff: true,
     frameguard: { action: 'deny' },
     xssFilter: true
