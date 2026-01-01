@@ -5,7 +5,9 @@
 services:
   # Discord Bot Application
   discord-bot:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prebuilt
     container_name: villain-seraphyx-bot
     restart: always
     env_file:

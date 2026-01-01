@@ -1,31 +1,30 @@
-# Villain Seraphyx Discord Bot
-# Node.js 20 LTS Debian for better compatibility with canvas
+# Villain Seraphyx Discord Bot - Minimal build without canvas
+# For quick deployment when canvas features are not critical
 
 FROM node:20-bullseye-slim
 
 WORKDIR /app
 
-# Install system dependencies for canvas and sharp
+# Install minimal runtime dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libcairo2-dev \
-    libpango1.0-dev \
-    libjpeg-dev \
-    libgif-dev \
-    librsvg2-dev \
-    libpixman-1-dev \
-    python3 \
-    pkg-config \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files first for better caching
+# Copy package files
 COPY package*.json ./
 
-# Set NODE_ENV to production to skip devDependencies
+# Temporarily remove canvas dependency for quick deployment
+RUN sed -i '/"canvas":/d' package.json && \
+    sed -i '/"canvafy":/d' package.json && \
+    sed -i '/"discord-card-canvas":/d' package.json && \
+    sed -i '/"greetify":/d' package.json
+
+# Set NODE_ENV to production
 ENV NODE_ENV=production
 
-# Install production dependencies only
-RUN npm ci --omit=dev && npm cache clean --force
+# Install dependencies without canvas
+RUN npm ci --omit=dev --no-audit && \
+    npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -37,7 +36,7 @@ RUN groupadd -g 1001 nodejs && \
 
 USER botuser
 
-# Expose ports for web dashboard and webhook
+# Expose ports
 EXPOSE 3000 3001
 
 # Health check

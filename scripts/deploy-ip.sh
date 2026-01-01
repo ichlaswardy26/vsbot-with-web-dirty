@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Villain Seraphyx Bot - IP-based Deployment Script
-# Usage: ./scripts/deploy-ip.sh [--ssl]
+# Usage: ./scripts/deploy-ip.sh [--ssl] [--minimal]
 # For VPS IP: 43.129.55.161
 
 set -e
@@ -13,10 +13,27 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-SSL_FLAG=$1
+SSL_FLAG=""
+MINIMAL_FLAG=""
 VPS_IP="43.129.55.161"
 
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        --ssl)
+            SSL_FLAG="--ssl"
+            ;;
+        --minimal)
+            MINIMAL_FLAG="--minimal"
+            ;;
+    esac
+done
+
 echo -e "${BLUE}🚀 Deploying Villain Seraphyx Bot for IP: ${VPS_IP}${NC}"
+
+if [ "$MINIMAL_FLAG" = "--minimal" ]; then
+    echo -e "${YELLOW}⚡ Using minimal build (without canvas dependencies)${NC}"
+fi
 
 # Check .env file
 if [ ! -f ".env" ]; then
@@ -99,6 +116,13 @@ fi
 # Set compose file
 COMPOSE_FILE="docker-compose.ip.yml"
 
+# Create temporary compose file with appropriate Dockerfile
+if [ "$MINIMAL_FLAG" = "--minimal" ]; then
+    echo -e "${YELLOW}📝 Creating minimal build configuration...${NC}"
+    sed 's/dockerfile: Dockerfile.prebuilt/dockerfile: Dockerfile.minimal/' $COMPOSE_FILE > docker-compose.ip.tmp.yml
+    COMPOSE_FILE="docker-compose.ip.tmp.yml"
+fi
+
 echo -e "${YELLOW}📦 Building...${NC}"
 $DC -f $COMPOSE_FILE build
 
@@ -175,3 +199,8 @@ fi
 echo ""
 echo -e "${GREEN}🎉 Deployment complete!${NC}"
 echo -e "${BLUE}Your Discord bot is now running on VPS IP: ${VPS_IP}${NC}"
+
+# Cleanup temporary files
+if [ -f "docker-compose.ip.tmp.yml" ]; then
+    rm docker-compose.ip.tmp.yml
+fi
