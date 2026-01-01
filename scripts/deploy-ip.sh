@@ -113,26 +113,39 @@ if [ "$SSL_FLAG" = "--ssl" ]; then
     fi
 fi
 
+# Verify CSP fixes are in place
+echo -e "${YELLOW}🔍 Verifying CSP fixes...${NC}"
+if ! grep -q "scriptSrcAttr" web/middleware/security.js; then
+    echo -e "${RED}❌ CSP fixes not found in security middleware!${NC}"
+    echo -e "${YELLOW}Please ensure CSP fixes are applied before deployment${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ CSP fixes verified${NC}"
+
 # Set compose file
 COMPOSE_FILE="docker-compose.ip.yml"
 
 # Create temporary compose file with appropriate Dockerfile
 if [ "$MINIMAL_FLAG" = "--minimal" ]; then
     echo -e "${YELLOW}📝 Creating minimal build configuration...${NC}"
-    sed 's/dockerfile: Dockerfile.prebuilt/dockerfile: Dockerfile.minimal/' $COMPOSE_FILE > docker-compose.ip.tmp.yml
+    sed 's/dockerfile: Dockerfile.deploy/dockerfile: Dockerfile.minimal/' $COMPOSE_FILE > docker-compose.ip.tmp.yml
     COMPOSE_FILE="docker-compose.ip.tmp.yml"
 fi
-
-echo -e "${YELLOW}📦 Building...${NC}"
-$DC -f $COMPOSE_FILE build
 
 echo -e "${YELLOW}🛑 Stopping existing containers...${NC}"
 $DC -f $COMPOSE_FILE down 2>/dev/null || true
 
+echo -e "${YELLOW}🗑️  Removing old images to force rebuild with CSP fixes...${NC}"
+docker rmi $(docker images -q villain-seraphyx* 2>/dev/null) 2>/dev/null || true
+
+echo -e "${YELLOW}📦 Building with CSP fixes (no cache)...${NC}"
+$DC -f $COMPOSE_FILE build --no-cache --pull
+
 echo -e "${YELLOW}🚀 Starting with Nginx for IP ${VPS_IP}...${NC}"
 $DC -f $COMPOSE_FILE --profile monitoring up -d
 
-sleep 5
+echo -e "${YELLOW}⏳ Waiting for services to start...${NC}"
+sleep 10
 
 # Check status
 if $DC -f $COMPOSE_FILE ps | grep -q "Up"; then
@@ -167,6 +180,13 @@ if $DC -f $COMPOSE_FILE ps | grep -q "Up"; then
     else
         echo -e "  ${YELLOW}http://${VPS_IP}/auth/discord/callback${NC}"
     fi
+    echo ""
+    echo -e "${GREEN}🎉 CSP Issues Fixed!${NC}"
+    echo -e "${BLUE}📋 Next Steps:${NC}"
+    echo -e "1. Clear your browser cache (Ctrl+Shift+R)"
+    echo -e "2. Visit the dashboard URL above"
+    echo -e "3. Check browser console - CSP errors should be gone!"
+    echo -e "4. Verify external resources load (Tailwind CSS, Font Awesome, Socket.IO)"
 else
     echo -e "${RED}❌ Failed to start!${NC}"
     $DC -f $COMPOSE_FILE logs
