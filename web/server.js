@@ -235,13 +235,6 @@ class WebServer {
     this.app.use('/api/roles', limiters.api, csrfMiddleware, require('./routes/roles'));
     this.app.use('/api/templates', limiters.api, csrfMiddleware, require('./routes/templates'));
 
-    // Dashboard routes (enhanced with new endpoints)
-    this.app.get('/api/dashboard/:guildId/overview', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getDashboardOverview);
-    this.app.get('/api/dashboard/:guildId/analytics', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getConfigurationAnalytics);
-    this.app.get('/api/dashboard/:guildId/bot-status', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getBotIntegrationStatus);
-    this.app.get('/api/dashboard/:guildId/validate', limiters.api, csrfMiddleware, require('./controllers/dashboardController').validateConfiguration);
-    this.app.get('/api/dashboard/:guildId/suggestions', limiters.api, csrfMiddleware, require('./controllers/dashboardController').getConfigurationSuggestions);
-
     // Audit log endpoint (admin only)
     this.app.get('/api/audit-logs', requireAuth, async (req, res) => {
       try {
