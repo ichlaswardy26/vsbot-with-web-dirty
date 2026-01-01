@@ -1,7 +1,7 @@
 # Villain Seraphyx Discord Bot
-# Node.js 18 LTS Alpine for smaller image size
+# Node.js 20 LTS Alpine for smaller image size
 
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -23,8 +23,11 @@ RUN apk add --no-cache \
 # Copy package files first for better caching
 COPY package*.json ./
 
+# Set NODE_ENV to production to skip devDependencies
+ENV NODE_ENV=production
+
 # Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy source code
 COPY . .

@@ -8,9 +8,8 @@ npm-debug.log*
 .gitattributes
 
 # Environment (mounted as volume)
-.env.local
-.env.development
-.env.test
+.env*
+!.env.example
 
 # Logs & Data
 logs
@@ -39,6 +38,20 @@ Thumbs.db
 coverage
 *.test.js
 __tests__
+tests
+
+# Development tools
+eslint.config.mjs
+jest.config.js
+
+# Scripts (except production scripts)
+scripts
+!scripts/backup.sh
+!scripts/restore.sh
+
+# SSL certificates (will be mounted)
+nginx/ssl
+certbot
 
 # Misc
 *.tgz
