@@ -49,11 +49,9 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx/nginx-ip.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx-ip-http-only.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/logs:/var/log/nginx
-      - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       discord-bot:
         condition: service_healthy
